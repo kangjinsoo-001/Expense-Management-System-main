@@ -1,0 +1,52 @@
+<%# 경비 항목 검증 상태 표시 %>
+<div id="expense_item_<%= expense_item.id %>_validation" class="validation-status">
+  <% if expense_item.validation_status.present? %>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= expense_item.validation_badge_class %>">
+        <% case expense_item.validation_status %>
+        <% when 'validated' %>
+          <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+        <% when 'warning' %>
+          <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+        <% when 'failed' %>
+          <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        <% end %>
+        <%= expense_item.validation_status_label %>
+      </span>
+      
+      <% if expense_item.validation_message.present? %>
+        <button type="button" 
+                class="text-gray-400 hover:text-gray-600"
+                data-controller="tooltip"
+                data-tooltip-content-value="<%= expense_item.validation_message %>">
+          <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      <% end %>
+    </div>
+    
+    <% if local_assigns[:validation_result] && validation_result[:results].present? %>
+      <div class="mt-2 text-xs text-gray-600">
+        <% validation_result[:results].each do |result| %>
+          <% unless result[:passed] %>
+            <div class="flex items-start gap-1 mt-1">
+              <svg class="h-3 w-3 mt-0.5 text-<%= result[:severity] == 'error' ? 'red' : 'yellow' %>-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+              <span><%= result[:message] %></span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <span class="text-xs text-gray-500">검증 대기중</span>
+  <% end %>
+</div>

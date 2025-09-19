@@ -1,0 +1,14 @@
+<div id="flash_<%= Time.current.to_i %>_<%= rand(10000) %>" 
+     class="flash-message flash-<%= type %> p-4 mb-4 rounded-lg <%= type == 'notice' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200' %>" 
+     data-turbo-temporary="true"
+     data-controller="flash"
+     data-flash-timeout-value="5000">
+  <div class="flex items-center justify-between">
+    <span><%= message %></span>
+    <button data-action="click->flash#close" class="ml-4 text-sm hover:opacity-75">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>

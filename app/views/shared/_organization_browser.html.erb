@@ -1,0 +1,62 @@
+<%# 재사용 가능한 조직 브라우저 컴포넌트 %>
+<%# 
+  Parameters:
+  - organizations: 표시할 조직 목록
+  - selected_organization: 현재 선택된 조직 (optional)
+  - url_helper: 조직 선택 시 호출할 URL 헬퍼 (optional, 기본값: organization_expenses_path)
+  - include_descendants_param: 하위 조직 포함 파라미터 이름 (optional, 기본값: include_descendants)
+  - additional_params: 추가 파라미터 해시 (optional)
+%>
+
+<%
+  url_helper ||= :organization_expenses_path
+  include_descendants_param ||= 'include_descendants'
+  additional_params ||= {}
+  selected_organization_id = selected_organization&.id
+%>
+
+<div class="organization-browser" data-controller="organization-selector">
+  <div class="p-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-900">조직 선택</h2>
+      <div class="flex gap-2">
+        <button type="button"
+                data-action="click->organization-selector#expandAll"
+                class="text-xs px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors">
+          모두 펼치기
+        </button>
+        <button type="button"
+                data-action="click->organization-selector#collapseAll"
+                class="text-xs px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors">
+          모두 접기
+        </button>
+      </div>
+    </div>
+    
+    <!-- 조직 트리 -->
+    <div class="space-y-1">
+      <% organizations.each do |org| %>
+        <%= render 'shared/organization_tree_node', 
+                   organization: org,
+                   selected_organization_id: selected_organization_id,
+                   level: 0,
+                   url_helper: url_helper,
+                   additional_params: additional_params %>
+      <% end %>
+    </div>
+    
+    <!-- 하위 조직 포함 토글 -->
+    <% if selected_organization %>
+      <div class="mt-4 pt-4 border-t">
+        <label class="flex items-center">
+          <input type="checkbox"
+                 data-action="change->organization-selector#toggleIncludeDescendants"
+                 data-organization-selector-target="includeDescendants"
+                 <%= params[include_descendants_param] != 'false' ? 'checked' : '' %>
+                 class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+          <span class="ml-2 text-sm text-gray-700">하위 조직 포함</span>
+        </label>
+      </div>
+    <% end %>
+  </div>
+</div>

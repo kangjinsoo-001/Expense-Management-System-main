@@ -1,0 +1,6 @@
+<div id="expense_sheet_total">
+  <p class="tremor-metric-value"><%= format_currency(expense_sheet.total_amount) %></p>
+  <p class="tremor-metric-delta">
+    <span class="text-gray-500"><%= expense_sheet.expense_items.count %>건의 경비 항목</span>
+  </p>
+</div>

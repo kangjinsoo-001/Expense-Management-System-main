@@ -1,0 +1,132 @@
+<%# 구성원 경비 상태 테이블 %>
+<%# Parameters: statuses - array of ExpenseClosingStatus objects %>
+
+<%= turbo_frame_tag "member_statuses" do %>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="w-12 px-6 py-3">
+            <input type="checkbox"
+                   data-action="change->closing-dashboard#toggleAllCheckboxes"
+                   data-closing-dashboard-target="selectAllCheckbox"
+                   class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            사원정보
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            상태
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            금액
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            항목수
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            제출일시
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            마감일시
+          </th>
+          <th scope="col" class="relative px-6 py-3">
+            <span class="sr-only">작업</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% if statuses.empty? %>
+          <tr>
+            <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+              해당 조건에 맞는 구성원이 없습니다.
+            </td>
+          </tr>
+        <% else %>
+          <% statuses.each do |status| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if status.can_close? %>
+                  <input type="checkbox"
+                         data-status-id="<%= status.id %>"
+                         data-closing-dashboard-target="statusCheckbox"
+                         data-action="change->closing-dashboard#checkboxChanged"
+                         class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">
+                      <%= status.user.name %>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      <%= status.user.employee_id %> | <%= status.user.organization&.name %>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= status.status_badge_class %>">
+                  <%= status.status_label %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <%= number_to_currency(status.total_amount, unit: "₩", precision: 0, format: "%u%n") %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <%= status.item_count %>건
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <% if status.expense_sheet %>
+                  <% if status.expense_sheet.submitted_at %>
+                    <%= l(status.expense_sheet.submitted_at, format: :short) %>
+                  <% else %>
+                    -
+                  <% end %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <% if status.closed_at %>
+                  <%= l(status.closed_at, format: :short) %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <% if status.expense_sheet %>
+                  <%= link_to "상세", 
+                              admin_expense_sheet_path(status.expense_sheet),
+                              class: "text-blue-600 hover:text-blue-900",
+                              data: { turbo_frame: "_top" } %>
+                <% elsif status.not_created? %>
+                  <span class="text-gray-400">미작성</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  
+  <% if statuses.any? %>
+    <!-- 하단 요약 -->
+    <div class="px-6 py-3 bg-gray-50 border-t">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          총 <%= statuses.count %>명 | 
+          총 금액: <%= number_to_currency(statuses.sum(&:total_amount), unit: "₩", precision: 0, format: "%u%n") %>
+        </div>
+        <div class="text-sm text-gray-500">
+          <% selected_count = statuses.count { |s| s.can_close? } %>
+          <% if selected_count > 0 %>
+            마감 가능: <%= selected_count %>명
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>

@@ -1,0 +1,35 @@
+<%# tbody 전체를 교체하여 Stimulus 컨트롤러 재연결 %>
+<%= turbo_stream.replace "calendar_grid" do %>
+  <tbody id="calendar_grid" 
+         class="bg-white">
+    <%= render partial: 'calendar_grid', locals: { 
+      filtered_rooms: @filtered_rooms, 
+      reservations: @reservations, 
+      date: @date, 
+      current_user: current_user,
+      highlight_reservation_id: @highlight_reservation_id
+    } %>
+  </tbody>
+<% end %>
+
+<%# 모달 숨기기 - JavaScript로 처리 %>
+<%= turbo_stream.append "flash_messages" do %>
+  <script>
+    (function() {
+      const modal = document.getElementById('newReservationModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        // 모달 내용 초기화
+        const frame = modal.querySelector('turbo-frame');
+        if (frame) {
+          frame.innerHTML = `
+            <div class="text-center py-4">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <p class="mt-2 text-sm text-gray-500">로딩 중...</p>
+            </div>
+          `;
+        }
+      }
+    })();
+  </script>
+<% end %>

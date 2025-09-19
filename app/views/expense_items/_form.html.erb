@@ -1,0 +1,553 @@
+<script>
+  window.expenseCodesData = <%= @expense_codes_data.to_json.html_safe %>;
+  window.approvalLinesData = <%= @approval_lines_data.to_json.html_safe %>;
+  window.currentUserGroups = <%= @current_user_groups.to_json.html_safe %>;
+</script>
+
+<%= turbo_frame_tag "expense_form" do %>
+  <%= form_with model: [expense_sheet, expense_item], 
+                id: dom_id(expense_item, :form),
+                data: { 
+                  turbo_frame: "_top", 
+                  controller: "expense-item-form autosave client-validation",
+                  action: "keydown->expense-item-form#preventEnterSubmit turbo:submit-start->autosave#cancelSave turbo:submit-end->autosave#resetDirty",
+                  expense_item_form_expense_sheet_id_value: expense_sheet.id,
+                  expense_item_form_expense_codes_data_value: @expense_codes_data.to_json,
+                  client_validation_expense_sheet_id_value: expense_sheet.id,
+                  edit_mode: expense_item.persisted? && !expense_item.is_draft,
+                  autosave_url_value: save_draft_expense_sheet_expense_items_path(expense_sheet),
+                  autosave_draft_id_value: expense_item.persisted? && expense_item.is_draft ? expense_item.id : nil,
+                  autosave_target: "form",
+                  sheet_year: expense_sheet.year,
+                  sheet_month: expense_sheet.month
+                } do |form| %>
+    
+    <!-- 자동 저장 상태 표시 영역 -->
+    <div id="autosave_status" class="mb-4 flex items-center justify-between">
+      <%= render "expense_items/autosave_status", 
+                 status: expense_item.is_draft ? "임시 저장됨" : nil,
+                 timestamp: expense_item.is_draft ? expense_item.last_saved_at : nil,
+                 draft_id: expense_item.is_draft ? expense_item.id : nil %>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-500" data-autosave-target="status"></span>
+        <button type="button" 
+                class="text-sm text-indigo-600 hover:text-indigo-500"
+                data-action="click->autosave#manualSave">
+          임시 저장
+        </button>
+      </div>
+    </div>
+    
+    <!-- 전체 에러 메시지 표시 -->
+    <% if expense_item.errors.any? %>
+      <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div class="flex">
+          <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">
+              <%= expense_item.errors.count %>개의 오류가 발생했습니다:
+            </h3>
+            <div class="mt-2 text-sm text-red-700">
+              <ul class="list-disc list-inside space-y-1">
+                <% expense_item.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    
+    <div class="space-y-6">
+      <!-- 1. 경비 발생일 -->
+      <div>
+        <%= form.label :expense_date, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          경비 발생일 <span class="text-red-500">*</span>
+        <% end %>
+        <p class="text-xs text-blue-600 mb-1">달력에서 경비가 발생한 날짜를 확인하고 필요시 수정해주세요</p>
+        <% 
+          # 기본값이 설정되어 있는지 확인
+          has_default_date = expense_item.expense_date.present?
+        %>
+        <%= form.date_field :expense_date, 
+                          value: expense_item.expense_date || Date.current,
+                          placeholder: "날짜를 선택하세요",
+                          autofocus: !expense_item.persisted?,
+                          data: { 
+                            action: "focus->expense-item-form#openDatePicker blur->expense-item-form#checkExpenseSheet change->client-validation#validateField change->expense-item-approval#revalidateApprovalLine",
+                            expense_item_form_target: "expenseDate",
+                            current_sheet_year: expense_sheet.year,
+                            current_sheet_month: expense_sheet.month,
+                            needs_validation: has_default_date ? "true" : "false"
+                          },
+                          class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm #{expense_item.errors[:expense_date].any? ? 'border-red-300' : 'border-gray-300'}" %>
+        <% if expense_item.errors[:expense_date].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:expense_date].first %></p>
+        <% end %>
+      </div>
+
+      <!-- 2. 경비 코드 -->
+      <div>
+        <%= form.label :expense_code_id, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          경비 코드 <span class="text-red-500">*</span>
+        <% end %>
+        <%= form.select :expense_code_id, 
+                      options_from_collection_for_select(expense_codes, :id, :name_with_code, expense_item.expense_code_id),
+                      { prompt: "경비 코드 선택" },
+                      { class: "mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm #{expense_item.errors[:expense_code_id].any? ? 'border-red-300' : 'border-gray-300'}",
+                        data: { 
+                          expense_item_form_target: "expenseCode",
+                          action: "change->expense-item-form#expenseCodeChanged change->expense-item-approval#revalidateApprovalLine",
+                          choices: true
+                        }
+                      } %>
+        <% if expense_item.errors[:expense_code_id].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:expense_code_id].first %></p>
+        <% elsif expense_item.errors[:expense_code].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:expense_code].first %></p>
+        <% end %>
+        
+        <!-- 가이드 정보 표시 영역 -->
+        <div id="expense_code_guide" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md <%= expense_item.expense_code.present? ? '' : 'hidden' %>">
+          <% if expense_item.expense_code.present? %>
+            <div class="flex items-start gap-2">
+              <svg class="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="text-sm text-blue-800">
+                <p class="font-medium"><%= expense_item.expense_code.name %></p>
+                <div class="text-xs mt-1 whitespace-pre-wrap"><%= expense_item.expense_code.description || '설명 없음' %></div>
+                <% if expense_item.expense_code.limit_amount.present? %>
+                  <p class="text-xs mt-1">한도: <span class="font-medium"><%= expense_item.expense_code.limit_amount_display %></span></p>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 3. 추가 필드 (경비 코드에 따라 동적으로 표시) -->
+      <%= turbo_frame_tag "custom_fields_container", data: { expense_item_form_target: "customFields" } do %>
+        <% if expense_item.expense_code.present? %>
+          <%= render partial: "custom_fields", locals: { expense_item: expense_item, form: form } %>
+        <% end %>
+      <% end %>
+
+      <!-- 4. 금액 -->
+      <div class="mt-6" data-controller="budget-mode">
+        <!-- 기존 예산 승인 항목인 경우 예산 정보 표시 -->
+        <% if expense_item.persisted? && expense_item.is_budget? && expense_item.budget_amount.present? %>
+          <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div class="flex items-start gap-2">
+              <svg class="h-5 w-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-blue-900">예산 승인 항목</p>
+                <p class="text-sm text-blue-700 mt-1">
+                  승인된 예산: <span class="font-semibold"><%= number_to_currency(expense_item.budget_amount, unit: "₩", format: "%u%n") %></span>
+                  <% if expense_item.budget_approved_at.present? %>
+                    <span class="text-xs text-blue-600 ml-2">(승인일: <%= expense_item.budget_approved_at.strftime('%Y-%m-%d') %>)</span>
+                  <% end %>
+                </p>
+                <% if expense_item.actual_amount.present? %>
+                  <p class="text-sm text-blue-700 mt-1">
+                    실제 집행: <span class="font-semibold"><%= number_to_currency(expense_item.actual_amount, unit: "₩", format: "%u%n") %></span>
+                    <% if expense_item.budget_exceeded? %>
+                      <span class="text-xs text-red-600 ml-2">(예산 초과)</span>
+                    <% end %>
+                  </p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 실제 집행 금액 입력 필드 -->
+          <div data-controller="budget-execution" 
+               data-budget-execution-budget-value="<%= expense_item.budget_amount %>">
+            <%= form.label :actual_amount, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+              실제 집행 금액 <span class="text-red-500">*</span>
+              <span class="text-xs text-gray-500 ml-2">(예산: <%= number_to_currency(expense_item.budget_amount, unit: "₩", format: "%u%n") %>)</span>
+            <% end %>
+            <%= form.number_field :actual_amount, 
+                                step: 1,
+                                class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm #{expense_item.errors[:actual_amount].any? ? 'border-red-300' : 'border-gray-300'}",
+                                placeholder: "실제 사용한 금액을 입력하세요",
+                                data: {
+                                  budget_execution_target: "actualAmount",
+                                  action: "input->budget-execution#onActualAmountChange"
+                                } %>
+            <% if expense_item.errors[:actual_amount].any? %>
+              <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:actual_amount].first %></p>
+            <% end %>
+            
+            <!-- 예산 정보 표시 영역 -->
+            <div data-budget-execution-target="budgetInfo"></div>
+            
+            <!-- 예산 초과 시 사유 입력 -->
+            <div class="mt-3 <%= expense_item.actual_amount.present? && expense_item.budget_amount.present? && expense_item.actual_amount > expense_item.budget_amount ? '' : 'hidden' %>"
+                 data-budget-execution-target="excessReasonField">
+              <%= form.label :excess_reason, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+                예산 초과 사유 <span class="text-red-500">*</span>
+              <% end %>
+              <%= form.text_area :excess_reason, 
+                                rows: 2,
+                                class: "mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm",
+                                placeholder: "예산을 초과한 사유를 입력해주세요",
+                                required: expense_item.actual_amount.present? && expense_item.budget_amount.present? && expense_item.actual_amount > expense_item.budget_amount %>
+              <% if expense_item.errors[:excess_reason].any? %>
+                <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:excess_reason].first %></p>
+              <% end %>
+            </div>
+          </div>
+          
+          <!-- 숨겨진 필드들 -->
+          <%= form.hidden_field :is_budget, value: true %>
+          <%= form.hidden_field :budget_amount %>
+        <% else %>
+          <!-- 신규 생성 또는 일반 항목인 경우 기존 UI -->
+          <!-- 예산 사전 입력 체크박스 -->
+          <div class="mb-3">
+            <label class="inline-flex items-center">
+              <%= form.check_box :is_budget, 
+                                class: "rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50",
+                                data: { 
+                                  budget_mode_target: "checkbox",
+                                  action: "change->budget-mode#toggleMode change->expense-item-approval#revalidateApprovalLine"
+                                } %>
+              <span class="ml-2 text-sm text-gray-700">예산 사전 입력</span>
+            </label>
+          </div>
+          
+          <!-- 금액 입력 필드 -->
+          <div data-budget-mode-target="normalMode" class="<%= expense_item.budget_mode? ? 'hidden' : '' %>">
+            <%= form.label :amount, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+              금액 <span class="text-red-500">*</span>
+            <% end %>
+            <%= form.number_field :amount, 
+                                step: 1,
+                                value: expense_item.budget_mode? ? nil : expense_item.amount,
+                                class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm #{expense_item.errors[:amount].any? ? 'border-red-300' : 'border-gray-300'}",
+                                data: { 
+                                  expense_item_form_target: "amount",
+                                  budget_mode_target: "amountField",
+                                  action: "input->client-validation#validateField input->expense-item-approval#revalidateApprovalLine"
+                                } %>
+            <% if expense_item.errors[:amount].any? %>
+              <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:amount].first %></p>
+            <% end %>
+          </div>
+          
+          <!-- 예산 금액 입력 필드 -->
+          <div data-budget-mode-target="budgetMode" class="<%= expense_item.budget_mode? ? '' : 'hidden' %>">
+            <%= form.label :budget_amount, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+              예산 금액 <span class="text-red-500">*</span>
+            <% end %>
+            <%= form.number_field :budget_amount, 
+                                step: 1,
+                                class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm #{expense_item.errors[:budget_amount].any? ? 'border-red-300' : 'border-gray-300'}",
+                                data: { 
+                                  budget_mode_target: "budgetAmountField",
+                                  action: "input->budget-mode#onBudgetAmountChange input->expense-item-approval#revalidateApprovalLine"
+                                } %>
+            <% if expense_item.errors[:budget_amount].any? %>
+              <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:budget_amount].first %></p>
+            <% end %>
+            
+            <!-- 예산 모드 안내 메시지 -->
+            <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <div class="flex">
+                <svg class="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="text-sm text-yellow-700">
+                  예산 모드에서는 승인 후 실제 집행 금액을 별도로 입력할 수 있습니다.
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 5. 코스트 센터 -->
+      <div>
+        <%= form.label :cost_center_id, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          코스트 센터 <span class="text-red-500">*</span>
+        <% end %>
+        <!-- Debug: Cost centers count = <%= cost_centers.count rescue "Error: #{$!.message}" %> -->
+        <% if cost_centers.nil? || cost_centers.empty? %>
+          <!-- Warning: No cost centers available -->
+        <% end %>
+        <%= form.select :cost_center_id, 
+                      options_from_collection_for_select(cost_centers || [], :id, :name_with_code, expense_item.cost_center_id),
+                      { prompt: "코스트 센터 선택" },
+                      { class: "mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm #{expense_item.errors[:cost_center_id].any? ? 'border-red-300' : 'border-gray-300'}",
+                        data: { 
+                          expense_item_form_target: "costCenter",
+                          action: "change->client-validation#validateImmediately change->expense-item-approval#revalidateApprovalLine",
+                          choices: true
+                        } } %>
+        <% if expense_item.errors[:cost_center_id].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:cost_center_id].first %></p>
+        <% end %>
+      </div>
+      
+      <!-- 6. 결재선 선택 -->
+      <div class="mt-6">
+        <%= turbo_frame_tag "approval_line_section" do %>
+        <div data-controller="expense-item-approval" 
+             data-expense-item-approval-selected-value="<%= expense_item.approval_line_id %>"
+             data-expense-item-approval-expense-sheet-id-value="<%= expense_sheet.id %>"
+             data-expense-item-approval-expense-codes-value="<%= expense_codes.to_json %>">
+          
+          <%= form.label :approval_line_id, "결재선", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        
+        <% if @approval_lines.any? %>
+          <!-- 결재선 칩 목록 -->
+          <div class="flex flex-wrap gap-2 mb-3">
+            <!-- 결재선 없음 옵션을 첫 번째로 -->
+            <label class="inline-flex items-center cursor-pointer relative">
+              <%= form.radio_button :approval_line_id, "", 
+                                   checked: expense_item.approval_line_id.blank?,
+                                   class: "sr-only peer",
+                                   data: { 
+                                     expense_item_approval_target: "radio",
+                                     action: "change->expense-item-approval#selectApprovalLine focus->expense-item-approval#handleFocus blur->expense-item-approval#handleBlur",
+                                     approval_line_id: ""
+                                   } %>
+              <span class="chip-selector px-3 py-1 text-sm rounded-full border transition-all
+                         peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-gray-500
+                         <%= expense_item.approval_line_id.blank? ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400' %>"
+                    data-expense-item-approval-target="chip">
+                결재 없음
+              </span>
+            </label>
+            
+            <!-- 사용자가 만든 결재선들 -->
+            <% @approval_lines.each do |approval_line| %>
+              <label class="inline-flex items-center cursor-pointer relative">
+                <%= form.radio_button :approval_line_id, approval_line.id, 
+                                     class: "sr-only peer",
+                                     data: { 
+                                       expense_item_approval_target: "radio",
+                                       action: "change->expense-item-approval#selectApprovalLine focus->expense-item-approval#handleFocus blur->expense-item-approval#handleBlur",
+                                       approval_line_id: approval_line.id
+                                     } %>
+                <span class="chip-selector px-3 py-1 text-sm rounded-full border transition-all
+                           peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-gray-500
+                           <%= expense_item.approval_line_id == approval_line.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400' %>"
+                      data-expense-item-approval-target="chip">
+                  <%= approval_line.name %>
+                  <% first_approver = approval_line.approval_line_steps.ordered.approvers.first&.approver %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+          
+          <!-- 선택된 결재선의 승인자 미리보기 -->
+          <div class="approval-preview <%= expense_item.approval_line_id.present? ? '' : 'hidden' %>" 
+               data-expense-item-approval-target="preview">
+            <% if expense_item.approval_line_id.present? %>
+              <%= render partial: "approval_line_preview", locals: { approval_line: expense_item.approval_line } %>
+            <% end %>
+          </div>
+          
+          <!-- 검증 메시지 영역 (Turbo Stream이 업데이트할 영역) -->
+          <div id="expense_code_validation">
+            <!-- 에러 메시지 표시 -->
+            <% if expense_item.errors[:approval_line].any? %>
+              <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-md" data-approval-error-container>
+                <div class="flex items-start gap-2">
+                  <svg class="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="text-sm text-red-800">
+                    <% expense_item.errors[:approval_line].each do |error| %>
+                      <p><%= error %></p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          
+        <% else %>
+          <p class="text-sm text-gray-500">설정된 결재선이 없습니다. 
+            <%= link_to "결재선 관리", approval_lines_path, class: "text-indigo-600 hover:text-indigo-500", target: "_blank" %>에서 결재선을 먼저 생성해주세요.
+          </p>
+        <% end %>
+        </div>
+        <% end %>
+      </div>
+      
+      <!-- 7. 첨부 파일 -->
+      <div class="mt-6" 
+           data-controller="attachment-uploader"
+           data-attachment-uploader-expense-sheet-id-value="<%= expense_item.expense_sheet_id %>"
+           data-attachment-uploader-expense-item-id-value="<%= expense_item.id %>">
+        <%= form.label :attachments, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          첨부 파일
+          <% if expense_item.expense_code&.attachment_required? %>
+            <% if expense_item.persisted? && expense_item.is_budget? && expense_item.budget_amount.present? %>
+              <!-- 예산 승인 후 실제 집행 단계에서는 첨부파일 필수 -->
+              <span class="text-red-500">*</span>
+            <% elsif expense_item.budget_mode? && !expense_item.persisted? %>
+              <!-- 신규 예산 모드 생성 시에만 선택사항 -->
+            <% else %>
+              <!-- 일반 모드에서는 항상 필수 -->
+              <span class="text-red-500">*</span>
+            <% end %>
+          <% end %>
+        <% end %>
+        
+        <% if expense_item.errors[:attachments].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= expense_item.errors[:attachments].first %></p>
+        <% end %>
+        
+        <div class="space-y-3">
+          <!-- 파일 업로드 영역 -->
+          <div class="flex items-center space-x-3">
+            <input type="file"
+                   accept="application/pdf,image/jpeg,image/jpg,image/png"
+                   multiple
+                   class="hidden"
+                   data-attachment-uploader-target="fileInput"
+                   data-action="change->attachment-uploader#fileSelected" />
+            
+            <button type="button"
+                    data-action="click->attachment-uploader#triggerFileSelect"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              파일 선택
+            </button>
+            
+            <span class="text-xs text-gray-500">
+              PDF, JPG, PNG 파일 (10MB 이하)
+            </span>
+          </div>
+          
+          <!-- 검증 메시지 영역 (파일 선택 버튼 바로 아래) -->
+          <div id="validation-messages"></div>
+          
+          <!-- 첨부된 파일 목록 -->
+          <div data-attachment-uploader-target="attachmentsList" class="space-y-2">
+            <% if @expense_item && @expense_item.expense_attachments.any? %>
+              <% Rails.logger.debug "Rendering #{@expense_item.expense_attachments.count} attachments in view" %>
+              <% @expense_item.expense_attachments.each do |attachment| %>
+                <% Rails.logger.debug "Rendering attachment ##{attachment.id}: status='#{attachment.status}' (#{attachment.status.class}), has_text=#{attachment.extracted_text.present?}" %>
+                <% Rails.logger.debug "  Button condition: (#{attachment.status} == 'completed') && #{attachment.extracted_text.present?} => #{attachment.status == 'completed' && attachment.extracted_text.present?}" %>
+                <!-- 기존 첨부파일 ID를 hidden field로 전달 -->
+                <input type="hidden" name="attachment_ids[]" value="<%= attachment.id %>" data-existing-attachment="<%= attachment.id %>" />
+                <div id="attachment-<%= attachment.id %>" class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg mb-2 hover:shadow-sm transition-shadow">
+                  <div class="flex items-center flex-1">
+                    <svg class="h-8 w-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-gray-900"><%= attachment.file_name %></p>
+                      <p class="text-xs <%= attachment.status == 'completed' ? 'text-green-600' : attachment.status == 'processing' ? 'text-yellow-600' : 'text-gray-500' %>" 
+                         data-status-id="<%= attachment.id %>">
+                        <%= attachment.status == 'completed' ? 'AI 분석 완료' : attachment.status == 'processing' ? 'AI 분석 중...' : attachment.status %>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <% if attachment.status == 'completed' && (attachment.ai_processed || attachment.summary_data.present?) %>
+                      <button type="button" 
+                              class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
+                              data-view-btn-id="<%= attachment.id %>"
+                              data-action="click->attachment-uploader#viewSummary"
+                              data-attachment-id="<%= attachment.id %>"
+                              data-summary-data="<%= html_escape(attachment.parsed_summary.to_json) %>"
+                              data-receipt-type="<%= attachment.receipt_type %>">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        내용 보기
+                      </button>
+                    <% else %>
+                      <button type="button" 
+                              class="hidden text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
+                              data-view-btn-id="<%= attachment.id %>"
+                              data-action="click->attachment-uploader#viewExtractedText"
+                              data-attachment-id="<%= attachment.id %>">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        내용 보기
+                      </button>
+                    <% end %>
+                    <button type="button"
+                            class="text-gray-400 hover:text-red-500"
+                            data-action="click->attachment-uploader#removeAttachment"
+                            data-attachment-id="<%= attachment.id %>">
+                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+          
+          <!-- 숨겨진 필드들 (추출된 데이터 저장용) -->
+          <%= form.hidden_field :extracted_amount, data: { expense_item_form_target: "extractedAmount" } %>
+          <%= form.hidden_field :extracted_date, data: { expense_item_form_target: "extractedDate" } %>
+          <%= form.hidden_field :extracted_vendor, data: { expense_item_form_target: "extractedVendor" } %>
+        </div>
+      </div>
+      
+      <!-- 8. 설명 필드 (숨김 처리 - 자동 생성) -->
+      <%= form.hidden_field :description, 
+                          value: expense_item.description.presence || "자동 생성",
+                          data: { 
+                            expense_item_form_target: "description"
+                          } %>
+      
+      <!-- 9. 비고 (선택) -->
+      <div class="mt-6">
+        <%= form.label :remarks, "비고", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= form.text_area :remarks, 
+                          rows: 3,
+                          class: "mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm",
+                          placeholder: "추가 메모가 필요한 경우 입력하세요 (선택사항)" %>
+      </div>
+    </div>
+
+    <!-- 숨겨진 필드 - 임시 저장 ID -->
+    <input type="hidden" name="draft_id" data-autosave-target="draftId" value="<%= @draft_id || (expense_item.persisted? && expense_item.is_draft ? expense_item.id : nil) %>" />
+    
+    <!-- 버튼 영역 -->
+    <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end gap-3">
+      <%= link_to "취소", expense_sheets_path, 
+                class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      
+      <!-- 저장 버튼 wrapper (툴팁 표시용) -->
+      <div class="relative" data-client-validation-target="submitButtonWrapper">
+        <%= form.submit "저장", 
+                      class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500",
+                      data: { 
+                        client_validation_target: "submitButton",
+                        action: "click->client-validation#validateAll"
+                      } %>
+        <!-- 커스텀 툴팁 -->
+        <div class="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap hidden z-50"
+             data-client-validation-target="tooltip">
+          <span data-client-validation-target="tooltipText"></span>
+          <div class="absolute top-full right-3 -mt-1">
+            <div class="border-4 border-transparent border-t-gray-900"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+

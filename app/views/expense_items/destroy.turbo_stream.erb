@@ -1,0 +1,31 @@
+<%= turbo_stream.remove "expense_item_#{@expense_item.id}" %>
+<%= turbo_stream.remove "expense_item_mobile_#{@expense_item.id}" %>
+
+<%= turbo_stream.replace "expense_sheet_total" do %>
+  <%= render partial: "expense_sheets/total_amount", locals: { expense_sheet: @expense_sheet } %>
+<% end %>
+
+<%= turbo_stream.update "expense_items_count" do %>
+  <%= @expense_sheet.expense_items.count %>
+<% end %>
+
+<%= turbo_stream.prepend "flash_messages" do %>
+  <%= render partial: "shared/flash_message", locals: { type: :notice, message: '경비 항목이 삭제되었습니다.' } %>
+<% end %>
+
+<%# 항목이 없는 경우 빈 메시지 표시 %>
+<% if @expense_sheet.expense_items.count == 0 %>
+  <%= turbo_stream.update "expense_items" do %>
+    <tr id="empty_items_message">
+      <td colspan="6" class="text-center py-12 text-sm text-gray-500">
+        아직 경비 항목이 없습니다.
+      </td>
+    </tr>
+  <% end %>
+  
+  <%= turbo_stream.update "expense_items_mobile" do %>
+    <div id="empty_items_message" class="text-center py-12">
+      <p class="text-sm text-gray-500">아직 경비 항목이 없습니다.</p>
+    </div>
+  <% end %>
+<% end %>

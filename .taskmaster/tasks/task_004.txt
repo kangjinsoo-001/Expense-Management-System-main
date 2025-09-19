@@ -1,0 +1,57 @@
+# Task ID: 4
+# Title: 승인 대시보드 구현
+# Status: done
+# Dependencies: 1, 3
+# Priority: high
+# Description: 승인자를 위한 승인 대기 목록 및 처리 화면 구현
+# Details:
+- 승인 대기 항목 목록 표시
+- 역할별 필터링 (승인/참조)
+- 승인/반려 처리 기능
+- 승인 의견 및 반려 사유 입력
+- 결재 진행 상태 시각화
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. ApprovalsController 생성 [done]
+### Dependencies: None
+### Description: 승인 대시보드를 위한 컨트롤러 생성
+### Details:
+- rails generate controller Approvals
+- index: 승인 대기 목록 표시
+- show: 승인 상세 정보 표시
+- approve/reject 액션 구현
+
+## 2. 승인 대기 목록 화면 구현 [done]
+### Dependencies: None
+### Description: 승인자가 처리해야 할 항목 목록 화면 구현
+### Details:
+- approvals/index.html.erb 구현
+- 현재 사용자가 승인해야 할 항목만 표시
+- 역할별 탭 (승인/참조)
+- 필터링 및 정렬 기능
+- 페이지네이션
+
+## 3. 승인 상세 화면 및 처리 기능 구현 [done]
+### Dependencies: None
+### Description: 개별 승인 항목의 상세 정보 표시 및 승인/반려 처리
+### Details:
+- approvals/show.html.erb 구현
+- 경비 항목 상세 정보 표시
+- 결재 진행 상태 타임라인
+- 승인/반려 버튼 및 의견 입력 폼
+- Turbo를 활용한 실시간 업데이트
+
+## 4. 승인/반려 처리 로직 구현 [done]
+### Dependencies: None
+### Description: 승인자가 승인 또는 반려를 처리하는 서비스 로직 구현
+### Details:
+- ApprovalService 또는 ApprovalRequest 모델에 처리 메서드 구현
+- 승인 처리: process_approval(approver, action, comment)
+- 전체 승인 필요/단일 승인 가능 로직 처리
+- 다음 단계로 진행 또는 완료 처리
+- 반려 시 전체 프로세스 중단
+- ApprovalHistory 기록 생성
+

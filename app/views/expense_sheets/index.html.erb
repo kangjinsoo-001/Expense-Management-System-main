@@ -1,0 +1,66 @@
+<%# 이 페이지에 대해서만 Turbo 캐시 완전 비활성화 %>
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- 월 네비게이션 헤더 - Tremor 스타일 -->
+  <div class="tremor-card px-6 py-4 mb-6 flex items-center justify-between">
+    <!-- 이전 달 버튼 -->
+    <%= link_to expense_sheets_path(year: @prev_date.year, month: @prev_date.month),
+                class: "inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-50 transition-colors",
+                data: { turbo_frame: "_top" } do %>
+      <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+    
+    <!-- 현재 달 표시 -->
+    <div class="flex items-center gap-4">
+      <h1 class="text-2xl font-semibold text-gray-900">
+        <%= "#{@year}년 #{@month}월" %>
+      </h1>
+      <div class="h-6 w-px bg-gray-300"></div>
+      <%= link_to "전체 목록 보기", list_expense_sheets_path,
+                  class: "text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" %>
+    </div>
+    
+    <!-- 다음 달 버튼 -->
+    <%= link_to expense_sheets_path(year: @next_date.year, month: @next_date.month),
+                class: "inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-50 transition-colors",
+                data: { turbo_frame: "_top" } do %>
+      <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    <% end %>
+  </div>
+
+  <!-- 경비 시트 내용 -->
+  <% if @expense_sheet %>
+    <%= render 'expense_sheet_content', expense_sheet: @expense_sheet, expense_items: @expense_items %>
+  <% else %>
+    <!-- 경비 시트가 없는 경우 - Tremor 스타일 -->
+    <div class="tremor-card">
+      <div class="px-8 py-16 text-center">
+        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100">
+          <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">경비 시트가 없습니다</h3>
+        <p class="mt-2 text-sm text-gray-500">
+          <%= "#{@year}년 #{@month}월 경비 시트가 아직 생성되지 않았습니다." %>
+        </p>
+        <div class="mt-8">
+          <%= link_to new_expense_sheet_path(year: @year, month: @month),
+                      class: "tremor-button-primary" do %>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            경비 시트 생성하기
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

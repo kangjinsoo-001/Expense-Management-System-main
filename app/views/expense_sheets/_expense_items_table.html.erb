@@ -1,0 +1,33 @@
+<div id="expense_items_table" class="overflow-x-auto"
+     <% if expense_sheet.editable? %>
+     data-controller="expense-items-sorter"
+     data-expense-items-sorter-sheet-id-value="<%= expense_sheet.id %>"
+     data-expense-items-sorter-sort-url-value="<%= sort_items_expense_sheet_path(expense_sheet) %>"
+     data-expense-items-sorter-bulk-sort-url-value="<%= bulk_sort_items_expense_sheet_path(expense_sheet) %>"
+     <% end %>>
+  <table class="tremor-table">
+    <thead>
+      <tr>
+        <% if expense_sheet.editable? %>
+          <th class="w-10 px-2">
+            <span class="sr-only">드래그</span>
+          </th>
+        <% end %>
+        <th class="text-left">날짜</th>
+        <th class="text-left">경비 코드</th>
+        <th class="text-left">설명</th>
+        <th class="text-right">금액</th>
+        <th class="text-center">검증 상태</th>
+        <th class="text-center">결재 진행률</th>
+        <% if expense_sheet.editable? %>
+          <th class="text-center">작업</th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody <% if expense_sheet.editable? %>data-expense-items-sorter-target="list"<% end %>>
+      <% expense_items.each do |item| %>
+        <%= render partial: "expense_items/expense_item", locals: { expense_item: item } %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

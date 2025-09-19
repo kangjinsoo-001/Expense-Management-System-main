@@ -1,0 +1,74 @@
+<!-- 정렬 버튼 그룹 -->
+<div class="flex flex-wrap gap-2" 
+     data-controller="expense-items-sorter"
+     data-expense-items-sorter-sheet-id-value="<%= expense_sheet.id %>"
+     data-expense-items-sorter-sort-url-value="<%= sort_items_expense_sheet_path(expense_sheet) %>"
+     data-expense-items-sorter-bulk-sort-url-value="<%= bulk_sort_items_expense_sheet_path(expense_sheet) %>">
+  <!-- 날짜순 -->
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByDate"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+    </svg>
+    날짜순↑
+  </button>
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByDateDesc"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"/>
+    </svg>
+    날짜순↓
+  </button>
+  <!-- 생성순 -->
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByCreation"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+    </svg>
+    생성순↑
+  </button>
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByCreationDesc"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"/>
+    </svg>
+    생성순↓
+  </button>
+  <!-- 금액순 -->
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByAmount"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+    </svg>
+    금액순↑
+  </button>
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByAmountDesc"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"/>
+    </svg>
+    금액순↓
+  </button>
+  <!-- 경비코드순 -->
+  <button type="button"
+          data-action="click->expense-items-sorter#sortByExpenseCode"
+          data-expense-items-sorter-target="sortButton"
+          class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+    </svg>
+    경비코드순
+  </button>
+</div>

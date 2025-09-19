@@ -1,0 +1,121 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice:
+  email: alice@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Alice
+  employee_id: EMP001
+  role: admin
+  organization: one
+
+bob:
+  email: bob@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Bob
+  employee_id: EMP002
+  role: manager
+  organization: two
+
+employee_one:
+  email: test1@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: 테스트사용자1
+  employee_id: EMP003
+  role: employee
+  organization: one
+
+manager_one:
+  email: test2@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: 테스트사용자2
+  employee_id: EMP004
+  role: manager
+  organization: one
+
+one:
+  email: one@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: User One
+  employee_id: EMP005
+  role: employee
+  organization: one
+
+user_one:
+  email: user_one@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: User One
+  employee_id: EMP015
+  role: employee
+  organization: talenx_bu
+
+user_two:
+  email: user_two@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: User Two
+  employee_id: EMP016
+  role: manager
+  organization: talenx_bu
+
+employee:
+  email: employee@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Employee User
+  employee_id: EMP006
+  role: employee
+  organization: one
+
+manager:
+  email: manager@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Manager User
+  employee_id: EMP007
+  role: manager
+  organization: one
+
+finance:
+  email: finance@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Finance User
+  employee_id: EMP008
+  role: finance
+  organization: one
+
+admin:
+  email: admin@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Admin User
+  employee_id: EMP009
+  role: admin
+  organization: one
+
+john:
+  email: john@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: John Doe
+  employee_id: EMP010
+  role: employee
+  organization: engineering
+
+jane:
+  email: jane@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Jane Smith
+  employee_id: EMP011
+  role: manager
+  organization: engineering
+
+alice_engineering:
+  email: alice.eng@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: Alice Engineering
+  employee_id: EMP012
+  role: employee
+  organization: engineering
+
+two:
+  email: two@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  name: User Two
+  employee_id: EMP013
+  role: employee
+  organization: two

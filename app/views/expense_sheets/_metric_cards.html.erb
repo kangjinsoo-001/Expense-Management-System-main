@@ -1,0 +1,48 @@
+<!-- 메트릭 카드 그리드 -->
+<div id="metric_cards" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <!-- 총 경비 카드 -->
+  <div class="tremor-metric-card">
+    <p class="tremor-metric-label">총 경비</p>
+    <div id="expense_sheet_total">
+      <p class="tremor-metric-value"><%= format_currency(expense_sheet.total_amount) %></p>
+      <p class="tremor-metric-delta">
+        <span class="text-gray-500"><%= expense_sheet.expense_items.count %>건의 경비 항목</span>
+      </p>
+    </div>
+  </div>
+  
+  <!-- 상태 카드 -->
+  <div class="tremor-metric-card">
+    <p class="tremor-metric-label">경비 항목 진행 상태</p>
+    <div class="flex items-center gap-2 mt-2">
+      <% status_classes = {
+        'draft' => 'tremor-badge-gray',
+        'submitted' => 'tremor-badge-blue',
+        'approved' => 'tremor-badge-success',
+        'rejected' => 'tremor-badge-error',
+        'closed' => 'tremor-badge-blue'
+      } %>
+      <span class="<%= status_classes[expense_sheet.status] %> tremor-badge">
+        <%= t("expense_sheet.status.#{expense_sheet.status}") %>
+      </span>
+    </div>
+    
+    <% if expense_sheet.submitted_at.present? %>
+      <p class="tremor-metric-delta mt-2">
+        제출일: <%= expense_sheet.submitted_at.strftime("%Y-%m-%d %H:%M") %>
+      </p>
+    <% end %>
+    
+    <% if expense_sheet.approved_by.present? %>
+      <p class="tremor-metric-delta">
+        승인자: <%= expense_sheet.approved_by.name %> (<%= expense_sheet.approved_at&.strftime("%Y-%m-%d") %>)
+      </p>
+    <% end %>
+    
+    <% if expense_sheet.status_rejected? && expense_sheet.rejection_reason.present? %>
+      <p class="tremor-metric-delta text-red-600">
+        반려 사유: <%= expense_sheet.rejection_reason %>
+      </p>
+    <% end %>
+  </div>
+</div>

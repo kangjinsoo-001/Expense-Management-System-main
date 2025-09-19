@@ -1,0 +1,11 @@
+# Task ID: 39
+# Title: 회의실 예약 시스템 데이터베이스 모델 설계
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Room, RoomReservation, RecurringReservationRule 모델 및 마이그레이션 생성
+# Details:
+회의실 정보(이름, 층), 예약 정보(신청자, 날짜, 시간, 사용 목적), 반복 예약 규칙을 관리하는 모델 생성. 필요한 인덱스와 제약조건 설정
+
+# Test Strategy:
+

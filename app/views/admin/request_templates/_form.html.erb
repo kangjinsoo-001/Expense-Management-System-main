@@ -1,0 +1,240 @@
+<%= form_with model: [:admin, request_template], html: { class: "space-y-6" } do |f| %>
+  <% if request_template.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <strong class="font-bold">오류가 발생했습니다:</strong>
+      <ul class="mt-2 list-disc list-inside">
+        <% request_template.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Basic Info -->
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+        기본 정보
+      </h3>
+      
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Category -->
+        <div>
+          <%= f.label :request_category_id, "카테고리", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.select :request_category_id, 
+              options_for_select(@categories.map { |c| [c.name, c.id] }, request_template.request_category_id),
+              { prompt: "카테고리를 선택하세요" },
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+        </div>
+
+        <!-- Name -->
+        <div>
+          <%= f.label :name, "템플릿명", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :name, 
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+              placeholder: "예: 사용자 계정 신청서" %>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <%= f.label :description, "설명", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :description, 
+              rows: 3,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+              placeholder: "템플릿에 대한 간단한 설명을 입력하세요" %>
+        </div>
+
+        <!-- Status -->
+        <div class="flex items-center">
+          <%= f.check_box :is_active, class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" %>
+          <%= f.label :is_active, "활성화", class: "ml-2 block text-sm text-gray-700" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fields -->
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          필드
+        </h3>
+        <button type="button" 
+                onclick="addField()"
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+          <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          필드 추가
+        </button>
+      </div>
+      
+      <div id="fields-container" class="space-y-3">
+        <% if request_template.fields.present? %>
+          <% request_template.fields.each_with_index do |field, index| %>
+            <%= render 'field_item', field: field, index: index %>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <% if request_template.fields.blank? %>
+        <p class="text-sm text-gray-500 mt-2" id="fields-empty">
+          필드가 없습니다. 위의 "필드 추가" 버튼을 클릭하여 추가하세요.
+        </p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Approval Rules -->
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          승인 규칙
+        </h3>
+      </div>
+      
+      <div id="approval-rules-container" class="space-y-3">
+        <% if request_template.persisted? && request_template.request_template_approval_rules.any? %>
+          <% request_template.request_template_approval_rules.includes(:approver_group).order(:order).each do |rule| %>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center">
+                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-indigo-100 text-indigo-800 text-sm font-medium mr-3">
+                  <%= rule.order %>
+                </span>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= rule.approver_group.name %>
+                  </p>
+                </div>
+              </div>
+              <%= link_to "삭제", "#", class: "text-red-600 hover:text-red-900 text-sm", 
+                  onclick: "removeApprovalRule(this); return false;" %>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="text-sm text-gray-500">템플릿 생성 후 승인 규칙을 설정할 수 있습니다.</p>
+        <% end %>
+      </div>
+      
+      <% if request_template.persisted? %>
+        <div class="mt-4 pt-4 border-t">
+          <p class="text-sm text-gray-600">
+            템플릿 저장 후 수정 페이지에서 승인 규칙을 추가/수정할 수 있습니다.
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+
+  <!-- Submit Buttons -->
+  <div class="flex justify-end space-x-3">
+    <%= link_to "취소", admin_request_templates_path, 
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit request_template.persisted? ? "수정" : "생성", 
+        class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+  </div>
+<% end %>
+
+<script>
+  let fieldIndex = <%= request_template.fields&.size || 0 %>;
+
+  function addField() {
+    const container = document.getElementById('fields-container');
+    const emptyMessage = document.getElementById('fields-empty');
+    
+    if (emptyMessage) {
+      emptyMessage.style.display = 'none';
+    }
+    
+    const fieldHtml = createFieldHtml(fieldIndex++);
+    container.insertAdjacentHTML('beforeend', fieldHtml);
+  }
+
+  function createFieldHtml(index) {
+    return `
+      <div class="field-item bg-gray-50 p-4 rounded-lg">
+        <div class="flex justify-between items-start mb-3">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            필드 ${index + 1}
+          </span>
+          <button type="button" onclick="removeField(this)" class="text-red-600 hover:text-red-900">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700">필드 키</label>
+            <input type="text" 
+                   name="request_template[fields][][field_key]"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                   placeholder="예: user_name"
+                   required>
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700">필드 라벨</label>
+            <input type="text" 
+                   name="request_template[fields][][field_label]"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                   placeholder="예: 사용자명"
+                   required>
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700">필드 타입</label>
+            <select name="request_template[fields][][field_type]"
+                    onchange="toggleOptions(this)"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    required>
+              <option value="text">텍스트</option>
+              <option value="textarea">긴 텍스트</option>
+              <option value="select">선택</option>
+              <option value="date">날짜</option>
+              <option value="checkbox">체크박스</option>
+              <option value="file">파일</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <div class="field-options" style="display: none;">
+            <label class="block text-xs font-medium text-gray-700">선택 옵션 (쉼표로 구분)</label>
+            <input type="text" 
+                   name="request_template[fields][][field_options][]"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                   placeholder="예: 옵션1, 옵션2, 옵션3">
+          </div>
+          
+          <div class="flex items-center">
+            <input type="checkbox" 
+                   name="request_template[fields][][is_required]"
+                   value="true"
+                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label class="ml-2 block text-sm text-gray-900">
+              필수 필드
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function removeField(button) {
+    button.closest('.field-item').remove();
+  }
+
+  function toggleOptions(select) {
+    const optionsDiv = select.closest('.field-item').querySelector('.field-options');
+    if (select.value === 'select') {
+      optionsDiv.style.display = 'block';
+    } else {
+      optionsDiv.style.display = 'none';
+    }
+  }
+</script>

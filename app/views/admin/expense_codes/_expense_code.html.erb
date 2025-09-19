@@ -1,0 +1,82 @@
+  <tr id="<%= dom_id(expense_code) %>">
+    <td class="font-medium">
+      <%= expense_code.code %>
+    </td>
+    <td>
+      <%= expense_code.name %>
+    </td>
+  <td class="text-right font-semibold">
+    <%= expense_code.limit_amount_display || "-" %>
+  </td>
+  <td>
+    <% if expense_code.organization %>
+      <span class="tremor-badge tremor-badge-gray"><%= expense_code.organization.name %></span>
+    <% else %>
+      <span class="text-gray-500">전체</span>
+    <% end %>
+  </td>
+  <td>
+    <% if expense_code.required_fields.present? %>
+      <div class="flex items-center gap-2">
+        <span class="font-medium"><%= expense_code.required_fields.size %>개</span>
+        <% if expense_code.attachment_required? %>
+          <span class="tremor-badge tremor-badge-blue" title="첨부파일 필수">
+            <svg class="h-3 w-3 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            첨부필수
+          </span>
+        <% end %>
+        <span class="tremor-badge tremor-badge-gray">v<%= expense_code.version %></span>
+      </div>
+    <% else %>
+      <div class="flex items-center gap-2">
+        <span class="text-gray-500">-</span>
+        <% if expense_code.attachment_required? %>
+          <span class="tremor-badge tremor-badge-blue" title="첨부파일 필수">
+            <svg class="h-3 w-3 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            첨부필수
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </td>
+  <td>
+    <span class="<%= expense_code.active? ? 'tremor-badge-success' : 'tremor-badge-error' %> tremor-badge">
+      <%= expense_code.active? ? '활성' : '비활성' %>
+    </span>
+  </td>
+  <td class="text-center">
+    <div class="flex items-center justify-center gap-1">
+      <%= link_to admin_expense_code_path(expense_code), 
+          class: "p-1.5 rounded hover:bg-gray-100 transition-colors group",
+          title: "보기" do %>
+        <svg class="h-4 w-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      <% end %>
+      <%= link_to edit_admin_expense_code_path(expense_code), 
+          class: "p-1.5 rounded hover:bg-gray-100 transition-colors group",
+          title: "편집" do %>
+        <svg class="h-4 w-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      <% end %>
+      <%= button_to admin_expense_code_path(expense_code), 
+          method: :delete,
+          data: { 
+            turbo_confirm: "정말 삭제하시겠습니까?" 
+          },
+          form: { class: "inline" },
+          class: "p-1.5 rounded hover:bg-red-50 transition-colors group",
+          title: "삭제" do %>
+        <svg class="h-4 w-4 text-gray-500 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      <% end %>
+    </div>
+  </td>
+</tr>

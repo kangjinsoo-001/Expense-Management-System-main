@@ -1,0 +1,9 @@
+<%= turbo_stream.replace "approval_rules_list" do %>
+  <%= render partial: "admin/expense_codes/approval_rules_list", 
+             locals: { expense_code: @expense_code, approval_rules: @approval_rules } %>
+<% end %>
+
+<%= turbo_stream.prepend "dragdrop_flash_container" do %>
+  <%= render partial: "shared/inline_flash_message",
+             locals: { type: 'notice', message: '승인 규칙이 삭제되었습니다.' } %>
+<% end %>

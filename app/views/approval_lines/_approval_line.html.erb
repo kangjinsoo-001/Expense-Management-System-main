@@ -1,0 +1,61 @@
+<%= turbo_frame_tag approval_line do %>
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">
+          <%= link_to approval_line.name, approval_line_path(approval_line), 
+                      class: "hover:text-blue-600 transition-colors",
+                      data: { turbo_frame: "_top" } %>
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">
+          <%= approval_line.total_steps %>단계 승인
+        </p>
+      </div>
+      <div class="flex items-center space-x-2">
+        <% if approval_line.is_active %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            활성
+          </span>
+        <% else %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            비활성
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <p class="text-sm text-gray-600">승인자:</p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <% approval_line.approval_line_steps.ordered.each do |step| %>
+          <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+            <span class="mr-1 font-bold"><%= step.step_order %>.</span>
+            <%= step.approver.name %>
+            <% if step.role_reference? %>
+              <span class="ml-1 text-gray-500">(참조)</span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-2">
+      <%= button_to approval_line.is_active ? "비활성화" : "활성화", 
+                    toggle_active_approval_line_path(approval_line), 
+                    method: :patch,
+                    class: "text-sm text-gray-600 hover:text-gray-900 transition-colors",
+                    form: { data: { turbo_frame: approval_line } } %>
+      
+      <%= link_to "수정", edit_approval_line_path(approval_line), 
+                  class: "text-sm text-blue-600 hover:text-blue-900 transition-colors",
+                  data: { turbo_frame: "_top" } %>
+      
+      <%= button_to "삭제", approval_line_path(approval_line), 
+                    method: :delete,
+                    data: { 
+                      turbo_confirm: "이 결재선을 삭제하시겠습니까?" 
+                    },
+                    class: "text-sm text-red-600 hover:text-red-900 transition-colors" %>
+    </div>
+  </div>
+<% end %>

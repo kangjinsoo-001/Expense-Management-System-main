@@ -1,0 +1,24 @@
+ko:
+  activerecord:
+    models:
+      expense_code: "경비 코드"
+    attributes:
+      expense_code:
+        code: "코드"
+        name: "이름"
+        description: "설명"
+        limit_amount: "한도 금액"
+        active: "활성화"
+        organization: "조직"
+        validation_rules: "검증 규칙"
+    errors:
+      models:
+        expense_code:
+          attributes:
+            code:
+              blank: "는 필수입니다"
+              taken: "는 이미 사용 중입니다"
+            name:
+              blank: "은 필수입니다"
+            limit_amount:
+              greater_than_or_equal_to: "는 0 이상이어야 합니다"

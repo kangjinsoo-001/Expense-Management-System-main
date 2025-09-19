@@ -1,0 +1,132 @@
+<%# tbody 내용물만 렌더링 %>
+<% 
+  # 디버그: 필터링된 회의실 개수 확인
+  Rails.logger.info "🔍 [calendar_grid] 렌더링할 회의실 개수: #{filtered_rooms.count}"
+  Rails.logger.info "🔍 [calendar_grid] 회의실 목록: #{filtered_rooms.map(&:name).join(', ')}"
+  
+  # 예약을 시간 슬롯별로 그룹화
+  reservations_by_slot = {}
+  reservations.each do |reservation|
+    start_hour = reservation.start_time.hour
+    start_minute = reservation.start_time.min
+    end_hour = reservation.end_time.hour
+    end_minute = reservation.end_time.min
+    
+    # 시작 슬롯 계산
+    start_slot = (start_hour - 9) * 4 + (start_minute / 15)
+    end_slot = (end_hour - 9) * 4 + (end_minute.to_f / 15).ceil
+    
+    # 회의실 인덱스 찾기
+    room_index = filtered_rooms.index { |r| r.id == reservation.room_id }
+    
+    if room_index
+      key = "#{room_index}-#{start_slot}"
+      reservations_by_slot[key] = {
+        reservation: reservation,
+        start_slot: start_slot,
+        end_slot: end_slot,
+        room_index: room_index
+      }
+    end
+  end
+%>
+
+<% (9..17).each do |hour| %>
+    <% [0, 15, 30, 45].each_with_index do |minute, minute_index| %>
+      <% 
+        # 시간 배경색 설정
+        bg_class = hour.even? ? 'bg-gray-50' : 'bg-white'
+        # 시간 경계선 스타일
+        border_class = minute == 0 ? 'border-t-2 border-gray-300' : 'border-t border-gray-100'
+        # 현재 시간 슬롯 인덱스 계산 (0부터 시작)
+        time_slot_index = (hour - 9) * 4 + (minute / 15)
+      %>
+      <tr class="<%= bg_class %>">
+        <% if minute == 0 %>
+          <td rowspan="4" class="sticky left-0 <%= bg_class %> px-2 py-1 align-top text-xs font-medium text-gray-900 border-r" style="width: 64px; min-width: 64px; max-width: 64px;">
+            <%= "%02d:00" % hour %>
+          </td>
+        <% end %>
+        
+        <% filtered_rooms.each_with_index do |room, room_index| %>
+          <% 
+            # 이 셀에 예약이 시작되는지 확인
+            reservation_data = reservations_by_slot["#{room_index}-#{time_slot_index}"]
+            has_reservation = reservation_data.present?
+            
+            # 새로 생성/수정된 예약인지 확인
+            # @highlight_reservation_id가 nil이 아니고 현재 예약 ID와 일치하는지 확인
+            is_highlighted = has_reservation && 
+                           defined?(highlight_reservation_id) && 
+                           highlight_reservation_id.present? && 
+                           reservation_data[:reservation].id == highlight_reservation_id
+          %>
+          <td class="calendar-cell px-1 py-0 text-xs <%= border_class %> border-r border-gray-100 hover:bg-gray-50 relative"
+              data-room-calendar-target="cell"
+              data-room-id="<%= room.id %>"
+              data-room-index="<%= room_index %>"
+              data-time-slot="<%= time_slot_index %>"
+              data-hour="<%= hour %>"
+              data-minute="<%= minute %>">
+            
+            <% if has_reservation %>
+              <% 
+                reservation = reservation_data[:reservation]
+                slot_count = reservation_data[:end_slot] - reservation_data[:start_slot]
+                is_owner = reservation.user == current_user
+                
+                # 시작 시간 오프셋 계산
+                start_minute_offset = reservation.start_time.min % 15
+                top_offset = 2 + (start_minute_offset.to_f / 15) * 24
+                height = slot_count * 24 - 4
+              %>
+              <div class="reservation-overlay <%= 'highlight-green' if is_highlighted %> <%= 'owned' if is_owner %>"
+                   data-reservation-id="<%= reservation.id %>"
+                   data-room-id="<%= reservation.room_id %>"
+                   data-start-time="<%= reservation.start_time.strftime('%H:%M') %>"
+                   data-end-time="<%= reservation.end_time.strftime('%H:%M') %>"
+                   data-is-owner="<%= is_owner %>"
+                   style="position: absolute; top: <%= top_offset %>px; height: <%= height %>px; left: 2px; right: 2px;">
+                <% if is_owner %>
+                  <div class="resize-handle top" data-resize-direction="top"></div>
+                  <div class="resize-handle bottom" data-resize-direction="bottom"></div>
+                <% end %>
+                <div class="text-xs p-1 truncate <%= 'pr-12' if is_owner %>">
+                  <div class="font-semibold truncate"><%= reservation.user.name.split(' ').first %></div>
+                  <div class="text-xs opacity-75"><%= reservation.start_time.strftime('%H:%M') %>-<%= reservation.end_time.strftime('%H:%M') %></div>
+                  <% if reservation.purpose.present? %>
+                    <div class="truncate opacity-75 reservation-purpose"><%= reservation.purpose %></div>
+                  <% end %>
+                  <% if is_owner %>
+                    <div class="absolute top-0.5 right-0.5 flex gap-0.5">
+                      <button type="button" 
+                              class="edit-btn p-0.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              data-reservation-id="<%= reservation.id %>"
+                              data-room-id="<%= reservation.room_id %>"
+                              data-date="<%= reservation.reservation_date %>"
+                              data-start-time="<%= reservation.start_time.strftime('%H:%M') %>"
+                              data-end-time="<%= reservation.end_time.strftime('%H:%M') %>"
+                              data-purpose="<%= reservation.purpose %>"
+                              title="수정">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button type="button"
+                              class="delete-btn p-0.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
+                              data-reservation-id="<%= reservation.id %>"
+                              title="삭제">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  <% end %>

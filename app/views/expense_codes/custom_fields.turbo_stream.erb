@@ -1,0 +1,22 @@
+<%= turbo_stream.replace "custom_fields_container" do %>
+  <div id="custom_fields_container">
+    <% if @expense_code.present? %>
+      <%= render partial: "expense_items/custom_fields", locals: { expense_item: @expense_item, form: nil } %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= turbo_stream.replace "expense_code_info" do %>
+  <div id="expense_code_info">
+    <% if @expense_code.present? %>
+      <div class="mt-2 p-3 bg-blue-50 rounded-md">
+        <p class="text-sm text-blue-800">
+          <strong><%= @expense_code.name %></strong>: <%= @expense_code.description || '설명 없음' %>
+          <% if @expense_code.limit_amount %>
+            <br><span class="text-xs">한도: <%= format_currency(@expense_code.limit_amount) %></span>
+          <% end %>
+        </p>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,108 @@
+<% if expense_item.approval_request.present? %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">결재 진행 현황</h3>
+    
+    <% approval_request = expense_item.approval_request %>
+    
+    <!-- 전체 진행 상태 -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-gray-700">전체 진행률</span>
+        <span class="text-sm font-medium <%= approval_request.status == 'approved' ? 'text-green-600' : 
+                                           approval_request.status == 'rejected' ? 'text-red-600' : 
+                                           'text-blue-600' %>">
+          <%= approval_request.current_status_display %>
+        </span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="h-2 rounded-full <%= approval_request.status == 'approved' ? 'bg-green-600' : 
+                                        approval_request.status == 'rejected' ? 'bg-red-600' : 
+                                        'bg-blue-600' %>" 
+             style="width: <%= approval_request.progress_percentage %>%"></div>
+      </div>
+    </div>
+    
+    <!-- 결재선 단계별 상태 -->
+    <div class="space-y-3">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">결재선: <%= approval_request.approval_line.name %></h4>
+      
+      <% approval_request.approval_line.approval_line_steps.ordered.each do |step| %>
+        <% history = approval_request.approval_histories.find_by(step_order: step.step_order) %>
+        
+        <div class="flex items-start gap-3 p-3 rounded-lg 
+          <%= approval_request.current_step == step.step_order && approval_request.status_pending? ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50' %>">
+          
+          <!-- 상태 아이콘 -->
+          <div class="flex-shrink-0">
+            <% if history && history.action == 'approve' %>
+              <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            <% elsif history && history.action == 'reject' %>
+              <span class="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center">
+                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </span>
+            <% elsif approval_request.current_step == step.step_order && approval_request.status_pending? %>
+              <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center animate-pulse">
+                <span class="text-white text-sm font-medium"><%= step.step_order %></span>
+              </span>
+            <% else %>
+              <span class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                <span class="text-gray-600 text-sm font-medium"><%= step.step_order %></span>
+              </span>
+            <% end %>
+          </div>
+          
+          <!-- 승인자 정보 및 처리 내역 -->
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-900">
+                  <%= step.approver.name %>
+                  <% if step.role == 'reference' %>
+                    <span class="ml-1 text-xs text-gray-500">(참조)</span>
+                  <% end %>
+                </p>
+                <p class="text-xs text-gray-500">
+                  <%= step.approver.organization.name %>
+                  <% same_step_approvers = approval_request.approval_line.approval_line_steps.where(step_order: step.step_order, role: 'approve') %>
+                  <% if same_step_approvers.count > 1 && step.approval_type.present? %>
+                    • <%= step.approval_type == 'all_required' ? '전체 승인 필요' : '단일 승인 가능' %>
+                  <% end %>
+                </p>
+              </div>
+              
+              <% if history %>
+                <span class="text-xs text-gray-500">
+                  <%= history.approved_at.strftime('%m/%d %H:%M') %>
+                </span>
+              <% elsif approval_request.current_step == step.step_order && approval_request.status_pending? %>
+                <span class="text-xs font-medium text-blue-600">대기중</span>
+              <% end %>
+            </div>
+            
+            <% if history && history.comment.present? %>
+              <div class="mt-2 p-2 bg-white rounded text-sm text-gray-700">
+                <%= history.comment %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- 현재 대기 중인 승인자 -->
+    <% if approval_request.status_pending? && approval_request.pending_approvers.any? %>
+      <div class="mt-4 pt-4 border-t">
+        <p class="text-sm text-gray-700">
+          <span class="font-medium">현재 승인 대기:</span>
+          <%= approval_request.pending_approvers.map(&:name).join(', ') %>
+        </p>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,31 @@
+# Task ID: 31
+# Title: 관리자 CRUD 인터페이스 구현
+# Status: done
+# Dependencies: 30
+# Priority: high
+# Description: 첨부파일 요구사항, AI 분석 규칙, 검증 규칙 관리를 위한 관리자 인터페이스 구현
+# Details:
+Admin 네임스페이스에 AttachmentRequirementsController, AnalysisRulesController, ValidationRulesController 구현. 드래그앤드롭 순서 변경, 활성화/비활성화 토글, 자연어 프롬프트 입력 UI 포함
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. AttachmentRequirementsController 생성 [done]
+### Dependencies: None
+### Description: 첨부파일 요구사항 관리를 위한 Admin 컨트롤러 생성
+### Details:
+Admin::AttachmentRequirementsController CRUD 액션 구현. index, new, create, edit, update, destroy, reorder 액션
+
+## 2. 첨부파일 요구사항 관리 View 구현 [done]
+### Dependencies: None
+### Description: 첨부파일 템플릿 목록, 생성/수정 폼 화면 구현
+### Details:
+드래그앤드롭 순서 변경, 활성화/비활성화 토글, 조건 설정 UI 포함. Stimulus 컨트롤러로 인터랙티브 기능 구현
+
+## 3. AI 분석/검증 규칙 관리 인터페이스 구현 [done]
+### Dependencies: None
+### Description: 자연어 프롬프트 입력 및 규칙 관리 UI 구현
+### Details:
+AnalysisRulesController, ValidationRulesController 구현. 자연어 프롬프트 에디터, 테스트 실행 기능, 규칙 우선순위 설정 UI
+

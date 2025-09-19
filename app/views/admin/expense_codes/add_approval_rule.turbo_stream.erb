@@ -1,0 +1,42 @@
+<%= turbo_stream.replace "approval_rules_list" do %>
+  <%= render partial: "admin/expense_codes/approval_rules_list", 
+             locals: { expense_code: @expense_code, approval_rules: @approval_rules } %>
+<% end %>
+
+<%= turbo_stream.replace "add_approval_rule_form" do %>
+  <%= form_with url: add_approval_rule_admin_expense_code_path(@expense_code), 
+                model: [@expense_code.expense_code_approval_rules.build],
+                scope: :expense_code_approval_rule,
+                local: false,
+                html: { id: 'add_approval_rule_form' } do |f| %>
+    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+      <h4 class="text-sm font-medium text-gray-900 mb-3">새 승인 규칙 추가</h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <%= f.text_field :condition,
+            placeholder: '조건식 (예: #금액 > 300000)',
+            class: "rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+        
+        <%= f.select :approver_group_id,
+            options_from_collection_for_select(@available_groups, :id, :name),
+            { include_blank: '승인 그룹 선택' },
+            class: "rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+        
+        <div class="flex items-center gap-3">
+          <label class="inline-flex items-center">
+            <%= f.check_box :is_active, { checked: true },
+                class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" %>
+            <span class="ml-2 text-sm text-gray-700">활성</span>
+          </label>
+        </div>
+        
+        <%= f.submit '규칙 추가',
+            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<%= turbo_stream.prepend "dragdrop_flash_container" do %>
+  <%= render partial: "shared/inline_flash_message",
+             locals: { type: 'notice', message: '승인 규칙이 추가되었습니다.' } %>
+<% end %>

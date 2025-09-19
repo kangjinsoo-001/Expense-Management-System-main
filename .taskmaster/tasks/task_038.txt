@@ -1,0 +1,31 @@
+# Task ID: 38
+# Title: 통합 테스트 및 최적화
+# Status: pending
+# Dependencies: 30, 31, 32, 33, 34, 35, 36, 37
+# Priority: medium
+# Description: 전체 시스템의 통합 테스트 작성 및 성능 최적화
+# Details:
+모델 단위 테스트, 컨트롤러 통합 테스트, Job 처리 테스트, AI 분석/검증 프로세스 엔드투엔드 테스트. 성능 병목 지점 파악 및 최적화, 캐싱 전략 구현
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. 모델 단위 테스트 작성 [pending]
+### Dependencies: None
+### Description: 첨부파일 관련 모든 모델의 단위 테스트
+### Details:
+AttachmentRequirement, AttachmentAnalysisRule, AttachmentValidationRule, ExpenseSheetAttachment 모델 테스트
+
+## 2. 서비스 및 Job 통합 테스트 작성 [pending]
+### Dependencies: None
+### Description: AI 분석 및 검증 서비스의 통합 테스트
+### Details:
+AttachmentAnalysisService, ValidationService, 각종 Job들의 통합 테스트. Mock Gemini API 응답 처리
+
+## 3. 엔드투엔드 시나리오 테스트 [pending]
+### Dependencies: None
+### Description: 전체 첨부파일 처리 워크플로우 테스트
+### Details:
+파일 업로드 → AI 분석 → 검증 → 결과 표시까지 전체 프로세스 테스트. 성능 측정 및 최적화
+

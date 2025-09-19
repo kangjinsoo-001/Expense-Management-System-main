@@ -1,0 +1,127 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-6">
+    <div class="flex items-center text-sm text-gray-500 mb-4">
+      <%= link_to "← 결재선 목록", approval_lines_path, class: "hover:text-gray-700" %>
+    </div>
+    
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900"><%= @approval_line.name %></h1>
+        <div class="mt-2 flex items-center space-x-4">
+          <span class="text-sm text-gray-500">
+            생성일: <%= @approval_line.created_at.strftime("%Y년 %m월 %d일") %>
+          </span>
+          <% if @approval_line.is_active %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              활성
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              비활성
+            </span>
+          <% end %>
+        </div>
+      </div>
+      
+      <div class="flex space-x-2">
+        <%= link_to "수정", edit_approval_line_path(@approval_line), 
+                    class: "bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors" %>
+        <%= button_to "삭제", approval_line_path(@approval_line), 
+                      method: :delete,
+                      data: { 
+                        turbo_confirm: "이 결재선을 삭제하시겠습니까?" 
+                      },
+                      class: "bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-medium text-gray-900">승인 단계</h2>
+    </div>
+    
+    <div class="p-6">
+      <% if @grouped_steps.any? %>
+        <div class="space-y-4">
+          <% @grouped_steps.each do |step_order, steps| %>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span class="text-sm font-bold text-blue-600"><%= step_order %></span>
+                </div>
+                
+                <div class="ml-4 flex-1">
+                  <% if steps.select { |s| s.role_approve? }.length > 1 %>
+                    <div class="mb-2 text-sm text-gray-600">
+                      승인 방식: <span class="font-medium"><%= steps.first.approval_type_display || '단독 가능' %></span>
+                    </div>
+                  <% end %>
+                  
+                  <div class="space-y-2">
+                    <% steps.each do |step| %>
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                          <h3 class="text-sm font-medium text-gray-900">
+                            <%= step.approver.name %>
+                          </h3>
+                          <span class="ml-2 text-sm text-gray-500">
+                            (<%= step.approver.email %>)
+                          </span>
+                          <span class="ml-3 px-2 py-0.5 text-xs rounded-full <%= step.role_approve? ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' %>">
+                            <%= step.role_display %>
+                          </span>
+                        </div>
+                        
+                        <span class="text-sm text-gray-600">
+                          <%= step.approver.organization&.name || "미지정" %>
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-center text-gray-500">승인 단계가 설정되지 않았습니다.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @approval_line.approval_requests.any? %>
+    <div class="mt-6 bg-white shadow-sm rounded-lg border border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-medium text-gray-900">사용 현황</h2>
+      </div>
+      
+      <div class="p-6">
+        <p class="text-sm text-gray-600">
+          이 결재선은 <%= @approval_line.approval_requests.count %>개의 경비 항목에서 사용 중입니다.
+        </p>
+        
+        <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-2xl font-bold text-gray-900">
+              <%= @approval_line.approval_requests.status_pending.count %>
+            </p>
+            <p class="text-sm text-gray-500">진행중</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-green-600">
+              <%= @approval_line.approval_requests.status_approved.count %>
+            </p>
+            <p class="text-sm text-gray-500">승인완료</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-red-600">
+              <%= @approval_line.approval_requests.status_rejected.count %>
+            </p>
+            <p class="text-sm text-gray-500">반려</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

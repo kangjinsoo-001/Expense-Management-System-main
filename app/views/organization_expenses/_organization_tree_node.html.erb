@@ -1,0 +1,57 @@
+<%# 재귀적 조직 트리 노드 렌더링 %>
+<div class="org-tree-node" data-org-id="<%= organization.id %>" data-level="<%= level %>">
+  <div class="flex items-center">
+    <%# 들여쓰기 (줄임) %>
+    <% if level > 0 %>
+      <span class="inline-block" style="width: <%= level * 12 %>px;"></span>
+    <% end %>
+    
+    <%# 확장/축소 아이콘 (하위 조직이 있는 경우만 표시) %>
+    <% if organization.children.any? %>
+      <button type="button"
+              data-action="click->organization-chart#toggleExpand"
+              data-org-id="<%= organization.id %>"
+              class="mr-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+        <svg class="h-3 w-3 transition-transform duration-200 transform rotate-0" 
+             data-organization-chart-target="expandIcon"
+             data-org-level="<%= level %>"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    <% else %>
+      <span class="inline-block w-4 mr-1"></span>
+    <% end %>
+    
+    <%# 조직 버튼 - 루트 조직은 기본 선택 %>
+    <button data-org-id="<%= organization.id %>"
+            data-action="click->organization-chart#selectOrganization"
+            data-organization-chart-target="orgButton"
+            class="flex-1 text-left px-2 py-1.5 <%= defined?(is_root) && is_root ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' %> rounded transition-colors">
+      <div class="flex items-center">
+        <%# 조직 아이콘 %>
+        <svg class="h-4 w-4 <%= defined?(is_root) && is_root ? 'text-white' : 'text-gray-400' %> mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        
+        <%# 조직명만 표시 %>
+        <span class="text-sm font-medium <%= defined?(is_root) && is_root ? 'text-white' : 'text-gray-900' %>">
+          <%= organization.name %>
+        </span>
+      </div>
+    </button>
+  </div>
+  
+  <%# 하위 조직 (재귀) - 기본적으로 숨김 상태 %>
+  <% if organization.children.any? %>
+    <div class="org-children" data-parent-org-id="<%= organization.id %>" data-org-level="<%= level %>" style="display: none;">
+      <% organization.children.each do |child| %>
+        <%= render 'organization_tree_node', 
+                   organization: child, 
+                   expenses: @organization_expenses[child],
+                   level: level + 1 %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

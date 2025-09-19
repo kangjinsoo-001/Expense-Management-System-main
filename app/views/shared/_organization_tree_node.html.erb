@@ -1,0 +1,76 @@
+<%# 재귀적 조직 트리 노드 렌더링 %>
+<%# 
+  Parameters:
+  - organization: 조직 객체
+  - selected_organization_id: 현재 선택된 조직 ID
+  - level: 트리 깊이 레벨
+  - url_helper: URL 헬퍼 메서드
+  - additional_params: 추가 파라미터
+%>
+
+<div class="org-tree-node" data-org-id="<%= organization.id %>" data-level="<%= level %>">
+  <div class="flex items-center">
+    <%# 들여쓰기 %>
+    <% if level > 0 %>
+      <span class="inline-block" style="width: <%= level * 12 %>px;"></span>
+    <% end %>
+    
+    <%# 확장/축소 아이콘 (하위 조직이 있는 경우만 표시) %>
+    <% if organization.children.any? %>
+      <button type="button"
+              data-action="click->organization-selector#toggleExpand"
+              data-org-id="<%= organization.id %>"
+              class="mr-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+        <svg class="h-3 w-3 transition-transform duration-200 transform rotate-0" 
+             data-organization-selector-target="expandIcon"
+             data-org-level="<%= level %>"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    <% else %>
+      <span class="inline-block w-4 mr-1"></span>
+    <% end %>
+    
+    <%# 조직 링크/버튼 %>
+    <% is_selected = organization.id == selected_organization_id %>
+    <%= link_to send(url_helper, additional_params.merge(organization_id: organization.id)),
+                data: { 
+                  turbo_frame: "_top",
+                  org_id: organization.id,
+                  organization_selector_target: "orgLink"
+                },
+                class: "flex-1 text-left px-2 py-1.5 #{is_selected ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'} rounded transition-colors" do %>
+      <div class="flex items-center">
+        <%# 조직 아이콘 %>
+        <svg class="h-4 w-4 <%= is_selected ? 'text-white' : 'text-gray-400' %> mr-2 flex-shrink-0" 
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        
+        <%# 조직명 %>
+        <span class="text-sm font-medium <%= is_selected ? 'text-white' : 'text-gray-900' %>">
+          <%= organization.name %>
+        </span>
+      </div>
+    <% end %>
+  </div>
+  
+  <%# 하위 조직 (재귀) - 기본적으로 숨김 상태 %>
+  <% if organization.children.any? %>
+    <div class="org-children" 
+         data-parent-org-id="<%= organization.id %>" 
+         data-org-level="<%= level %>" 
+         style="display: none;">
+      <% organization.children.each do |child| %>
+        <%= render 'shared/organization_tree_node', 
+                   organization: child,
+                   selected_organization_id: selected_organization_id,
+                   level: level + 1,
+                   url_helper: url_helper,
+                   additional_params: additional_params %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

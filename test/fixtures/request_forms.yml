@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  request_template: one
+  user: one
+  organization: one
+  request_number: MyString
+  title: MyString
+  form_data: MyText
+  status: MyString
+  approval_line: one
+  submitted_at: 2025-08-27 16:03:06
+  approved_at: 2025-08-27 16:03:06
+  rejected_at: 2025-08-27 16:03:06
+  rejection_reason: MyText
+  is_draft: false
+  draft_data: MyText
+
+two:
+  request_template: two
+  user: two
+  organization: two
+  request_number: MyString
+  title: MyString
+  form_data: MyText
+  status: MyString
+  approval_line: two
+  submitted_at: 2025-08-27 16:03:06
+  approved_at: 2025-08-27 16:03:06
+  rejected_at: 2025-08-27 16:03:06
+  rejection_reason: MyText
+  is_draft: false
+  draft_data: MyText

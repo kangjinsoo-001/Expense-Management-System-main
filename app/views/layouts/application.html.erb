@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>경비 관리</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#1f2937">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <!-- 파비콘 설정 (talenx) -->
+    <link rel="shortcut icon" href="/favicon.ico?v=<%= Time.current.to_i %>" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?v=<%= Time.current.to_i %>" type="image/x-icon">
+    <link rel="icon" href="/icon.png?v=<%= Time.current.to_i %>" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="/icon.png?v=<%= Time.current.to_i %>">
+
+    <%# Choices.js CSS %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+    
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    
+    <%= javascript_importmap_tags %>
+    
+  </head>
+
+  <body>
+    <nav class="tremor-navigation" data-controller="mobile-nav">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <%= link_to root_path, class: "flex items-center group" do %>
+              <div class="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-600 mr-3">
+                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <span class="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
+                <span class="hidden sm:inline">경비 관리 시스템</span>
+                <span class="sm:hidden">경비관리</span>
+              </span>
+            <% end %>
+          </div>
+          
+          <!-- 데스크톱 메뉴 -->
+          <div class="hidden md:flex items-center gap-2">
+            <% if logged_in? %>
+              <%= link_to expense_sheets_path, 
+                          class: nav_link_class(expense_sheets_path) do %>
+                경비
+              <% end %>
+              
+              <% if current_user.managed_organizations.any? %>
+                <%= link_to organization_expenses_path, 
+                            class: nav_link_class(organization_expenses_path) do %>
+                  경비 통계
+                <% end %>
+              <% end %>
+              
+              <%= link_to request_forms_path, 
+                          class: nav_link_class(request_forms_path) do %>
+                신청서
+              <% end %>
+              
+              <%= link_to calendar_room_reservations_path, 
+                          class: nav_link_class(room_reservations_path) do %>
+                회의실
+              <% end %>
+              
+              <%= link_to approvals_path, 
+                          class: nav_link_class(approvals_path) do %>
+                <span class="inline-flex items-center gap-1">
+                  승인
+                  <% if pending_approval_count > 0 %>
+                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                      <%= pending_approval_count > 99 ? '99+' : pending_approval_count %>
+                    </span>
+                  <% end %>
+                </span>
+              <% end %>
+              
+              <%= link_to approval_lines_path, 
+                          class: nav_link_class(approval_lines_path) do %>
+                결재선
+              <% end %>
+              
+              <% if current_user.admin? %>
+                <%= link_to admin_root_path, 
+                            class: nav_link_class(admin_root_path) do %>
+                  관리자
+                <% end %>
+              <% end %>
+              
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-600"><%= current_user.name %></span>
+                
+                <%= button_to logout_path, method: :delete, 
+                    class: "tremor-button-secondary text-sm py-1.5 px-3" do %>
+                  로그아웃
+                <% end %>
+              </div>
+            <% else %>
+              <%= link_to "로그인", login_path, 
+                          class: "text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors" %>
+              <%= link_to "시작하기", new_user_path, 
+                          class: "tremor-button-primary text-sm py-1.5 px-4" %>
+            <% end %>
+          </div>
+          
+          <!-- 모바일 햄버거 버튼 -->
+          <button class="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors" 
+                  data-action="click->mobile-nav#toggle" 
+                  data-mobile-nav-target="hamburger">
+            <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 모바일 메뉴 -->
+      <div class="fixed inset-0 z-50 md:hidden hidden" data-mobile-nav-target="menu">
+        <!-- 오버레이 -->
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity" 
+             data-action="click->mobile-nav#close"></div>
+        
+        <!-- 메뉴 패널 -->
+        <div class="fixed right-0 top-0 h-full w-64 bg-white shadow-xl transform transition-transform translate-x-full"
+             data-mobile-nav-target="panel">
+          <div class="flex items-center justify-between p-4 border-b">
+            <h2 class="text-lg font-medium text-gray-900">메뉴</h2>
+            <button class="p-2 rounded-md hover:bg-gray-100" data-action="click->mobile-nav#close">
+              <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div class="p-4">
+            <% if logged_in? %>
+              <div class="mb-6">
+                <p class="text-sm font-medium text-gray-900"><%= current_user.name %></p>
+                <p class="text-xs text-gray-500"><%= current_user.role.humanize %></p>
+              </div>
+              
+              <div class="space-y-1">
+                <%= link_to expense_sheets_path, 
+                            class: mobile_nav_link_class(expense_sheets_path) do %>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>경비</span>
+                <% end %>
+                
+                <% if current_user.managed_organizations.any? %>
+                  <%= link_to organization_expenses_path, 
+                              class: mobile_nav_link_class(organization_expenses_path) do %>
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                    </svg>
+                    <span>경비 통계</span>
+                  <% end %>
+                <% end %>
+                
+                <%= link_to request_forms_path, 
+                            class: mobile_nav_link_class(request_forms_path) do %>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>신청서</span>
+                <% end %>
+                
+                <%= link_to calendar_room_reservations_path, 
+                            class: mobile_nav_link_class(room_reservations_path) do %>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>회의실</span>
+                <% end %>
+                
+                <%= link_to approvals_path, 
+                            class: mobile_nav_link_class(approvals_path) do %>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="inline-flex items-center gap-1">
+                    승인
+                    <% if pending_approval_count > 0 %>
+                      <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                        <%= pending_approval_count > 99 ? '99+' : pending_approval_count %>
+                      </span>
+                    <% end %>
+                  </span>
+                <% end %>
+                
+                <%= link_to approval_lines_path, 
+                            class: mobile_nav_link_class(approval_lines_path) do %>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  <span>결재선</span>
+                <% end %>
+                
+                <% if current_user.admin? %>
+                  <%= link_to admin_root_path, 
+                              class: mobile_nav_link_class(admin_root_path) do %>
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>관리자</span>
+                  <% end %>
+                <% end %>
+              </div>
+              
+              <div class="mt-8 pt-8 border-t">
+                <%= button_to logout_path, method: :delete, 
+                    class: "w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" do %>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  로그아웃
+                <% end %>
+              </div>
+            <% else %>
+              <div class="space-y-2">
+                <%= link_to login_path, 
+                            class: "block px-4 py-2 text-center text-gray-700 rounded-lg hover:bg-gray-100" do %>
+                  로그인
+                <% end %>
+                
+                <%= link_to new_user_path, 
+                            class: "block px-4 py-2 text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700" do %>
+                  시작하기
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Turbo Stream용 Flash 메시지 영역 -->
+    <div id="flash-messages" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    </div>
+
+    <!-- 알림 메시지 - Tremor 스타일 -->
+    <% if notice.present? %>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div class="rounded-md bg-green-50 border border-green-200 p-4 tremor-fade-in">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-green-800"><%= notice %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    
+    <% if alert.present? %>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div class="rounded-md bg-red-50 border border-red-200 p-4 tremor-fade-in">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-red-800"><%= alert %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <main>
+      <%= yield %>
+    </main>
+    
+    <!-- 모달용 Turbo Frame -->
+    <%= turbo_frame_tag "modal" %>
+  </body>
+</html>

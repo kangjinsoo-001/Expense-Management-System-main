@@ -1,0 +1,29 @@
+<%# tbody 전체를 교체하여 삭제된 예약 반영 및 Stimulus 컨트롤러 재연결 %>
+<%= turbo_stream.replace 'calendar_grid' do %>
+  <tbody id="calendar_grid" 
+         class="bg-white">
+    <%= render partial: 'calendar_grid', locals: { 
+      filtered_rooms: @filtered_rooms, 
+      reservations: @reservations, 
+      date: @date, 
+      current_user: current_user,
+      highlight_reservation_id: nil
+    } %>
+  </tbody>
+<% end %>
+
+<%# 성공 메시지 표시 %>
+<%= turbo_stream.prepend 'flash' do %>
+  <div data-controller="auto-dismiss" 
+       data-auto-dismiss-delay-value="3000"
+       class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+    <p>예약이 취소되었습니다.</p>
+  </div>
+<% end %>
+
+<%# JavaScript 콘솔 로그 (디버깅용) %>
+<%= turbo_stream_action_tag(
+  "append",
+  target: "body",
+  template: %(<script>console.log('🗑️ 예약 삭제 완료, 캘린더 업데이트됨')</script>)
+) %>

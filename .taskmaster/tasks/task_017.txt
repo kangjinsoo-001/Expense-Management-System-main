@@ -1,0 +1,14 @@
+# Task ID: 17
+# Title: 데이터베이스 스키마 업데이트
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: AI 요약 기능을 위한 데이터베이스 스키마 변경
+# Details:
+- attachments 테이블에 summary_data (JSON) 필드 추가
+- receipt_type (string) 필드 추가 (통신비/일반/기타)
+- processing_stage (enum) 필드 추가 (분석중/추출완료/요약완료)
+- 마이그레이션 파일 생성 및 실행
+
+# Test Strategy:
+

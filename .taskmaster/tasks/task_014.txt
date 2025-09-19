@@ -1,0 +1,16 @@
+# Task ID: 14
+# Title: 테스트 코드 작성 및 검증
+# Status: done
+# Dependencies: 8, 9, 10, 11, 12, 13
+# Priority: medium
+# Description: 승인자 그룹 시스템 전체 테스트 코드 작성
+# Details:
+- 모델 단위 테스트 (ApproverGroup, ApproverGroupMember, ExpenseCodeApprovalRule)
+- 조건식 파서 테스트
+- 결재선 검증 로직 테스트
+- 우선순위 위계 시스템 테스트
+- 컨트롤러 통합 테스트
+- 시나리오 테스트 (금액별 승인자 요구사항)
+
+# Test Strategy:
+

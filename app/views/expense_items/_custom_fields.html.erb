@@ -1,0 +1,113 @@
+<% if expense_item.expense_code.present? %>
+  <% expense_code = expense_item.expense_code %>
+  <% # required_fields가 빈 Hash인 경우도 체크 %>
+  <% if expense_code.validation_rules.present? && 
+        expense_code.validation_rules['required_fields'].present? && 
+        !expense_code.validation_rules['required_fields'].empty? %>
+    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+      <h4 class="text-sm font-medium text-gray-900 mb-3">추가 필드</h4>
+      
+      <% required_fields_raw = expense_code.validation_rules['required_fields'] || [] %>
+      <% # 배열 형태를 Hash 형태로 변환 %>
+      <% required_fields = [] %>
+      <% if required_fields_raw.is_a?(Array) %>
+        <% required_fields_raw.each do |field_name| %>
+          <% required_fields << { 'name' => field_name, 'label' => field_name, 'required' => true, 'order' => 999 } %>
+        <% end %>
+      <% elsif required_fields_raw.is_a?(Hash) %>
+        <% # 새로운 구조: order 필드를 기준으로 정렬 %>
+        <% # Hash를 배열로 변환할 때 keys를 먼저 정렬하여 순서 보장 %>
+        <% sorted_keys = required_fields_raw.keys.sort_by { |key| [(required_fields_raw[key]['order'] || 999).to_i, key] } %>
+        <% sorted_fields = sorted_keys.map do |key| %>
+          <% field = required_fields_raw[key] %>
+          <% field.merge('field_key' => key, 'order' => (field['order'] || 999).to_i) %>
+        <% end %>
+        <% # 이미 정렬된 순서로 사용 %>
+        <% required_fields = sorted_fields %>
+        <% Rails.logger.info "=== Custom fields order ===" %>
+        <% Rails.logger.info "Fields in order: #{required_fields.map { |f| "#{f['field_key']}(order:#{f['order']})" }.join(' -> ')}" %>
+      <% end %>
+      
+      <% required_fields.each do |field_config| %>
+        <% field_key = field_config['field_key'] || field_config['name'] || field_config['field'] %>
+        <% field_label = field_config['label'] || field_key %>
+        <% Rails.logger.debug "=== Custom field processing ===" %>
+        <% Rails.logger.debug "expense_item.id: #{expense_item.id}" %>
+        <% Rails.logger.debug "expense_item.custom_fields: #{expense_item.custom_fields.inspect}" %>
+        <% Rails.logger.debug "field_key: #{field_key}" %>
+        <% field_value = expense_item.custom_fields.is_a?(Hash) ? expense_item.custom_fields[field_key] : '' %>
+        <% Rails.logger.debug "field_value: #{field_value.inspect}" %>
+        <% field_required = field_config['required'] != false %>
+        
+        <%# base 에러에서 이 필드 관련 에러 찾기 %>
+        <% field_error = expense_item.errors[:base].find { |e| e.include?(field_label) } %>
+        
+        <div class="mb-4" data-field-name="<%= field_key %>" data-field-order="<%= field_config['order'] %>">
+          <label class="block text-sm font-medium text-gray-700">
+            <%= field_label %>
+            <% if field_required %>
+              <span class="text-red-500">*</span>
+            <% end %>
+          </label>
+          
+          <% if field_config['type'] == 'number' %>
+            <%= number_field_tag "expense_item[custom_fields][#{field_key}]", 
+                                field_value,
+                                class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md #{field_error ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm",
+                                data: { 
+                                  field_name: field_key,
+                                  field_required: field_required.to_s,
+                                  action: "input->client-validation#validateField"
+                                } %>
+          <% elsif field_config['type'] == 'select' %>
+            <%= select_tag "expense_item[custom_fields][#{field_key}]",
+                          options_for_select(['선택하세요'] + (field_config['options'] || []), field_value),
+                          class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md #{field_error ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm",
+                          data: { 
+                            field_name: field_key,
+                            field_required: field_required.to_s,
+                            action: "change->client-validation#validateField"
+                          } %>
+          <% elsif field_config['type'] == 'participants' || field_config['type'] == 'organization' %>
+            <% # Choice.js를 위한 select 태그 %>
+            <% # field_value가 Array인 경우 처리 %>
+            <% selected_values = if field_value.is_a?(Array)
+                field_value
+              elsif field_value.present?
+                field_value.split(', ')
+              else
+                []
+              end %>
+            <% Rails.logger.debug "Custom field '#{field_key}' type='#{field_config['type']}' value=#{field_value.inspect} selected_values=#{selected_values.inspect}" %>
+            <%= select_tag "expense_item[custom_fields][#{field_key}][]",
+                          nil,
+                          class: "mt-1 block w-full bg-white border rounded-md #{field_error ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm",
+                          multiple: true,
+                          data: { 
+                            choices: true,
+                            field_type: field_config['type'],
+                            field_name: field_key,
+                            field_required: field_required.to_s,
+                            selected_values: selected_values.to_json,
+                            action: "change->client-validation#validateField"
+                          } %>
+          <% else %>
+            <%= text_field_tag "expense_item[custom_fields][#{field_key}]", 
+                              field_value,
+                              class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md #{field_error ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 focus:ring-opacity-25 sm:text-sm",
+                              data: { 
+                                field_name: field_key,
+                                field_required: field_required.to_s,
+                                action: "input->client-validation#validateField"
+                              } %>
+          <% end %>
+          
+          <% if field_error %>
+            <p class="mt-1 text-sm text-red-600"><%= field_error %></p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+  
+<% end %>

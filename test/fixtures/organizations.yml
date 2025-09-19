@@ -1,0 +1,43 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: 본사
+  code: HEAD_OFFICE
+  parent: 
+  manager: alice
+  deleted_at: 
+
+two:
+  name: 개발팀
+  code: DEV_TEAM
+  parent: one
+  manager: bob
+  deleted_at:
+
+company:
+  name: 테스트회사
+  code: TEST_COMPANY
+  parent: 
+  manager: 
+  deleted_at: 
+
+division:
+  name: 테스트부서
+  code: TEST_DIV
+  parent: company
+  manager: 
+  deleted_at:
+
+engineering:
+  name: 엔지니어링팀
+  code: ENG_TEAM
+  parent: one
+  manager: jane
+  deleted_at:
+
+talenx_bu:
+  name: Talenx BU
+  code: TALENX
+  parent:
+  manager:
+  deleted_at:

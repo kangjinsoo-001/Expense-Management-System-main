@@ -1,0 +1,328 @@
+<!-- 경비 시트 상세 템플릿 -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">
+    경비 시트 정보
+  </h2>
+  
+  <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <dt class="text-sm font-medium text-gray-500">신청자</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= presenter.owner_name %>
+        <% if presenter.organization %>
+          <span class="text-gray-500">(<%= presenter.organization.name %>)</span>
+        <% end %>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">제출일</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.submitted_at&.strftime('%Y-%m-%d %H:%M') || '미제출' %>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">연월</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.year %>년 <%= item.month %>월
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">총 금액</dt>
+      <dd class="mt-1 text-sm font-semibold text-gray-900">
+        <%= number_to_currency(item.total_amount, unit: '₩', format: '%u%n') %>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">경비 항목</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.expense_items.where(is_draft: false).count %>개
+      </dd>
+    </div>
+  </dl>
+</div>
+
+<!-- 경비 항목 내역 (별도 카드) -->
+<% if item.expense_items.any? %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">
+      경비 항목 내역
+    </h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">경비 코드</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">설명</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">첨부</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">금액</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% item.expense_items.where(is_draft: false).order(:expense_date).each do |expense_item| %>
+              <tr class="text-sm">
+                <td class="px-3 py-2 text-gray-600">
+                  <%= expense_item.expense_date.strftime('%m/%d') %>
+                </td>
+                <td class="px-3 py-2 text-gray-700">
+                  <%= expense_item.expense_code.name %>
+                </td>
+                <td class="px-3 py-2 text-gray-700">
+                  <%= truncate(expense_item.description, length: 30) %>
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <% attachment_count = expense_item.expense_attachments.count %>
+                  <% if attachment_count > 0 %>
+                    <button type="button" 
+                            onclick="showExpenseItemAttachments(<%= expense_item.id %>)"
+                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer">
+                      <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                      </svg>
+                      <%= attachment_count %>
+                    </button>
+                    <!-- 첨부파일 데이터를 숨겨진 div에 저장 -->
+                    <div id="expense-item-<%= expense_item.id %>-attachments" class="hidden">
+                      <% expense_item.expense_attachments.each_with_index do |attachment, index| %>
+                        <div class="attachment-data-<%= index %>" 
+                             data-id="<%= attachment.id %>"
+                             data-name="<%= attachment.file_name %>"
+                             data-size="<%= number_to_human_size(attachment.file_size || 0) %>"
+                             data-url="<%= rails_blob_url(attachment.file, disposition: 'inline') if attachment.file.attached? %>"
+                             data-download-url="<%= rails_blob_url(attachment.file, disposition: 'attachment') if attachment.file.attached? %>">
+                          <!-- 서버에서 렌더링된 AI 요약 HTML -->
+                          <div class="attachment-summary-content">
+                            <%= render 'expense_attachments/summary', attachment: attachment %>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="text-gray-400">-</span>
+                  <% end %>
+                </td>
+                <td class="px-3 py-2 text-right font-medium">
+                  <%= number_to_currency(expense_item.amount, unit: '₩', format: '%u%n') %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot>
+            <tr class="font-semibold">
+              <td colspan="4" class="px-3 py-2 text-right">합계</td>
+              <td class="px-3 py-2 text-right">
+                <%= number_to_currency(item.total_amount, unit: '₩', format: '%u%n') %>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+    </div>
+  </div>
+<% end %>
+
+<!-- AI 검증 결과 섹션 (기존 partial 재사용) -->
+<% if item.validation_histories.any? || item.validation_result.present? %>
+  <%= render 'expense_sheets/validation_details_table', 
+             expense_sheet: item, 
+             expense_items: item.expense_items.where(is_draft: false) %>
+<% end %>
+
+<!-- 첨부파일 미리보기 모달 -->
+<div id="expense-attachments-modal" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-4xl">
+  <div class="bg-white rounded-lg shadow-2xl border border-gray-200 max-h-[80vh] flex flex-col">
+      <!-- 모달 헤더 -->
+      <div class="bg-white px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-900">첨부파일 미리보기</h3>
+          <button type="button" onclick="closeAttachmentsModal()"
+                  class="text-gray-400 hover:text-gray-500">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+    <!-- 모달 본문 -->
+    <div class="bg-white px-6 py-4 overflow-y-auto flex-1">
+      <!-- 탭 네비게이션 (여러 첨부파일이 있을 때만 표시) -->
+      <div id="attachment-tabs" class="border-b border-gray-200 mb-4 hidden">
+        <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+          <!-- 탭 버튼들이 동적으로 추가됩니다 -->
+        </nav>
+      </div>
+      
+      <!-- 첨부파일 내용 영역 -->
+      <div id="attachment-content">
+        <!-- 첨부파일 내용이 동적으로 표시됩니다 -->
+      </div>
+    </div>
+      
+    <!-- 모달 푸터 -->
+    <div class="bg-gray-50 px-6 py-3 flex justify-end border-t border-gray-200">
+      <button type="button" onclick="closeAttachmentsModal()"
+              class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+        닫기
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentAttachmentIndex = 0;
+let attachments = [];
+
+function formatCurrency(amount) {
+  if (!amount && amount !== 0) return '';
+  return new Intl.NumberFormat('ko-KR', { 
+    style: 'currency', 
+    currency: 'KRW',
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+function formatAiSummary(attachment) {
+  // summaryHtml이 이미 서버에서 렌더링된 HTML이면 그대로 반환
+  if (attachment.summaryHtml && attachment.summaryHtml.trim().length > 0) {
+    return attachment.summaryHtml;
+  }
+  
+  // 그렇지 않으면 클라이언트에서 포맷팅 (fallback)
+  return '<div class="text-sm text-gray-500">AI 요약을 불러올 수 없습니다.</div>';
+}
+
+function showExpenseItemAttachments(itemId) {
+  const attachmentContainer = document.getElementById(`expense-item-${itemId}-attachments`);
+  if (!attachmentContainer) return;
+  
+  // 첨부파일 데이터 수집
+  attachments = [];
+  let index = 0;
+  while (true) {
+    const attachmentDiv = attachmentContainer.querySelector(`.attachment-data-${index}`);
+    if (!attachmentDiv) break;
+    
+    const summaryContent = attachmentDiv.querySelector('.attachment-summary-content');
+    attachments.push({
+      id: attachmentDiv.dataset.id,
+      name: attachmentDiv.dataset.name,
+      size: attachmentDiv.dataset.size,
+      url: attachmentDiv.dataset.url,
+      downloadUrl: attachmentDiv.dataset.downloadUrl,
+      summaryHtml: summaryContent ? summaryContent.innerHTML : ''
+    });
+    index++;
+  }
+  
+  if (attachments.length === 0) return;
+  
+  // 모달 표시
+  const modal = document.getElementById('expense-attachments-modal');
+  modal.classList.remove('hidden');
+  
+  // 탭 설정 (여러 개일 때만)
+  const tabsContainer = document.getElementById('attachment-tabs');
+  const tabNav = tabsContainer.querySelector('nav');
+  
+  if (attachments.length > 1) {
+    tabsContainer.classList.remove('hidden');
+    tabNav.innerHTML = '';
+    
+    attachments.forEach((attachment, index) => {
+      const tabButton = document.createElement('button');
+      tabButton.className = `py-2 px-1 border-b-2 font-medium text-sm ${
+        index === 0 
+          ? 'border-blue-500 text-blue-600' 
+          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+      }`;
+      tabButton.textContent = attachment.name || `파일 ${index + 1}`;
+      tabButton.onclick = () => showAttachment(index);
+      tabNav.appendChild(tabButton);
+    });
+  } else {
+    tabsContainer.classList.add('hidden');
+  }
+  
+  // 첫 번째 첨부파일 표시
+  showAttachment(0);
+}
+
+function showAttachment(index) {
+  currentAttachmentIndex = index;
+  const attachment = attachments[index];
+  
+  // 탭 활성화 상태 업데이트
+  if (attachments.length > 1) {
+    const tabs = document.querySelectorAll('#attachment-tabs nav button');
+    tabs.forEach((tab, i) => {
+      if (i === index) {
+        tab.className = 'py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600';
+      } else {
+        tab.className = 'py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+      }
+    });
+  }
+  
+  // 내용 업데이트
+  const contentDiv = document.getElementById('attachment-content');
+  
+  let contentHTML = `
+    <div class="space-y-4">
+      <!-- 파일 정보 및 다운로드 버튼 -->
+      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div>
+          <h4 class="font-medium text-gray-900">${attachment.name || '파일명 없음'}</h4>
+          <p class="text-sm text-gray-500">크기: ${attachment.size || '알 수 없음'}</p>
+        </div>
+        <div class="flex gap-2">
+          ${attachment.downloadUrl ? `
+            <a href="${attachment.downloadUrl}" 
+               download="${attachment.name}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              다운로드
+            </a>
+          ` : ''}
+          ${attachment.url ? `
+            <a href="${attachment.url}" 
+               target="_blank"
+               class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              새 탭에서 열기
+            </a>
+          ` : ''}
+        </div>
+      </div>
+      
+      <!-- AI 요약 표시 -->
+      <div class="attachment-ai-summary">
+        ${formatAiSummary(attachment)}
+      </div>
+    </div>
+  `;
+  
+  contentDiv.innerHTML = contentHTML;
+}
+
+function closeAttachmentsModal() {
+  const modal = document.getElementById('expense-attachments-modal');
+  modal.classList.add('hidden');
+  attachments = [];
+  currentAttachmentIndex = 0;
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeAttachmentsModal();
+  }
+});
+</script>

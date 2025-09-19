@@ -1,0 +1,3 @@
+<%= turbo_stream.append "sheet-attachments-list" do %>
+  <%= render 'expense_sheet_attachments/attachment_item', attachment: @attachment, expense_sheet: @expense_sheet %>
+<% end %>

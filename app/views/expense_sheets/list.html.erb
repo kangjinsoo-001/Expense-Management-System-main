@@ -1,0 +1,38 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- 헤더 영역 -->
+  <div class="mb-8">
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-semibold text-gray-900">전체 경비 시트</h1>
+        <p class="mt-1 text-sm text-gray-500">
+          <span class="font-medium text-gray-700"><%= current_user.name %></span>님의 모든 경비 시트 목록
+        </p>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4 gap-3">
+        <%= link_to expense_sheets_path,
+                    class: "tremor-button-secondary" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          현재 달로 돌아가기
+        <% end %>
+        <%= link_to new_expense_sheet_path, 
+                    class: "tremor-button-primary" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          새 경비 시트
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%= render partial: "list", locals: { expense_sheets: @expense_sheets } %>
+  
+  <!-- 페이지네이션 -->
+  <% if @expense_sheets.respond_to?(:total_pages) %>
+    <div class="mt-6">
+      <%= paginate @expense_sheets %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,32 @@
+# Task ID: 18
+# Title: 백그라운드 처리 Job 구현
+# Status: done
+# Dependencies: 15, 16, 17
+# Priority: medium
+# Description: 비동기 AI 요약 처리를 위한 백그라운드 Job 시스템 구현
+# Details:
+- AttachmentSummaryJob 구현
+- 처리 상태 실시간 업데이트 (Turbo Streams)
+- 재시도 로직 및 에러 처리
+- API 호출 제한 관리
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. TextExtractionJob 구현 [done]
+### Dependencies: None
+### Description: 첨부파일에서 텍스트를 추출하는 백그라운드 작업
+### Details:
+- PDF/이미지 파일 텍스트 추출
+- OCR 처리
+- 처리 상태 업데이트
+
+## 2. AttachmentSummaryJob 구현 [done]
+### Dependencies: None
+### Description: AI 요약 처리를 위한 백그라운드 작업
+### Details:
+- Gemini API를 통한 영수증 분석
+- 요약 결과 저장
+- Turbo Streams로 실시간 업데이트
+

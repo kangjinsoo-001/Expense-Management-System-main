@@ -1,0 +1,5 @@
+<%= turbo_stream.replace "reservation_form" do %>
+  <turbo-frame id="reservation_form">
+    <%= render 'form', reservation: @reservation %>
+  </turbo-frame>
+<% end %>

@@ -1,0 +1,50 @@
+# Task ID: 3
+# Title: 경비 항목에 결재선 적용 기능 구현
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: 경비 항목 생성/수정 시 결재선 선택 및 적용 기능
+# Details:
+- 경비 항목 폼에 결재선 선택 UI 추가 (칩 형태)
+- 선택한 결재선의 승인자 미리보기
+- ExpenseItem 모델에 approval_line_id 추가
+- 결재선 선택 시 ApprovalRequest 자동 생성
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. ExpenseItem 모델에 결재선 관련 필드 추가 [done]
+### Dependencies: None
+### Description: 경비 항목에 결재선 정보를 저장할 수 있도록 모델 수정
+### Details:
+- approval_line_id 컬럼 추가 마이그레이션
+- ExpenseItem 모델에 belongs_to :approval_line, optional: true 관계 추가
+- has_one :approval_request 관계 추가
+
+## 2. 경비 항목 폼에 결재선 선택 UI 추가 [done]
+### Dependencies: None
+### Description: 경비 항목 생성/수정 폼에 결재선 선택 칩 UI 구현
+### Details:
+- expense_items/_form.html.erb 수정
+- 사용자의 결재선 목록을 칩 형태로 표시
+- 결재선 선택 시 승인자 미리보기 표시
+- expense_item_approval_controller.js Stimulus 컨트롤러 구현
+
+## 3. ApprovalRequest 자동 생성 로직 구현 [done]
+### Dependencies: None
+### Description: 경비 항목 저장 시 결재선이 선택된 경우 ApprovalRequest 자동 생성
+### Details:
+- ExpenseItem 모델에 after_create 콜백 추가
+- create_approval_request 메서드 구현
+- 결재선의 첫 번째 단계로 current_step 설정
+- status를 'pending'으로 초기화
+
+## 4. ExpenseItemsController 수정 [done]
+### Dependencies: None
+### Description: 컨트롤러에서 결재선 관련 파라미터 처리
+### Details:
+- expense_item_params에 approval_line_id 추가
+- 사용자의 결재선 목록을 @approval_lines로 전달
+- 결재선 선택된 경우 승인자 정보 포함하여 응답
+

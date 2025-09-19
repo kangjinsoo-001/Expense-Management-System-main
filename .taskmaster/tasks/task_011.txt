@@ -1,0 +1,16 @@
+# Task ID: 11
+# Title: 조건식 파서 및 평가 엔진 구현
+# Status: done
+# Dependencies: 10
+# Priority: high
+# Description: Ruby 기반 안전한 조건식 평가 시스템 구현
+# Details:
+- ConditionParser 클래스 구현
+- 지원 연산자: >, <, >=, <=, ==, !=
+- 지원 필드: #금액, #날짜, #커스텀필드명
+- 토큰화 및 파싱 로직
+- 안전한 평가를 위한 샌드박스
+- 에러 처리 및 검증
+
+# Test Strategy:
+

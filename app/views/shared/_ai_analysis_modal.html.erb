@@ -1,0 +1,257 @@
+<%# 
+  AI 분석 모달 공통 partial
+  
+  필수 파라미터:
+  - attachment: 분석할 첨부파일 객체 (ExpenseSheetAttachment 또는 ExpenseAttachment)
+  - modal_id: 모달의 고유 ID
+  
+  선택 파라미터:
+  - show_file_name: 파일명 표시 여부 (기본값: true)
+%>
+
+<% 
+  show_file_name = local_assigns.fetch(:show_file_name, true)
+  
+  # 첨부파일 타입에 따른 데이터 추출
+  if attachment.respond_to?(:analysis_result) && attachment.analysis_result.present?
+    # ExpenseSheetAttachment
+    summary_data = attachment.analysis_result['summary_data']
+    extracted_text = attachment.extracted_text
+    file_name = attachment.file_name
+  elsif attachment.respond_to?(:summary_data) && attachment.summary_data.present?
+    # ExpenseAttachment
+    summary_data = attachment.summary_data
+    extracted_text = attachment.extracted_text
+    file_name = attachment.file.filename.to_s if attachment.file.attached?
+  else
+    summary_data = nil
+    extracted_text = nil
+    file_name = nil
+  end
+  
+  # JSON 문자열인 경우 파싱
+  if summary_data.is_a?(String)
+    begin
+      summary_data = JSON.parse(summary_data)
+    rescue JSON::ParserError
+      summary_data = { 'summary_text' => summary_data }
+    end
+  end
+  
+  # type과 data 분리
+  if summary_data.is_a?(Hash)
+    receipt_type = summary_data['type'] || summary_data['receipt_type'] || 'unknown'
+    data = summary_data['data'] || summary_data['summary'] || summary_data
+    
+    # type이 없고 transactions가 있으면 corporate_card로 판단
+    if (receipt_type == 'unknown' || receipt_type.nil?) && data['transactions'].is_a?(Array)
+      receipt_type = 'corporate_card'
+    end
+  else
+    receipt_type = 'unknown'
+    data = { 'summary_text' => summary_data }
+  end
+%>
+
+<div id="<%= modal_id %>" class="hidden fixed inset-0 z-50 overflow-y-auto">
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+  <div class="flex min-h-full items-center justify-center p-4">
+    <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-4xl sm:w-full">
+      <div class="bg-white px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-900">첨부파일 분석 결과</h3>
+          <button type="button" 
+                  onclick="document.getElementById('<%= modal_id %>').classList.add('hidden')"
+                  class="text-gray-400 hover:text-gray-500">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="bg-white px-6 py-4 max-h-[32rem] overflow-y-auto">
+        <% if show_file_name && file_name.present? %>
+          <p class="text-sm text-gray-500 mb-4">파일: <%= file_name %></p>
+        <% end %>
+        
+        <% if summary_data.present? %>
+          <% if receipt_type == 'corporate_card' %>
+            <!-- 법인카드 명세서 -->
+            <% if data['transactions'].is_a?(Array) %>
+              <div class="mt-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">법인카드 명세서 분석 결과</h4>
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div class="mb-4">
+                    <h5 class="font-medium text-gray-700 mb-2">거래 내역 (<%= data['transactions'].length %>건)</h5>
+                    <div class="overflow-x-auto">
+                      <table class="min-w-full text-sm">
+                        <thead>
+                          <tr class="border-b">
+                            <th class="text-left px-2 py-1 font-medium text-gray-600">날짜</th>
+                            <th class="text-left px-2 py-1 font-medium text-gray-600">가맹점</th>
+                            <th class="text-right px-2 py-1 font-medium text-gray-600">원금</th>
+                            <th class="text-right px-2 py-1 font-medium text-gray-600">수수료</th>
+                            <th class="text-right px-2 py-1 font-medium text-gray-600">합계</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% data['transactions'].each do |tx| %>
+                            <tr class="border-b">
+                              <td class="px-2 py-1"><%= tx['date'] || '' %></td>
+                              <td class="px-2 py-1"><%= tx['merchant'] || tx['vendor'] || tx['description'] || '' %></td>
+                              <td class="text-right px-2 py-1">₩<%= number_with_delimiter(tx['amount'] || 0) %></td>
+                              <td class="text-right px-2 py-1">₩<%= number_with_delimiter(tx['fee'] || 0) %></td>
+                              <td class="text-right px-2 py-1 font-medium">₩<%= number_with_delimiter(tx['total'] || tx['amount'] || 0) %></td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                        <tfoot>
+                          <tr class="font-bold border-t-2">
+                            <td colspan="2" class="px-2 py-2">합계</td>
+                            <td class="text-right px-2 py-2">₩<%= number_with_delimiter(data['total_amount'] || data['transactions'].sum { |t| t['amount'] || 0 }) %></td>
+                            <td class="text-right px-2 py-2">₩<%= number_with_delimiter(data['total_fee'] || data['transactions'].sum { |t| t['fee'] || 0 }) %></td>
+                            <td class="text-right px-2 py-2 text-blue-600">₩<%= number_with_delimiter(data['grand_total'] || data['total_amount'] || data['transactions'].sum { |t| t['total'] || t['amount'] || 0 }) %></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% elsif receipt_type == 'telecom' %>
+            <!-- 통신비 영수증 -->
+            <div class="mt-4">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">통신비 영수증 분석 결과</h4>
+              <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="space-y-1">
+                  <% if data['total_amount'] %>
+                    <p class="text-lg text-gray-900 mb-2"><span class="font-bold">총 청구금액:</span> ₩<%= number_with_delimiter(data['total_amount']) %></p>
+                  <% end %>
+                  <% if data['billing_period'] %>
+                    <p class="text-sm text-gray-700"><span class="font-medium">사용기간:</span> <%= data['billing_period'] %></p>
+                  <% end %>
+                  <div class="ml-4 border-l-2 border-gray-300 pl-3">
+                    <% if data['service_charge'] %>
+                      <p class="text-sm text-gray-700"><span class="font-medium">통신 서비스 요금:</span> ₩<%= number_with_delimiter(data['service_charge']) %></p>
+                    <% end %>
+                    <% if data['additional_service_charge'] && data['additional_service_charge'] > 0 %>
+                      <p class="text-sm text-gray-700"><span class="font-medium">부가 서비스 요금:</span> ₩<%= number_with_delimiter(data['additional_service_charge']) %></p>
+                    <% end %>
+                    <% if data['device_installment'] && data['device_installment'] > 0 %>
+                      <p class="text-sm text-gray-700"><span class="font-medium">단말기 할부금:</span> ₩<%= number_with_delimiter(data['device_installment']) %></p>
+                    <% end %>
+                    <% if data['other_charges'] && data['other_charges'] > 0 %>
+                      <p class="text-sm text-gray-700"><span class="font-medium">기타 요금:</span> ₩<%= number_with_delimiter(data['other_charges']) %></p>
+                    <% end %>
+                    <% if data['discount_amount'] && data['discount_amount'] != 0 %>
+                      <p class="text-sm text-red-600"><span class="font-medium">할인 금액:</span> -₩<%= number_with_delimiter(data['discount_amount'].abs) %></p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% elsif receipt_type == 'general' %>
+            <!-- 일반 영수증 -->
+            <div class="mt-4">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">일반 영수증 분석 결과</h4>
+              <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <dl class="grid grid-cols-2 gap-4 text-sm">
+                  <% if data['store_name'] || data['vendor'] %>
+                    <div>
+                      <dt class="font-medium text-gray-600">상호명</dt>
+                      <dd class="mt-1 text-gray-900"><%= data['store_name'] || data['vendor'] %></dd>
+                    </div>
+                  <% end %>
+                  <% if data['date'] %>
+                    <div>
+                      <dt class="font-medium text-gray-600">날짜</dt>
+                      <dd class="mt-1 text-gray-900"><%= data['date'] %></dd>
+                    </div>
+                  <% end %>
+                  <% if data['location'] %>
+                    <div>
+                      <dt class="font-medium text-gray-600">위치</dt>
+                      <dd class="mt-1 text-gray-900"><%= data['location'] %></dd>
+                    </div>
+                  <% end %>
+                  <% if data['total_amount'] || data['amount'] %>
+                    <div>
+                      <dt class="font-medium text-gray-600">총 금액</dt>
+                      <dd class="mt-1 text-gray-900">₩<%= number_with_delimiter(data['total_amount'] || data['amount']) %></dd>
+                    </div>
+                  <% end %>
+                </dl>
+                <% if data['items'].is_a?(Array) && data['items'].any? %>
+                  <div class="mt-4">
+                    <h5 class="font-medium text-gray-600 mb-2">구매 항목</h5>
+                    <ul class="space-y-1">
+                      <% data['items'].each do |item| %>
+                        <li class="flex justify-between text-gray-700">
+                          <span><%= item.is_a?(Hash) ? item['name'] : item %></span>
+                          <% if item.is_a?(Hash) && item['amount'] %>
+                            <span class="font-medium">₩<%= number_with_delimiter(item['amount']) %></span>
+                          <% end %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <!-- 분류 불가 또는 기타 -->
+            <div class="mt-4">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">문서 분석 결과</h4>
+              <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <% if data['summary_text'] %>
+                  <p class="text-sm text-gray-700"><%= data['summary_text'] %></p>
+                <% else %>
+                  <pre class="text-sm text-gray-700 whitespace-pre-wrap"><%= JSON.pretty_generate(data) %></pre>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+          <!-- 원본 JSON 데이터 (디버깅용 - 필요시 표시) -->
+          <details class="mt-4">
+            <summary class="cursor-pointer text-sm font-medium text-gray-700 mb-2">원본 JSON 데이터</summary>
+            <div class="p-4 bg-gray-900 text-gray-100 rounded-lg overflow-x-auto">
+              <pre class="text-xs font-mono"><%= JSON.pretty_generate(summary_data) %></pre>
+            </div>
+          </details>
+        <% else %>
+          <p class="text-gray-500">AI 분석 결과를 불러오는 중...</p>
+        <% end %>
+        
+        <% if extracted_text.present? %>
+          <div class="mt-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">추출된 원본 텍스트</h4>
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono"><%= extracted_text %></pre>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      
+      <div class="bg-gray-50 px-6 py-3 flex justify-end gap-2">
+        <% if extracted_text.present? %>
+          <button type="button" 
+                  onclick="navigator.clipboard.writeText(<%= extracted_text.to_json %>); alert('텍스트가 복사되었습니다.')"
+                  class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            복사
+          </button>
+        <% end %>
+        <button type="button" 
+                onclick="document.getElementById('<%= modal_id %>').classList.add('hidden')"
+                class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

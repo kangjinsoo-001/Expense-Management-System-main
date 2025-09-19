@@ -1,0 +1,14 @@
+<% if expense_code.present? && expense_code.description.present? %>
+  <div class="mt-2 p-3 bg-blue-50 rounded-md expense-code-info">
+    <p class="text-sm text-blue-800">
+      <strong><%= expense_code.name %></strong>: <%= expense_code.description %>
+      <br><span class="text-xs">한도: 
+        <% if expense_code.limit_amount.present? %>
+          <%= format_currency(expense_code.limit_amount) %>
+        <% else %>
+          한도 없음
+        <% end %>
+      </span>
+    </p>
+  </div>
+<% end %>

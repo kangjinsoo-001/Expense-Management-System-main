@@ -1,0 +1,358 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" 
+     data-controller="room-calendar"
+     data-date="<%= @date %>"
+     data-room-calendar-date-value="<%= @date %>"
+     data-room-calendar-all-rooms-value="<%= @all_rooms.map { |r| { id: r.id, name: r.name, category: r.category } }.to_json %>">
+  <!-- 헤더 -->
+  <div class="mb-6">
+    <div class="sm:flex sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">회의실 예약</h1>
+        <p class="mt-1 text-sm text-gray-600">일간 예약 현황</p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex gap-2">
+        <%= link_to room_reservations_path,
+            class: "inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" do %>
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          내 예약 보기
+        <% end %>
+        <button type="button" 
+            data-action="click->room-calendar#showNewReservationModal"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+          </svg>
+          예약하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 날짜 네비게이션 -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-3 sm:px-6 flex items-center gap-4">
+      <div class="flex items-center">
+        <%= link_to calendar_room_reservations_path(date: @date - 1.day, location: params[:location]),
+            class: "inline-flex items-center p-2 text-gray-400 hover:text-gray-500" do %>
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+          </svg>
+        <% end %>
+        <%= link_to calendar_room_reservations_path(date: @date + 1.day, location: params[:location]),
+            class: "inline-flex items-center p-2 text-gray-400 hover:text-gray-500" do %>
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+          </svg>
+        <% end %>
+      </div>
+      
+      <div class="flex items-center space-x-4 flex-1">
+        <h2 class="text-lg font-medium text-gray-900">
+          <% 
+            weekdays = %w[일 월 화 수 목 금 토]
+            weekday = weekdays[@date.wday]
+          %>
+          <%= @date.strftime("%Y년 %m월 %d일") %> (<%= weekday %>)
+        </h2>
+        <div style="width: 80px;">
+          <% unless @date == Date.today %>
+            <%= link_to "오늘로 이동", calendar_room_reservations_path(location: params[:location]), 
+                class: "text-sm text-indigo-600 hover:text-indigo-500" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 지점 필터 칩 (DB 기반) -->
+  <% if @available_categories.present? %>
+    <div class="mb-6 flex flex-wrap gap-2">
+      <%= link_to "전체", 
+          calendar_room_reservations_path(date: @date),
+          class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium #{params[:location].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+      
+      <% @available_categories.each do |category| %>
+        <%= link_to category, 
+            calendar_room_reservations_path(date: @date, location: category),
+            class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium #{params[:location] == category ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 캘린더 그리드 (오버레이 방식) -->
+  <style>
+    .calendar-cell {
+      height: 24px;
+      min-height: 24px;
+      max-height: 24px;
+      position: relative;
+    }
+    
+    /* 회의실 컬럼을 relative 컨테이너로 */
+    .room-column-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* 예약 오버레이 스타일 */
+    .reservation-overlay {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      z-index: 10;
+      background-color: rgb(224 231 255);
+      border: 1px solid rgb(165 180 252);
+      border-radius: 4px;
+      padding: 2px 4px;
+      cursor: move;
+      transition: background-color 0.2s;
+      pointer-events: auto;
+      overflow: hidden;
+      font-size: 11px;
+    }
+    
+    .reservation-overlay:hover {
+      background-color: rgb(199 210 254);
+      z-index: 11;
+    }
+    
+    /* 드래그 중인 예약 */
+    .reservation-overlay.dragging {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    
+    /* 드래그 미리보기 */
+    .drag-preview {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      background-color: rgba(165, 180, 252, 0.5);
+      border: 2px dashed rgb(99, 102, 241);
+      border-radius: 4px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    
+    /* 드래그 선택 시 강조 스타일 */
+    td.bg-indigo-100 {
+      background-color: rgb(224 231 255) !important;
+      border-color: rgb(165 180 252) !important;
+    }
+    
+    /* 툴팁 애니메이션 */
+    #reservation-tooltip {
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -90%); }
+      to { opacity: 1; transform: translate(-50%, -100%); }
+    }
+  </style>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="overflow-x-auto">
+      <table class="w-full table-fixed select-none">
+        <colgroup>
+          <col style="width: 64px;">
+          <% @filtered_rooms.each do |room| %>
+            <col>
+          <% end %>
+        </colgroup>
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="sticky left-0 bg-gray-50 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 64px; min-width: 64px; max-width: 64px;">
+              시간
+            </th>
+            <% @filtered_rooms.each do |room| %>
+              <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-500">
+                <div title="<%= room.name %>">
+                  <div class="text-xs text-gray-400">
+                    <%= room.category %>
+                  </div>
+                  <div class="truncate font-medium">
+                    <%= room.name %>
+                  </div>
+                </div>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <%= render 'calendar_grid', filtered_rooms: @filtered_rooms, reservations: @reservations, date: @date, current_user: current_user %>
+                
+                <% @filtered_rooms.each do |room| %>
+                  <% 
+                    # 현재 15분 블록에 해당하는 예약 찾기
+                    # 시간만 비교하기 위해 hour와 minute 값을 직접 사용
+                    reservation = @reservations.find do |r|
+                      if r.room_id == room.id && r.reservation_date == @date
+                        # 예약 시간을 시와 분으로 변환
+                        r_start_hour = r.start_time.hour
+                        r_start_minute = r.start_time.min
+                        r_end_hour = r.end_time.hour
+                        r_end_minute = r.end_time.min
+                        
+                        # 현재 시간 블록이 예약 시간 범위 안에 있는지 확인
+                        current_minutes = hour * 60 + minute
+                        start_minutes = r_start_hour * 60 + r_start_minute
+                        end_minutes = r_end_hour * 60 + r_end_minute
+                        
+                        current_minutes >= start_minutes && current_minutes < end_minutes
+                      else
+                        false
+                      end
+                    end
+                    
+                    # 예약이 이 시간블록에서 시작하는지 확인
+                    is_reservation_start = false
+                    rowspan_count = 0
+                    
+                    if reservation
+                      start_hour = reservation.start_time.hour
+                      start_minute = reservation.start_time.min
+                      
+                      if start_hour == hour && start_minute == minute
+                        is_reservation_start = true
+                        # 예약이 차지하는 15분 블록 개수 계산
+                        duration_minutes = ((reservation.end_time - reservation.start_time) / 60).to_i
+                        rowspan_count = (duration_minutes / 15.0).ceil
+                      end
+                    end
+                  %>
+                  
+                  <% 
+                    # 현재 시간 슬롯 인덱스 계산 (0부터 시작)
+                    time_slot_index = (hour - 9) * 4 + (minute / 15)
+                  %>
+                  
+                  <% if is_reservation_start %>
+                    <td rowspan="<%= rowspan_count %>" 
+                        class="px-1 py-0 text-xs relative <%= border_class %> border-r border-gray-200"
+                        data-room-calendar-target="cell"
+                        data-reserved="true">
+                      <div class="calendar-reservation bg-indigo-100 border border-indigo-300 rounded p-1 overflow-hidden hover:bg-indigo-200 transition cursor-move group relative"
+                           data-reservation-id="<%= reservation.id %>"
+                           data-start-time="<%= reservation.start_time.strftime('%H:%M') %>"
+                           data-end-time="<%= reservation.end_time.strftime('%H:%M') %>"
+                           title="<%= "#{reservation.user.name}\n#{reservation.start_time.strftime('%H:%M')}-#{reservation.end_time.strftime('%H:%M')}\n#{reservation.purpose}" %>"
+                           <% if reservation.user == current_user %>
+                             data-action="mousedown->room-calendar#startMove mouseenter->room-calendar#showTooltip mouseleave->room-calendar#hideTooltip"
+                           <% else %>
+                             data-action="mouseenter->room-calendar#showTooltip mouseleave->room-calendar#hideTooltip"
+                           <% end %>>
+                        <!-- 15분 예약 (rowspan=1): 이름만 표시 -->
+                        <% if rowspan_count == 1 %>
+                          <div class="text-indigo-900 text-xs truncate font-medium">
+                            <%= reservation.user.name.split.first %>
+                          </div>
+                        <!-- 30분 예약 (rowspan=2): 이름, 시간 표시 -->
+                        <% elsif rowspan_count == 2 %>
+                          <div class="text-indigo-900 text-xs truncate font-medium">
+                            <%= reservation.user.name.split.first %>
+                          </div>
+                          <div class="text-indigo-700 text-xs truncate">
+                            <%= reservation.start_time.strftime("%H:%M") %>-<%= reservation.end_time.strftime("%H:%M") %>
+                          </div>
+                        <!-- 45분 이상 예약 (rowspan>=3): 이름, 시간, 목적 표시 -->
+                        <% else %>
+                          <div class="text-indigo-900 text-xs truncate font-medium">
+                            <%= reservation.user.name.split.first %>
+                          </div>
+                          <div class="text-indigo-700 text-xs truncate">
+                            <%= reservation.start_time.strftime("%H:%M") %>-<%= reservation.end_time.strftime("%H:%M") %>
+                          </div>
+                          <div class="text-indigo-600 text-xs truncate">
+                            <%= reservation.purpose %>
+                          </div>
+                        <% end %>
+                        <% if reservation.user == current_user %>
+                          <!-- 리사이즈 핸들 -->
+                          <div class="resize-handle absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-indigo-300 opacity-0 hover:opacity-50"
+                               data-action="mousedown->room-calendar#startResize"></div>
+                          
+                          <div class="hidden group-hover:flex absolute top-1 right-1 gap-1 bg-white rounded p-1 shadow-sm">
+                            <button type="button"
+                                data-action="click->room-calendar#showEditReservationModal"
+                                data-reservation-id="<%= reservation.id %>"
+                                data-room-id="<%= reservation.room_id %>"
+                                data-date="<%= reservation.reservation_date %>"
+                                data-start-time="<%= reservation.start_time.strftime('%H:%M') %>"
+                                data-end-time="<%= reservation.end_time.strftime('%H:%M') %>"
+                                data-purpose="<%= reservation.purpose %>"
+                                class="text-indigo-600 hover:text-indigo-800">
+                              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <%= button_to room_reservation_path(reservation), 
+                                method: :delete,
+                                data: { turbo_confirm: "예약을 취소하시겠습니까?" },
+                                class: "text-red-600 hover:text-red-800" do %>
+                              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    </td>
+                  <% elsif !reservation %>
+                    <td class="calendar-cell px-1 py-0 text-xs <%= border_class %> border-r border-gray-100 hover:bg-gray-50"
+                        data-room-calendar-target="cell"
+                        data-room-id="<%= room.id %>"
+                        data-time-slot="<%= time_slot_index %>"
+                        data-reserved="false">
+                      <!-- 빈 셀 -->
+                    </td>
+                  <% end %>
+                <% end %>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- 범례 -->
+  <div class="mt-4 flex items-center justify-end text-xs text-gray-500">
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1">
+        <div class="w-3 h-3 bg-indigo-100 border border-indigo-300 rounded"></div>
+        <span>예약됨</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        <span>예약 가능</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 새 예약 모달 -->
+<div id="newReservationModal" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-lg" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="bg-white rounded-lg shadow-2xl border border-gray-200">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900" id="modal-title">
+        새 예약
+      </h3>
+      <button type="button" data-action="click->room-calendar#closeModal" class="text-gray-400 hover:text-gray-500">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-6 max-h-[70vh] overflow-y-auto">
+      <turbo-frame id="reservation_form" src="/room_reservations/new?modal=true">
+        <div class="text-center py-4">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <p class="mt-2 text-sm text-gray-500">로딩 중...</p>
+        </div>
+      </turbo-frame>
+    </div>
+  </div>
+</div>

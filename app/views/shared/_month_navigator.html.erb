@@ -1,0 +1,124 @@
+<%# 재사용 가능한 월 네비게이션 컴포넌트 %>
+<%# 
+  Parameters:
+  - year: 현재 연도
+  - month: 현재 월 (월별 보기일 때)
+  - view_mode: 보기 모드 (monthly, yearly, trend)
+  - url_helper: URL 헬퍼 메서드 (기본값: organization_expenses_path)
+  - additional_params: 추가 파라미터 해시
+  - turbo_frame: Turbo Frame ID (optional)
+%>
+
+<%
+  url_helper ||= :organization_expenses_path
+  additional_params ||= {}
+  turbo_frame ||= "_top"
+  view_mode ||= 'monthly'
+  
+  # 날짜 계산
+  current_date = Date.new(year, month || 1, 1)
+  prev_date = current_date - 1.month
+  next_date = current_date + 1.month
+  prev_year = year - 1
+  next_year = year + 1
+  
+  # 추이 모드일 때 표시할 기간
+  if view_mode == 'trend'
+    end_date = current_date.end_of_month
+    start_date = end_date.beginning_of_month - 11.months
+  end
+%>
+
+<div class="month-navigator bg-white border-b px-6 py-3">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center">
+      <!-- 이전/다음 네비게이션 버튼 그룹 -->
+      <div class="flex items-center gap-1 mr-4">
+        <% if view_mode == 'yearly' %>
+          <!-- 연도별: 이전 연도 버튼 -->
+          <%= link_to send(url_helper, additional_params.merge(view_mode: 'yearly', year: prev_year)),
+                      class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                      data: { turbo_frame: turbo_frame, turbo_action: "advance" } do %>
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          <% end %>
+          
+          <!-- 연도별: 다음 연도 버튼 -->
+          <%= link_to send(url_helper, additional_params.merge(view_mode: 'yearly', year: next_year)),
+                      class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                      data: { turbo_frame: turbo_frame, turbo_action: "advance" } do %>
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          <% end %>
+        <% elsif view_mode == 'trend' %>
+          <!-- 추이: 이전 달 버튼 -->
+          <%= link_to send(url_helper, additional_params.merge(view_mode: 'trend', year: prev_date.year, month: prev_date.month)),
+                      class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                      data: { turbo_frame: turbo_frame, turbo_action: "advance" } do %>
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          <% end %>
+          
+          <!-- 추이: 다음 달 버튼 -->
+          <%= link_to send(url_helper, additional_params.merge(view_mode: 'trend', year: next_date.year, month: next_date.month)),
+                      class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                      data: { turbo_frame: turbo_frame, turbo_action: "advance" } do %>
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          <% end %>
+        <% else %>
+          <!-- 월별: 이전 달 버튼 -->
+          <%= link_to send(url_helper, additional_params.merge(year: prev_date.year, month: prev_date.month)),
+                      class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                      data: { turbo_frame: turbo_frame, turbo_action: "advance" } do %>
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          <% end %>
+          
+          <!-- 월별: 다음 달 버튼 -->
+          <%= link_to send(url_helper, additional_params.merge(year: next_date.year, month: next_date.month)),
+                      class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                      data: { turbo_frame: turbo_frame, turbo_action: "advance" } do %>
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <!-- 현재 기간 표시 -->
+      <h1 class="text-lg font-semibold text-gray-900">
+        <% if view_mode == 'yearly' %>
+          <%= "#{year}년" %>
+        <% elsif view_mode == 'trend' %>
+          <%= "#{start_date.year}년 #{start_date.month}월 ~ #{end_date.year}년 #{end_date.month}월" %>
+        <% else %>
+          <%= "#{year}년 #{month}월" %>
+        <% end %>
+      </h1>
+    </div>
+    
+    <!-- 월별/연도별/추이 토글 버튼 (옵션) -->
+    <% if local_assigns[:show_view_mode_toggle] %>
+      <div class="inline-flex rounded-lg bg-gray-100 p-1">
+        <%= link_to "월별", 
+                    send(url_helper, additional_params.merge(view_mode: 'monthly', year: year, month: month || Date.current.month)),
+                    class: "px-3 py-1 text-sm font-medium rounded-md transition-colors #{view_mode == 'monthly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}",
+                    data: { turbo_frame: turbo_frame, turbo_action: "advance" } %>
+        <%= link_to "연도별", 
+                    send(url_helper, additional_params.merge(view_mode: 'yearly', year: year)),
+                    class: "px-3 py-1 text-sm font-medium rounded-md transition-colors #{view_mode == 'yearly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}",
+                    data: { turbo_frame: turbo_frame, turbo_action: "advance" } %>
+        <%= link_to "추이", 
+                    send(url_helper, additional_params.merge(view_mode: 'trend', year: year, month: month || Date.current.month)),
+                    class: "px-3 py-1 text-sm font-medium rounded-md transition-colors #{view_mode == 'trend' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}",
+                    data: { turbo_frame: turbo_frame, turbo_action: "advance" } %>
+      </div>
+    <% end %>
+  </div>
+</div>

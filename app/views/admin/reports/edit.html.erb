@@ -1,0 +1,140 @@
+<% content_for :title, "리포트 템플릿 수정" %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">리포트 템플릿 수정</h1>
+    <p class="mt-2 text-sm text-gray-600"><%= @report_template.name %> 템플릿을 수정합니다.</p>
+  </div>
+
+  <%= form_with model: [:admin, @report_template], 
+                class: "space-y-8 divide-y divide-gray-200",
+                data: { controller: "report-template-form" } do |form| %>
+    
+    <div class="space-y-8 divide-y divide-gray-200">
+      <!-- 기본 정보 -->
+      <div class="pt-8">
+        <div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">기본 정보</h3>
+          <p class="mt-1 text-sm text-gray-500">템플릿의 이름과 설명을 입력하세요.</p>
+        </div>
+        
+        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+          <div class="sm:col-span-4">
+            <%= form.label :name, "템플릿 이름", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :name, 
+                               class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                               placeholder: "예: 월별 경비 요약 리포트" %>
+          </div>
+          
+          <div class="sm:col-span-6">
+            <%= form.label :description, "설명", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_area :description, 
+                              rows: 3,
+                              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                              placeholder: "템플릿의 용도와 특징을 설명하세요." %>
+          </div>
+          
+          <div class="sm:col-span-3">
+            <%= form.label :export_format, "내보내기 형식", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.select :export_format, 
+                           options_for_select([['Excel', 'excel'], ['PDF', 'pdf'], ['CSV', 'csv']], @report_template.export_format),
+                           {},
+                           class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- 필터 설정 -->
+      <div class="pt-8">
+        <div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">필터 설정</h3>
+          <p class="mt-1 text-sm text-gray-500">리포트에 포함할 데이터의 조건을 설정하세요.</p>
+        </div>
+        
+        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+          <div class="sm:col-span-3">
+            <label class="block text-sm font-medium text-gray-700">조직</label>
+            <select name="report_template[filter_config][organization_id]" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">전체</option>
+              <% @filter_options[:organizations].each do |name, id| %>
+                <option value="<%= id %>" <%= 'selected' if @report_template.filter_config['organization_id'].to_s == id.to_s %>><%= name %></option>
+              <% end %>
+            </select>
+          </div>
+          
+          <div class="sm:col-span-3">
+            <label class="block text-sm font-medium text-gray-700">사용자</label>
+            <select name="report_template[filter_config][user_id]" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">전체</option>
+              <% @filter_options[:users].each do |name, id| %>
+                <option value="<%= id %>" <%= 'selected' if @report_template.filter_config['user_id'].to_s == id.to_s %>><%= name %></option>
+              <% end %>
+            </select>
+          </div>
+          
+          <div class="sm:col-span-3">
+            <label class="block text-sm font-medium text-gray-700">경비 코드</label>
+            <select name="report_template[filter_config][expense_code_id]" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">전체</option>
+              <% @filter_options[:expense_codes].each do |name, id| %>
+                <option value="<%= id %>" <%= 'selected' if @report_template.filter_config['expense_code_id'].to_s == id.to_s %>><%= name %></option>
+              <% end %>
+            </select>
+          </div>
+          
+          <div class="sm:col-span-3">
+            <label class="block text-sm font-medium text-gray-700">상태</label>
+            <select name="report_template[filter_config][status]" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">전체</option>
+              <% @filter_options[:statuses].each do |label, value| %>
+                <option value="<%= value %>" <%= 'selected' if @report_template.filter_config['status'] == value %>><%= label %></option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 컬럼 선택 -->
+      <div class="pt-8">
+        <div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">포함할 컬럼</h3>
+          <p class="mt-1 text-sm text-gray-500">리포트에 표시할 항목을 선택하세요.</p>
+        </div>
+        
+        <div class="mt-6">
+          <fieldset class="space-y-4">
+            <% @available_columns.each do |column| %>
+              <div class="relative flex items-start">
+                <div class="flex items-center h-5">
+                  <%= check_box_tag "report_template[columns_config][]", 
+                                    column[:id], 
+                                    @report_template.columns.include?(column[:id]),
+                                    class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded",
+                                    id: "column_#{column[:id]}" %>
+                </div>
+                <div class="ml-3 text-sm">
+                  <label for="column_<%= column[:id] %>" class="font-medium text-gray-700">
+                    <%= column[:label] %>
+                  </label>
+                </div>
+              </div>
+            <% end %>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-5">
+      <div class="flex justify-end">
+        <%= link_to "취소", admin_report_path(@report_template), 
+                    class: "bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <%= form.submit "템플릿 수정", 
+                       class: "ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      </div>
+    </div>
+  <% end %>
+</div>

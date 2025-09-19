@@ -1,0 +1,125 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">내 예약 목록</h1>
+      <p class="mt-1 text-sm text-gray-600">회의실 예약 내역을 확인하세요</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex gap-3">
+      <%= link_to calendar_room_reservations_path, 
+          class: "inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" do %>
+        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+        </svg>
+        캘린더 보기
+      <% end %>
+      <%= link_to new_room_reservation_path, 
+          class: "inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" do %>
+        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+        </svg>
+        예약하기
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 예정된 예약 -->
+  <div class="mt-8">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">예정된 예약</h2>
+    <% if @upcoming_reservations.any? %>
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+          <% @upcoming_reservations.each do |reservation| %>
+            <li>
+              <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <svg class="h-10 w-10 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">
+                        [<%= reservation.room.category %>] <%= reservation.room.name %>
+                      </div>
+                      <div class="text-sm text-gray-500">
+                        <%= reservation.reservation_date.strftime("%Y년 %m월 %d일") %>
+                        <%= reservation.start_time.strftime("%H:%M") %> - <%= reservation.end_time.strftime("%H:%M") %>
+                      </div>
+                      <div class="text-sm text-gray-600 mt-1">
+                        목적: <%= reservation.purpose %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <%= link_to edit_room_reservation_path(reservation), 
+                        class: "text-indigo-600 hover:text-indigo-900 text-sm" do %>
+                      수정
+                    <% end %>
+                    <%= button_to room_reservation_path(reservation), 
+                        method: :delete,
+                        data: { turbo_confirm: "예약을 취소하시겠습니까?" },
+                        class: "text-red-600 hover:text-red-900 text-sm ml-2" do %>
+                      취소
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% else %>
+      <div class="bg-gray-50 rounded-lg py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">예정된 예약이 없습니다</h3>
+        <p class="mt-1 text-sm text-gray-500">새로운 회의실 예약을 만들어보세요</p>
+        <div class="mt-6">
+          <%= link_to new_room_reservation_path, 
+              class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+            </svg>
+            예약하기
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 지난 예약 -->
+  <% if @past_reservations.any? %>
+    <div class="mt-8">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">지난 예약</h2>
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+          <% @past_reservations.each do |reservation| %>
+            <li class="px-4 py-4 sm:px-6 bg-gray-50">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-10 w-10 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    <%= reservation.room.name %> (<%= reservation.room.category %>)
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <%= reservation.reservation_date.strftime("%Y년 %m월 %d일") %>
+                    <%= reservation.start_time.strftime("%H:%M") %> - <%= reservation.end_time.strftime("%H:%M") %>
+                  </div>
+                  <div class="text-sm text-gray-600 mt-1">
+                    목적: <%= reservation.purpose %>
+                  </div>
+                </div>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+</div>

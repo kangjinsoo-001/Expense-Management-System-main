@@ -1,0 +1,18 @@
+<% if params[:modal] == "true" %>
+  <turbo-frame id="reservation_form">
+    <%= render 'form', reservation: @reservation %>
+  </turbo-frame>
+<% else %>
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">회의실 예약</h1>
+      <p class="mt-1 text-sm text-gray-600">회의실을 예약하세요</p>
+    </div>
+
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+      <div class="px-4 py-6 sm:p-8">
+        <%= render 'form', reservation: @reservation %>
+      </div>
+    </div>
+  </div>
+<% end %>

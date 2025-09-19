@@ -1,0 +1,184 @@
+<% content_for :title, "리포트 관리" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900">리포트 관리</h1>
+    <p class="mt-1 text-sm text-gray-500">경비 데이터를 다양한 형식으로 내보내고 관리합니다</p>
+  </div>
+
+  <!-- 빠른 리포트 생성 -->
+  <div class="tremor-card mb-8">
+    <div class="p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">빠른 리포트 생성</h2>
+      
+      <%= form_with url: export_admin_reports_path, method: :post, 
+                    class: "grid grid-cols-1 gap-4 sm:grid-cols-3",
+                    data: { controller: "report-export" } do |form| %>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700">기간</label>
+          <select name="period" class="mt-1 tremor-input">
+            <% @quick_filters[:periods].each do |period| %>
+              <option value="<%= period[:value] %>"><%= period[:label] %></option>
+            <% end %>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700">형식</label>
+          <select name="format" class="mt-1 tremor-input">
+            <% @quick_filters[:formats].each do |format| %>
+              <option value="<%= format[:value] %>"><%= format[:label] %></option>
+            <% end %>
+          </select>
+        </div>
+        
+        <div class="flex items-end">
+          <button type="submit" 
+                  class="w-full tremor-button-primary"
+                  data-report-export-target="exportButton">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            리포트 생성
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <!-- 리포트 템플릿 -->
+    <div class="tremor-card">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">리포트 템플릿</h3>
+          <%= link_to new_admin_report_path, class: "tremor-button-secondary text-sm" do %>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            새 템플릿
+          <% end %>
+        </div>
+        
+        <div class="space-y-3">
+          <% if @report_templates.any? %>
+            <% @report_templates.each do |template| %>
+              <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="text-sm font-medium text-gray-900">
+                      <%= link_to template.name, admin_report_path(template), class: "hover:text-blue-600" %>
+                    </h4>
+                    <p class="text-sm text-gray-500 mt-1"><%= template.description %></p>
+                    <div class="flex items-center space-x-4 mt-2">
+                      <span class="tremor-badge tremor-badge-gray">
+                        <%= template.export_format.upcase %>
+                      </span>
+                      <span class="text-xs text-gray-500">
+                        <%= template.columns.size %>개 컬럼
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center space-x-2">
+                    <%= link_to admin_report_path(template), method: :post,
+                                class: "text-blue-600 hover:text-blue-700" do %>
+                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                      </svg>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="text-center py-8">
+              <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-gray-100">
+                <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p class="mt-2 text-sm text-gray-500">아직 생성된 템플릿이 없습니다</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 최근 생성된 리포트 -->
+    <div class="tremor-card">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">최근 생성된 리포트</h3>
+        
+        <div class="space-y-3" data-controller="report-status">
+          <% if @recent_exports.any? %>
+            <% @recent_exports.each do |export| %>
+              <div class="border border-gray-200 rounded-lg p-4" 
+                   data-report-status-target="export"
+                   data-export-id="<%= export.id %>">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center">
+                      <% if export.pending? %>
+                        <svg class="animate-spin h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      <% elsif export.processing? %>
+                        <svg class="animate-spin h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      <% elsif export.completed? %>
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      <% else %>
+                        <svg class="h-5 w-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      <% end %>
+                      
+                      <div>
+                        <p class="text-sm font-medium text-gray-900">
+                          <%= export.report_template&.name || "빠른 리포트" %>
+                        </p>
+                        <p class="text-xs text-gray-500">
+                          <%= export.created_at.strftime('%Y-%m-%d %H:%M') %>
+                          <% if export.completed? && export.total_records %>
+                            · <%= number_with_delimiter(export.total_records) %>건
+                          <% end %>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <% if export.completed? %>
+                    <%= link_to download_admin_report_path(export),
+                                class: "tremor-button-secondary text-sm",
+                                data: { turbo: false } do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      다운로드
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="text-center py-8">
+              <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-gray-100">
+                <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p class="mt-2 text-sm text-gray-500">아직 생성된 리포트가 없습니다</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

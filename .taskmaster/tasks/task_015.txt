@@ -1,0 +1,50 @@
+# Task ID: 15
+# Title: Gemini API 통합 설정
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Google Gemini Flash-lite 모델 API 통합을 위한 기반 구조 구축
+# Details:
+- Gemini API gem 설치 및 설정
+- 환경 변수 및 API 키 관리 체계 구축
+- 기본 API 호출 서비스 클래스 구현
+- 에러 처리 및 로깅 구조
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Gemini API gem 설치 및 설정 [done]
+### Dependencies: None
+### Description: Google Gemini API Ruby SDK 설치 및 기본 설정
+### Details:
+- google-generative-ai gem 추가
+- Gemfile 업데이트 및 bundle install
+- 기본 설정 파일 생성
+
+## 2. 환경 변수 및 API 키 관리 [done]
+### Dependencies: None
+### Description: Gemini API 키를 안전하게 관리하기 위한 환경 설정
+### Details:
+- .env 파일에 GEMINI_API_KEY 추가
+- credentials.yml.enc에 production API 키 저장
+- 환경별 API 키 관리 구조
+
+## 3. GeminiService 클래스 구현 [done]
+### Dependencies: None
+### Description: Gemini API와 통신하는 서비스 클래스 구현
+### Details:
+- app/services/gemini_service.rb 생성
+- API 호출 메서드 구현
+- 에러 처리 및 재시도 로직
+- 응답 파싱 및 포맷팅
+
+## 4. 로깅 및 모니터링 구조 [done]
+### Dependencies: None
+### Description: API 호출 로깅 및 모니터링 시스템 구축
+### Details:
+- API 호출 로그 기록
+- 성공/실패 메트릭 추적
+- API 사용량 모니터링
+- 디버깅을 위한 상세 로그
+

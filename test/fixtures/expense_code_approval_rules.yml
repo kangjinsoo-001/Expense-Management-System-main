@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  expense_code: one
+  condition: MyString
+  approver_group: one
+  order: 1
+  is_active: false
+
+two:
+  expense_code: two
+  condition: MyString
+  approver_group: two
+  order: 1
+  is_active: false

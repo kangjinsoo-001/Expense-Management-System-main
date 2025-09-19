@@ -1,0 +1,60 @@
+<div id="<%= dom_id user %>" class="space-y-6">
+  <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+    <div class="sm:col-span-1">
+      <dt class="text-sm font-medium text-gray-500">이메일</dt>
+      <dd class="mt-1 text-sm text-gray-900"><%= user.email %></dd>
+    </div>
+    
+    <div class="sm:col-span-1">
+      <dt class="text-sm font-medium text-gray-500">이름</dt>
+      <dd class="mt-1 text-sm text-gray-900"><%= user.name %></dd>
+    </div>
+    
+    <div class="sm:col-span-1">
+      <dt class="text-sm font-medium text-gray-500">사번</dt>
+      <dd class="mt-1 text-sm text-gray-900"><%= user.employee_id || "-" %></dd>
+    </div>
+    
+    <div class="sm:col-span-1">
+      <dt class="text-sm font-medium text-gray-500">역할</dt>
+      <dd class="mt-1">
+        <% role_badges = {
+          'admin' => 'tremor-badge-error',
+          'manager' => 'tremor-badge-blue',
+          'finance' => 'tremor-badge-purple',
+          'employee' => 'tremor-badge-gray'
+        } %>
+        <span class="<%= role_badges[user.role] || 'tremor-badge-gray' %> tremor-badge">
+          <%= t("user.role.#{user.role}") %>
+        </span>
+      </dd>
+    </div>
+    
+    <div class="sm:col-span-2">
+      <dt class="text-sm font-medium text-gray-500">소속 조직</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <% if user.organization %>
+          <div class="flex items-center gap-2">
+            <%= link_to user.organization.name, organization_path(user.organization), 
+                        class: "text-blue-600 hover:text-blue-700 font-medium" %>
+            <% if user == user.organization.manager %>
+              <span class="tremor-badge tremor-badge-yellow">조직장</span>
+            <% end %>
+          </div>
+        <% else %>
+          <span class="text-gray-500">소속 없음</span>
+        <% end %>
+      </dd>
+    </div>
+    
+    <div class="sm:col-span-1">
+      <dt class="text-sm font-medium text-gray-500">등록일</dt>
+      <dd class="mt-1 text-sm text-gray-900"><%= l(user.created_at, format: :long) %></dd>
+    </div>
+    
+    <div class="sm:col-span-1">
+      <dt class="text-sm font-medium text-gray-500">마지막 수정일</dt>
+      <dd class="mt-1 text-sm text-gray-900"><%= l(user.updated_at, format: :long) %></dd>
+    </div>
+  </dl>
+</div>

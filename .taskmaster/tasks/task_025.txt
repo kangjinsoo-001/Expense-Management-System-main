@@ -1,0 +1,11 @@
+# Task ID: 25
+# Title: 첨부파일 분석 Job 구현
+# Status: done
+# Dependencies: 21, 23
+# Priority: high
+# Description: 업로드된 첨부파일을 AI로 분석하는 백그라운드 Job 구현
+# Details:
+AttachmentAnalysisJob 구현, GeminiService 확장, 프롬프트 템플릿 시스템, 분석 결과 JSON 저장
+
+# Test Strategy:
+

@@ -1,0 +1,82 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  code: EXP001
+  name: 일반 경비
+  description: 일반 업무 경비
+  limit_amount: 100000
+  active: true
+  organization: one
+  validation_rules: '{}'
+
+two:
+  code: EXP002
+  name: 교통비
+  description: 업무 관련 교통비
+  limit_amount: 50000
+  active: true
+  organization: one
+  validation_rules: '{"required_fields": ["출발지", "도착지"]}'
+
+travel_expense:
+  code: TRAVEL001
+  name: 국내 출장비
+  description: 국내 출장 관련 경비
+  limit_amount: 500000
+  active: true
+  organization: one
+  validation_rules: '{"required_fields": ["출장지", "출장목적"], "auto_approval_conditions": [{"type": "amount_under", "value": 100000}]}'
+
+meal_expense:
+  code: MEAL001
+  name: 식대
+  description: 업무 관련 식대
+  limit_amount: 50000
+  active: true
+  organization: one
+  validation_rules: '{"required_fields": ["참석자", "목적"]}'
+
+transportation:
+  code: TRANS001
+  name: 교통비
+  description: 업무 관련 교통비
+  limit_amount: 50000
+  active: true
+  organization: one
+  validation_rules: '{}'
+
+meals:
+  code: MEAL002
+  name: 식대
+  description: 업무 관련 식대
+  limit_amount: 30000
+  active: true
+  organization: one
+  validation_rules: '{}'
+
+office_supplies:
+  code: OFFICE001
+  name: 사무용품
+  description: 사무용품 구매
+  limit_amount: 100000
+  active: true
+  organization: one
+  validation_rules: '{}'
+
+meal:
+  code: MEAL
+  name: 식대
+  description: 업무 식대
+  limit_amount: 30000
+  active: true
+  organization: engineering
+  validation_rules: '{}'
+
+transport:
+  code: TRANSPORT
+  name: 교통비
+  description: 업무 교통비
+  limit_amount: 20000
+  active: true
+  organization: engineering
+  validation_rules: '{}'

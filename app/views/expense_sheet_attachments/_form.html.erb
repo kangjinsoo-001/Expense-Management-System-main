@@ -1,0 +1,124 @@
+<%= form_with model: [expense_sheet, attachment], 
+              id: "attachment-form",
+              data: { turbo_stream: true } do |form| %>
+  
+  <% if attachment.errors.any? %>
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+      <ul class="text-sm text-red-600">
+        <% attachment.errors.full_messages.each do |message| %>
+          <li>• <%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  
+  <div class="space-y-4">
+    <!-- 첨부파일 유형 선택 -->
+    <div>
+      <%= form.label :attachment_requirement_id, "첨부파일 유형", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= form.select :attachment_requirement_id,
+                      options_for_select(
+                        @attachment_requirements.map { |req| 
+                          ["#{req.name} #{req.required? ? '(필수)' : ''}", req.id] 
+                        },
+                        attachment.attachment_requirement_id
+                      ),
+                      { include_blank: "-- 유형 선택 (선택사항) --" },
+                      class: "tremor-input" %>
+      
+      <!-- 선택된 요구사항 설명 표시 -->
+      <div id="requirement-description" class="mt-2 text-sm text-gray-600">
+        <% if attachment.attachment_requirement %>
+          <%= attachment.attachment_requirement.description %>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- 파일 업로드 -->
+    <div>
+      <%= form.label :file, "파일 선택", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <div class="mt-1">
+        <%= form.file_field :file, 
+                           class: "block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none",
+                           accept: ".pdf,.jpg,.jpeg,.png",
+                           data: { 
+                             action: "change->file-upload#validateFile",
+                             max_size: "10485760"
+                           } %>
+        <p class="mt-1 text-xs text-gray-500">
+          PDF, JPG, PNG 파일만 가능 (최대 10MB)
+        </p>
+      </div>
+      
+      <!-- 파일 미리보기 영역 -->
+      <div id="file-preview" class="mt-3 hidden">
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <div class="flex items-center gap-3">
+            <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div>
+              <div id="file-name" class="text-sm font-medium text-gray-900"></div>
+              <div id="file-size" class="text-xs text-gray-500"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mt-6 flex justify-end gap-3">
+    <%= link_to "취소", 
+                expense_sheet_expense_sheet_attachments_path(expense_sheet),
+                class: "tremor-btn tremor-btn-secondary",
+                data: { turbo_frame: "_top" } %>
+    
+    <%= form.submit "업로드", 
+                   class: "tremor-btn tremor-btn-primary",
+                   data: { disable_with: "업로드 중..." } %>
+  </div>
+<% end %>
+
+<script>
+  // 첨부파일 유형 선택 시 설명 업데이트
+  document.addEventListener('DOMContentLoaded', function() {
+    const requirementSelect = document.querySelector('#expense_sheet_attachment_attachment_requirement_id');
+    const descriptionDiv = document.querySelector('#requirement-description');
+    
+    if (requirementSelect) {
+      requirementSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+          // AJAX로 요구사항 설명 가져오기 (추후 구현)
+          descriptionDiv.textContent = '선택된 유형의 설명이 여기에 표시됩니다.';
+        } else {
+          descriptionDiv.textContent = '';
+        }
+      });
+    }
+    
+    // 파일 선택 시 미리보기
+    const fileInput = document.querySelector('#expense_sheet_attachment_file');
+    const filePreview = document.querySelector('#file-preview');
+    const fileName = document.querySelector('#file-name');
+    const fileSize = document.querySelector('#file-size');
+    
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          fileName.textContent = file.name;
+          fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+          filePreview.classList.remove('hidden');
+          
+          // 파일 크기 검증
+          if (file.size > 10485760) {
+            alert('파일 크기는 10MB를 초과할 수 없습니다.');
+            this.value = '';
+            filePreview.classList.add('hidden');
+          }
+        }
+      });
+    }
+  });
+</script>

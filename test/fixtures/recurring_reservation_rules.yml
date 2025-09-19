@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  frequency: MyString
+  days_of_week: MyString
+  end_date: 2025-08-26
+  max_occurrences: 1
+
+two:
+  frequency: MyString
+  days_of_week: MyString
+  end_date: 2025-08-26
+  max_occurrences: 1

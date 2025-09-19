@@ -1,0 +1,12 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 원 -->
+  <circle cx="256" cy="256" r="240" fill="#1e40af"/>
+  
+  <!-- X 로고 스타일 -->
+  <g transform="translate(256, 256)">
+    <!-- 왼쪽 위에서 오른쪽 아래로 가는 대각선 -->
+    <rect x="-100" y="-8" width="200" height="16" rx="8" fill="white" transform="rotate(45)"/>
+    <!-- 오른쪽 위에서 왼쪽 아래로 가는 대각선 -->
+    <rect x="-100" y="-8" width="200" height="16" rx="8" fill="white" transform="rotate(-45)"/>
+  </g>
+</svg>

@@ -1,0 +1,55 @@
+<%= turbo_frame_tag "modal" do %>
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40"></div>
+  
+  <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-2xl sm:w-full" 
+           data-controller="attachment-upload">
+        
+        <!-- 헤더 -->
+        <div class="bg-white px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">영수증 첨부</h3>
+            <%= link_to expense_sheets_path, 
+                        data: { turbo_frame: "_top" },
+                        class: "text-gray-400 hover:text-gray-500" do %>
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 본문 -->
+        <div class="bg-white px-6 py-4">
+          <!-- 업로드 폼 -->
+          <div id="attachment-form" class="mb-6">
+            <%= render 'form', expense_item: @expense_item, attachment: ExpenseAttachment.new %>
+          </div>
+          
+          <!-- 첨부 파일 목록 -->
+          <div class="space-y-2">
+            <h4 class="text-sm font-medium text-gray-900">첨부된 파일</h4>
+            <div id="attachments-list" class="space-y-2 max-h-96 overflow-y-auto">
+              <% if @attachments.any? %>
+                <% @attachments.each do |attachment| %>
+                  <%= render 'attachment', attachment: attachment %>
+                <% end %>
+              <% else %>
+                <p class="text-sm text-gray-500 py-4 text-center">첨부된 파일이 없습니다.</p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 푸터 -->
+        <div class="bg-gray-50 px-6 py-3 flex justify-end">
+          <%= link_to "닫기", 
+                      expense_sheets_path,
+                      data: { turbo_frame: "_top" },
+                      class: "inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,47 @@
+<%
+  attachments = expense_sheet.expense_sheet_attachments
+  required_count = AttachmentRequirement.where(
+    attachment_type: 'expense_sheet',
+    required: true,
+    active: true
+  ).count
+  
+  uploaded_required_count = attachments.joins(:attachment_requirement)
+                                      .where(attachment_requirements: { required: true })
+                                      .count
+  
+  completion_rate = required_count > 0 ? (uploaded_required_count.to_f / required_count * 100).round : 100
+%>
+
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+  <div class="flex items-center justify-between mb-2">
+    <div class="text-sm font-medium text-blue-900">
+      첨부파일 업로드 상태
+    </div>
+    <div class="text-sm text-blue-700">
+      <%= uploaded_required_count %> / <%= required_count %> 필수 항목 완료
+    </div>
+  </div>
+  
+  <div class="w-full bg-blue-200 rounded-full h-2">
+    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+         style="width: <%= completion_rate %>%"></div>
+  </div>
+  
+  <% if completion_rate == 100 && required_count > 0 %>
+    <div class="mt-2 text-sm text-green-600 flex items-center gap-1">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      모든 필수 첨부파일이 업로드되었습니다.
+    </div>
+  <% elsif required_count == 0 %>
+    <div class="mt-2 text-sm text-gray-600">
+      필수 첨부파일이 없습니다.
+    </div>
+  <% else %>
+    <div class="mt-2 text-sm text-orange-600">
+      필수 첨부파일 <%= required_count - uploaded_required_count %>개가 누락되었습니다.
+    </div>
+  <% end %>
+</div>

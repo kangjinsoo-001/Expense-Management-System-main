@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  request_template: one
+  approver_group: one
+  condition: MyText
+  order: 1
+  is_active: false
+
+two:
+  request_template: two
+  approver_group: two
+  condition: MyText
+  order: 1
+  is_active: false

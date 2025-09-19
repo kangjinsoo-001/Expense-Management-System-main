@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  request_template: one
+  field_key: MyString
+  field_label: MyString
+  field_type: MyString
+  field_options: MyText
+  is_required: false
+  validation_rules: MyText
+  placeholder: MyString
+  help_text: MyText
+  display_order: 1
+  display_width: MyString
+
+two:
+  request_template: two
+  field_key: MyString
+  field_label: MyString
+  field_type: MyString
+  field_options: MyText
+  is_required: false
+  validation_rules: MyText
+  placeholder: MyString
+  help_text: MyText
+  display_order: 1
+  display_width: MyString

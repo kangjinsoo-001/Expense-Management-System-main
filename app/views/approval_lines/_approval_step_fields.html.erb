@@ -1,0 +1,77 @@
+<div class="approval-step-group bg-gray-50 rounded-lg p-4" data-step-order="<%= step.step_order || 0 %>">
+  <div class="flex items-start space-x-4">
+    <div class="drag-handle flex-shrink-0 cursor-move">
+      <svg class="w-6 h-6 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </div>
+    
+    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+      <span class="step-number text-sm font-bold text-blue-600"><%= step.step_order || 1 %></span>
+    </div>
+    
+    <div class="flex-1">
+      <div class="approvers-container space-y-3" data-step-order="<%= step.step_order || 1 %>">
+        <div class="approval-step">
+          <%= step_form.hidden_field :id if step.persisted? %>
+          <%= step_form.hidden_field :_destroy, value: false %>
+          <%= step_form.hidden_field :step_order %>
+          <%= step_form.hidden_field :approval_type, value: 'single_allowed', class: 'approval-type-hidden' %>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+              <%= step_form.label :approver_id, "승인자", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= step_form.select :approver_id, 
+                                   options_for_select(@users.map { |u| 
+                                     org_name = u.organization&.name || "소속 없음"
+                                     ["#{u.name} (#{org_name})", u.id] 
+                                   }, step.approver_id),
+                                   { prompt: "승인자를 선택하세요" },
+                                   { class: "w-full approver-select" } %>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <%= step_form.label :role, "역할", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                <%= step_form.select :role,
+                                     options_for_select([['승인', 'approve'], ['참조', 'reference']], step.role || 'approve'),
+                                     {},
+                                     { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 role-select" } %>
+              </div>
+              
+              <button type="button"
+                      data-action="click->approval-line-form#removeApprover"
+                      class="mt-6 text-red-600 hover:text-red-800 transition-colors"
+                      title="삭제">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-3 flex items-center justify-between">
+        <button type="button"
+                data-action="click->approval-line-form#addApproverToStep"
+                class="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+          + 이 단계에 승인자 추가
+        </button>
+        
+        <div class="approval-type-field" style="display: none;" data-step-order="<%= step.step_order || 1 %>">
+          <label class="text-sm font-medium text-gray-700 mr-2">승인 방식</label>
+          <select class="approval-type-select text-sm px-3 py-1 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  data-action="change->approval-line-form#updateApprovalType">
+            <option value="single_allowed">단독 가능</option>
+            <option value="all_required">전체 합의</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex-shrink-0">
+      <!-- 단계 삭제는 마지막 승인자 삭제 시 자동으로 처리 -->
+    </div>
+  </div>
+</div>

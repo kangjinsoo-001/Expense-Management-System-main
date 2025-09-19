@@ -1,0 +1,171 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">첨부파일 요구사항 상세</h3>
+      <div class="space-x-2">
+        <%= link_to "수정", edit_admin_attachment_requirement_path(@attachment_requirement), 
+                    class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <%= link_to "목록", admin_attachment_requirements_path, 
+                    class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      </div>
+    </div>
+    
+    <div class="px-4 py-5 sm:p-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- 기본 정보 -->
+        <div>
+          <h5 class="text-lg font-medium text-gray-900 mb-4">기본 정보</h5>
+          <dl class="grid grid-cols-1 gap-x-4 gap-y-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">이름</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @attachment_requirement.name %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">설명</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @attachment_requirement.description || "-" %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">순서</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @attachment_requirement.position %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">필수 여부</dt>
+              <dd class="mt-1">
+                <% if @attachment_requirement.required? %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    필수
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    선택
+                  </span>
+                <% end %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">활성 상태</dt>
+              <dd class="mt-1">
+                <% if @attachment_requirement.active? %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    활성
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    비활성
+                  </span>
+                <% end %>
+              </dd>
+            </div>
+          </dl>
+        </div>
+        
+        <!-- 파일 설정 -->
+        <div>
+          <h5 class="text-lg font-medium text-gray-900 mb-4">파일 설정</h5>
+          <dl class="grid grid-cols-1 gap-x-4 gap-y-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">허용 파일 형식</dt>
+              <dd class="mt-1">
+                <% if @attachment_requirement.file_types.present? %>
+                  <div class="flex flex-wrap gap-1">
+                    <% @attachment_requirement.file_types.each do |type| %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        <%= type.upcase %>
+                      </span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-sm text-gray-500">모든 형식</span>
+                <% end %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">조건 표현식</dt>
+              <dd class="mt-1">
+                <% if @attachment_requirement.condition_expression.present? %>
+                  <code class="text-sm bg-gray-100 px-2 py-1 rounded"><%= @attachment_requirement.condition_expression %></code>
+                <% else %>
+                  <span class="text-sm text-gray-500">없음</span>
+                <% end %>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      
+      <div class="mt-8 border-t border-gray-200 pt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- 분석 규칙 -->
+        <div>
+          <h5 class="text-lg font-medium text-gray-900 mb-4">분석 규칙 (<%= @analysis_rules.count %>개)</h5>
+          <% if @analysis_rules.any? %>
+            <div class="space-y-3">
+              <% @analysis_rules.each do |rule| %>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-start mb-2">
+                    <h6 class="text-sm font-medium text-gray-900">프롬프트</h6>
+                    <% if rule.active? %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                        활성
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                        비활성
+                      </span>
+                    <% end %>
+                  </div>
+                  <pre class="text-sm text-gray-600 mb-2 whitespace-pre-wrap font-sans bg-white p-3 rounded border border-gray-200 max-h-96 overflow-y-auto"><%= rule.prompt_text %></pre>
+                  <% if rule.expected_fields.present? %>
+                    <h6 class="text-sm font-medium text-gray-900 mb-1 mt-3">예상 필드</h6>
+                    <pre class="text-xs bg-white p-3 rounded border border-gray-200 overflow-x-auto font-mono"><%= JSON.pretty_generate(rule.expected_fields) %></pre>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-sm text-gray-500">분석 규칙이 없습니다.</p>
+          <% end %>
+        </div>
+        
+        <!-- 검증 규칙 -->
+        <div>
+          <h5 class="text-lg font-medium text-gray-900 mb-4">검증 규칙 (<%= @validation_rules.count %>개)</h5>
+          <% if @validation_rules.any? %>
+            <div class="space-y-3">
+              <% @validation_rules.each do |rule| %>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center space-x-2">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-800">
+                        <%= rule.rule_type %>
+                      </span>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-<%= rule.severity == 'error' ? 'red' : 'yellow' %>-100 text-<%= rule.severity == 'error' ? 'red' : 'yellow' %>-800">
+                        <%= rule.severity %>
+                      </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        순서: <%= rule.position %>
+                      </span>
+                      <% if rule.active? %>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                          활성
+                        </span>
+                      <% else %>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                          비활성
+                        </span>
+                      <% end %>
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-600"><%= rule.prompt_text %></p>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-sm text-gray-500">검증 규칙이 없습니다.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

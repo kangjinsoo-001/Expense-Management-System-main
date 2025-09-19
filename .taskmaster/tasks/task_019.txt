@@ -1,0 +1,15 @@
+# Task ID: 19
+# Title: UI/UX 개선 및 테스트
+# Status: done
+# Dependencies: 18
+# Priority: medium
+# Description: AI 요약 기능의 사용자 인터페이스 개선 및 통합 테스트
+# Details:
+- 처리 단계 표시 UI 업데이트 (분석중→추출완료→요약완료)
+- 요약 결과 표시 컴포넌트 개발
+- 원본 텍스트와 요약 토글 기능
+- 다양한 영수증 형식 테스트
+- 프롬프트 최적화
+
+# Test Strategy:
+

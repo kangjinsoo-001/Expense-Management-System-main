@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  attachment_requirement: one
+  rule_type: MyString
+  prompt_text: MyText
+  severity: MyString
+  position: 1
+  active: false
+
+two:
+  attachment_requirement: two
+  rule_type: MyString
+  prompt_text: MyText
+  severity: MyString
+  position: 1
+  active: false

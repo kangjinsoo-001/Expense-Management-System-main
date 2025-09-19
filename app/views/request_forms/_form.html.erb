@@ -1,0 +1,317 @@
+<script>
+  window.approvalLinesData = <%= (@approval_lines_data || {}).to_json.html_safe %>;
+  window.templateApprovalRules = <%= (@template_approval_rules || []).to_json.html_safe %>;
+  window.currentUserGroups = <%= (@current_user_groups || []).to_json.html_safe %>;
+</script>
+
+<%= form_with model: request_form,
+              data: { 
+                controller: "request-form request-form-validation",
+                action: "keydown->request-form#preventEnterSubmit"
+              } do |f| %>
+  
+  <!-- 전체 에러 메시지 표시 -->
+  <% if request_form.errors.any? %>
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+      <div class="flex">
+        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            <%= request_form.errors.count %>개의 오류가 발생했습니다:
+          </h3>
+          <div class="mt-2 text-sm text-red-700">
+            <ul class="list-disc list-inside space-y-1">
+              <% request_form.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%= f.hidden_field :request_template_id %>
+
+  <div class="space-y-6">
+    <!-- 동적 필드 -->
+    <% if @template&.request_template_fields.present? %>
+      <% @template.request_template_fields.ordered.each do |field| %>
+        <div class="field-item" data-field-key="<%= field.field_key %>">
+          <%= f.fields_for :form_data do |ff| %>
+            <%= ff.label field.field_key, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+              <%= field.field_label %>
+              <% if field.is_required %>
+                <span class="text-red-500">*</span>
+              <% end %>
+            <% end %>
+
+            <% case field.field_type %>
+            <% when 'text' %>
+              <%= ff.text_field field.field_key, 
+                  class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm border-gray-300",
+                  required: field.is_required,
+                  placeholder: field.placeholder,
+                  value: request_form.form_data&.dig(field.field_key) %>
+
+            <% when 'email' %>
+              <%= ff.email_field field.field_key, 
+                  class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm border-gray-300",
+                  required: field.is_required,
+                  placeholder: field.placeholder,
+                  value: request_form.form_data&.dig(field.field_key) %>
+
+            <% when 'textarea' %>
+              <%= ff.text_area field.field_key, 
+                  rows: 3,
+                  class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm border-gray-300",
+                  required: field.is_required,
+                  placeholder: field.placeholder,
+                  value: request_form.form_data&.dig(field.field_key) %>
+
+            <% when 'select' %>
+              <% options = field.field_options&.dig('options') || [] %>
+              <%= ff.select field.field_key,
+                  options_for_select(options, request_form.form_data&.dig(field.field_key)),
+                  { prompt: "선택하세요", selected: request_form.form_data&.dig(field.field_key) },
+                  { class: "mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300",
+                    required: field.is_required,
+                    data: { 
+                      choices: true 
+                    }
+                  } %>
+
+            <% when 'date' %>
+              <%= ff.date_field field.field_key, 
+                  class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm border-gray-300",
+                  required: field.is_required,
+                  value: request_form.form_data&.dig(field.field_key) %>
+
+            <% when 'checkbox' %>
+              <div class="mt-1">
+                <%= ff.check_box field.field_key, 
+                    { class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded",
+                      checked: request_form.form_data&.dig(field.field_key) == 'true' || request_form.form_data&.dig(field.field_key) == true },
+                    'true', 'false' %>
+                <%= ff.label field.field_key, field.field_label, class: "ml-2 text-sm text-gray-700" %>
+              </div>
+
+            <% when 'file' %>
+              <div class="mt-1">
+                <p class="text-sm text-gray-500 mb-2">파일 업로드는 저장 후 가능합니다</p>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <!-- 첨부파일 (수정 모드에서만 표시) -->
+    <% if request_form.persisted? %>
+      <div class="mt-6">
+        <%= f.label :attachments, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          첨부파일
+        <% end %>
+        
+        <% if request_form.request_form_attachments.any? %>
+          <ul class="divide-y divide-gray-200 mb-3">
+            <% request_form.request_form_attachments.each do |attachment| %>
+              <li class="py-3 flex items-center justify-between">
+                <div class="flex items-center">
+                  <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                  </svg>
+                  <span class="text-sm text-gray-900"><%= attachment.file.filename %></span>
+                  <span class="ml-2 text-xs text-gray-500">(<%= number_to_human_size(attachment.file.byte_size) %>)</span>
+                </div>
+                <% if request_form.draft? %>
+                  <%= link_to "삭제", "#", class: "text-red-600 hover:text-red-900 text-sm" %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+        
+        <% if request_form.draft? %>
+          <%= f.file_field :attachments, 
+              multiple: true,
+              class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100",
+              accept: ".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" %>
+          <p class="mt-1 text-xs text-gray-500">PDF, Word, Excel, 이미지 파일을 업로드할 수 있습니다.</p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- 결재선 선택 -->
+    <div class="mt-6">
+      <%= turbo_frame_tag "approval_line_section" do %>
+        <div data-controller="request-form-approval"
+             data-request-form-approval-selected-value="<%= request_form.approval_line_id %>"
+             data-request-form-approval-template-id-value="<%= @template.id %>">
+          
+          <%= f.label :approval_line_id, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+            결재선
+          <% end %>
+          
+          <% if @approval_lines.any? %>
+            <!-- 결재선 칩 목록 -->
+            <div class="flex flex-wrap gap-2 mb-3">
+              <!-- 결재 없음 옵션 -->
+              <label class="inline-flex items-center cursor-pointer relative">
+                <%= f.radio_button :approval_line_id, "", 
+                                   checked: request_form.approval_line_id.blank?,
+                                   class: "sr-only peer",
+                                   data: { 
+                                     request_form_approval_target: "radio",
+                                     action: "change->request-form-approval#selectApprovalLine",
+                                     approval_line_id: ""
+                                   } %>
+                <span class="chip-selector px-3 py-1 text-sm rounded-full border transition-all
+                           peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-gray-500
+                           <%= request_form.approval_line_id.blank? ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400' %>"
+                      data-request-form-approval-target="chip">
+                  결재 없음
+                </span>
+              </label>
+              
+              <!-- 사용자가 만든 결재선들 -->
+              <% @approval_lines.each do |approval_line| %>
+                <label class="inline-flex items-center cursor-pointer relative">
+                  <%= f.radio_button :approval_line_id, approval_line.id, 
+                                     class: "sr-only peer",
+                                     data: { 
+                                       request_form_approval_target: "radio",
+                                       action: "change->request-form-approval#selectApprovalLine",
+                                       approval_line_id: approval_line.id
+                                     } %>
+                  <span class="chip-selector px-3 py-1 text-sm rounded-full border transition-all
+                             peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-gray-500
+                             <%= request_form.approval_line_id == approval_line.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400' %>"
+                        data-request-form-approval-target="chip">
+                    <%= approval_line.name %>
+                  </span>
+                </label>
+              <% end %>
+            </div>
+            
+            <!-- 검증 메시지 영역 (칩 바로 아래) -->
+            <div id="approval_server_messages">
+              <% if request_form.errors[:approval_line].any? %>
+                <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <div class="flex items-start gap-2">
+                    <svg class="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-sm text-red-800">
+                      <% request_form.errors[:approval_line].each do |error| %>
+                        <p><%= error %></p>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% elsif @approval_validation.present? %>
+                <% case @approval_validation[:type] %>
+                <% when 'error' %>
+                  <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div class="flex items-start gap-2">
+                      <svg class="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div class="text-sm text-red-800">
+                        <p>승인 필요: <%= @approval_validation[:required_groups].join(', ') %></p>
+                      </div>
+                    </div>
+                  </div>
+                <% when 'warning' %>
+                  <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div class="flex items-start gap-2">
+                      <svg class="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div class="text-sm text-yellow-800">
+                        <p class="font-semibold mb-1">주의</p>
+                        <p><%= @approval_validation[:message] %></p>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+            
+            <!-- 선택된 결재선의 승인자 미리보기 -->
+            <div class="approval-preview <%= request_form.approval_line_id.present? ? '' : 'hidden' %>" 
+                 data-request-form-approval-target="preview">
+              <% if request_form.approval_line_id.present? %>
+                <%= render partial: "approval_line_preview", locals: { approval_line: request_form.approval_line } %>
+              <% end %>
+            </div>
+            
+            <!-- 결재선 검증 메시지 영역 -->
+            <div id="approval_validation_messages" class="mt-3"></div>
+            
+          <% else %>
+            <p class="text-sm text-gray-500">
+              설정된 결재선이 없습니다. 
+              <%= link_to "결재선 관리", approval_lines_path, class: "text-indigo-600 hover:text-indigo-500", target: "_blank" %>에서 결재선을 먼저 생성해주세요.
+            </p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div> <!-- space-y-6 div 닫기 -->
+
+  <!-- 제출 버튼 -->
+  <div class="mt-6 flex justify-end space-x-3">
+    <%= link_to "취소", request_forms_path, 
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    
+    <% if request_form.draft? || request_form.new_record? %>
+      <%= f.button "임시 저장", 
+          type: "submit",
+          name: "submit_type", 
+          value: "save",
+          class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700",
+          "data-action": "click->request-form#save" %>
+      
+      <!-- 제출 버튼 wrapper (툴팁 포함) -->
+      <div class="relative" data-request-form-validation-target="submitButtonWrapper">
+        <%= f.button "저장", 
+            type: "submit",
+            name: "submit_type", 
+            value: "submit",
+            class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700",
+            "data-action": "click->request-form#submit",
+            "data-request-form-validation-target": "submitButton" %>
+        
+        <!-- 툴팁 -->
+        <div class="absolute bottom-full right-0 mb-2 hidden" data-request-form-validation-target="tooltip">
+          <div class="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+            <span data-request-form-validation-target="tooltipText">필수 필드를 모두 입력해주세요</span>
+            <svg class="absolute text-gray-900 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve">
+              <polygon class="fill-current" points="0,0 127.5,127.5 255,0"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <div class="relative" data-request-form-validation-target="submitButtonWrapper">
+        <%= f.button "수정", 
+            type: "submit",
+            class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700",
+            "data-request-form-validation-target": "submitButton" %>
+        
+        <!-- 툴팁 -->
+        <div class="absolute bottom-full right-0 mb-2 hidden" data-request-form-validation-target="tooltip">
+          <div class="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+            <span data-request-form-validation-target="tooltipText">필수 필드를 모두 입력해주세요</span>
+            <svg class="absolute text-gray-900 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve">
+              <polygon class="fill-current" points="0,0 127.5,127.5 255,0"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

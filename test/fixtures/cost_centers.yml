@@ -1,0 +1,37 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  code: CC001
+  name: 일반 비용센터
+  organization: one
+  manager: employee_one
+  budget_amount: 5000000
+  fiscal_year: 2025
+  active: true
+
+two:
+  code: CC002
+  name: 프로젝트 비용센터
+  organization: one
+  manager: manager_one
+  budget_amount: 8000000
+  fiscal_year: 2025
+  active: true
+
+sales:
+  code: SALES001
+  name: 영업 비용센터
+  organization: one
+  manager: employee_one
+  budget_amount: 10000000
+  fiscal_year: 2025
+  active: true
+
+engineering_center:
+  code: ENG001
+  name: 엔지니어링 비용센터
+  organization: engineering
+  manager: jane
+  budget_amount: 20000000
+  fiscal_year: 2025
+  active: true

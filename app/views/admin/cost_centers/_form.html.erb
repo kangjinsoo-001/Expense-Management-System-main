@@ -1,0 +1,99 @@
+<%= form_with(model: [:admin, cost_center], local: false) do |form| %>
+  <% if cost_center.errors.any? %>
+    <div class="tremor-card mb-6 border-red-200 bg-red-50">
+      <div class="p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">
+              <%= cost_center.errors.count %>개의 오류가 발생했습니다:
+            </h3>
+            <div class="mt-2 text-sm text-red-700">
+              <ul class="list-disc list-inside">
+                <% cost_center.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="space-y-6">
+    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+      <div class="sm:col-span-1">
+        <%= form.label :code, "코드", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :code, 
+            class: "tremor-input mt-1",
+            placeholder: "CC001",
+            required: true %>
+      </div>
+      
+      <div class="sm:col-span-1">
+        <%= form.label :name, "이름", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :name, 
+            class: "tremor-input mt-1",
+            placeholder: "코스트센터명",
+            required: true %>
+      </div>
+
+      <div class="sm:col-span-2">
+        <%= form.label :description, "설명", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_area :description, 
+            rows: 3, 
+            class: "tremor-input mt-1",
+            placeholder: "코스트센터 설명을 입력하세요" %>
+      </div>
+
+      <div class="sm:col-span-1">
+        <%= form.label :manager_id, "관리자", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :manager_id, 
+            options_for_select([["-", nil]] + User.where(role: ['admin', 'manager']).pluck(:name, :id), cost_center.manager_id),
+            {},
+            class: "tremor-select mt-1" %>
+      </div>
+      
+      <div class="sm:col-span-1">
+        <%= form.label :organization_id, "조직", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :organization_id, 
+            options_for_select([["-", nil]] + Organization.pluck(:name, :id), cost_center.organization_id),
+            {},
+            class: "tremor-select mt-1" %>
+      </div>
+
+      <div class="sm:col-span-1">
+        <%= form.label :budget_amount, "예산 금액", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.number_field :budget_amount, 
+            step: 1, 
+            class: "tremor-input mt-1" %>
+      </div>
+      
+      <div class="sm:col-span-1">
+        <%= form.label :fiscal_year, "회계연도", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.number_field :fiscal_year, 
+            value: cost_center.fiscal_year || Date.current.year,
+            class: "tremor-input mt-1" %>
+      </div>
+
+      <div class="sm:col-span-2">
+        <%= form.label :active, class: "flex items-center cursor-pointer" do %>
+          <%= form.check_box :active, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2" %>
+          <span class="text-sm font-medium text-gray-700">활성화</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+    <%= link_to "취소", admin_cost_centers_path, 
+        class: "tremor-button-secondary" %>
+    <%= form.submit cost_center.new_record? ? "코스트센터 생성" : "코스트센터 수정",
+        class: "tremor-button-primary" %>
+  </div>
+<% end %>

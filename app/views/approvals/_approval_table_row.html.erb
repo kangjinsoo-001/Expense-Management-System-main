@@ -1,0 +1,73 @@
+<tr class="hover:bg-gray-50">
+  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    <%= request.created_at.strftime('%Y-%m-%d') %>
+  </td>
+  <% if show_requester %>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <% if request.approvable.is_a?(ExpenseItem) %>
+        <%= request.approvable.expense_sheet.user.name %>
+      <% elsif request.approvable.is_a?(RequestForm) %>
+        <%= request.approvable.user.name %>
+      <% end %>
+    </td>
+  <% end %>
+  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    <% if request.approvable.is_a?(ExpenseItem) %>
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+        경비
+      </span>
+    <% elsif request.approvable.is_a?(RequestForm) %>
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+        신청서
+      </span>
+    <% end %>
+  </td>
+  <td class="px-6 py-4 text-sm text-gray-900">
+    <% if request.approvable.is_a?(ExpenseItem) %>
+      <div class="font-medium"><%= request.approvable.expense_code.name %></div>
+      <div class="text-gray-500 text-xs"><%= request.approvable.display_description %></div>
+    <% elsif request.approvable.is_a?(RequestForm) %>
+      <div class="font-medium"><%= request.approvable.request_template.name %></div>
+      <div class="text-gray-500 text-xs"><%= request.approvable.title %></div>
+    <% end %>
+  </td>
+  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+    <% if request.approvable.is_a?(ExpenseItem) %>
+      <%= request.approvable.formatted_amount %>
+    <% elsif request.approvable.is_a?(RequestForm) %>
+      <span class="text-gray-400">-</span>
+    <% end %>
+  </td>
+  <td class="px-6 py-4 whitespace-nowrap">
+    <% status_colors = {
+         'pending' => 'bg-yellow-100 text-yellow-800',
+         'approved' => 'bg-green-100 text-green-800',
+         'rejected' => 'bg-red-100 text-red-800',
+         'cancelled' => 'bg-gray-100 text-gray-800'
+       } %>
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= status_colors[request.status] || 'bg-gray-100 text-gray-800' %>">
+      <%= request.current_status_display %>
+    </span>
+  </td>
+  <% if show_current_approver %>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <% if request.status == 'pending' && request.current_approver %>
+        <div class="flex items-center gap-1">
+          <span class="text-gray-600"><%= request.current_approver.name %></span>
+          <span class="text-xs text-gray-400">대기</span>
+        </div>
+      <% elsif request.status == 'approved' %>
+        <span class="text-green-600">승인 완료</span>
+      <% elsif request.status == 'rejected' %>
+        <span class="text-red-600">반려됨</span>
+      <% else %>
+        <span class="text-gray-400">-</span>
+      <% end %>
+    </td>
+  <% end %>
+  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+    <%= link_to '상세보기', approval_path(request), 
+        class: 'text-blue-600 hover:text-blue-900',
+        data: { turbo_frame: "_top" } %>
+  </td>
+</tr>

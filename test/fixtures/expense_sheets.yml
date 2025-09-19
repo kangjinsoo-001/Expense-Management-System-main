@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  organization: one
+  year: 2025
+  month: 1
+  status: draft
+  total_amount: 100000
+  
+two:
+  user: two
+  organization: two
+  year: 2025
+  month: 1
+  status: draft
+  total_amount: 200000

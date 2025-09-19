@@ -1,0 +1,14 @@
+<!-- 자동 저장 상태 표시 영역 -->
+<div id="autosave_status" 
+     class="text-sm"
+     data-autosave-target="status">
+  <% if defined?(status) && status.present? %>
+    <% css_class = defined?(error) && error ? 'text-red-600' : 'text-green-600' %>
+    <span class="<%= css_class %>">
+      <%= status %>
+      <% if defined?(timestamp) && timestamp.present? %>
+        (<%= timestamp.strftime("%H:%M:%S") %>)
+      <% end %>
+    </span>
+  <% end %>
+</div>

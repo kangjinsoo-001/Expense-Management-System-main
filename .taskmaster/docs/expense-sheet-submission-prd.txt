@@ -1,0 +1,230 @@
+# 경비 시트 제출 고도화 시스템 - PRD
+
+## 프로젝트 개요
+경비 시트 제출 시 첨부파일 관리를 체계화하고, AI를 활용한 자동 분석 및 검증 기능을 구현하여 경비 처리의 정확성과 효율성을 향상시킨다.
+
+## 목적
+- 경비 시트 제출 시 필요한 첨부파일을 체계적으로 관리
+- AI를 통한 첨부파일 내용 자동 분석 및 데이터 추출
+- 경비 항목과 첨부파일 내용의 자동 검증
+- 관리자가 유연하게 검증 규칙을 설정할 수 있는 시스템 구축
+
+## 주요 기능
+
+### 1. 첨부파일 요구사항 관리 시스템
+관리자가 경비 시트 제출 시 필요한 첨부파일 요구사항을 설정하고 관리한다.
+
+#### 1.1 첨부파일 템플릿 정의
+- 첨부파일 이름/유형 설정 (예: "법인카드 청구서", "통신비 명세서")
+- 필수/선택 여부 설정
+- 파일 형식 제한 (PDF, 이미지 등)
+- 적용 조건 설정 (특정 경비 코드가 포함된 경우에만 요구)
+
+#### 1.2 데이터베이스 모델
+- AttachmentRequirement: 첨부파일 요구사항 정의
+- AttachmentAnalysisRule: AI 분석 규칙 저장
+- AttachmentValidationRule: 검증 규칙 저장
+- ExpenseSheetAttachment: 제출된 첨부파일 정보
+
+### 2. AI 분석 규칙 설정
+관리자가 자연어로 AI 분석 요구사항을 설정한다.
+
+#### 2.1 분석 항목 설정
+- 추출해야 할 데이터 필드 정의
+- 자연어 프롬프트 입력 기능
+- 예시:
+  ```
+  - 카드 이용 내역만 필요 (해외이용내역은 이미 카드 이용 내역에 포함)
+  - 이용일자, 이용가맹점, 이용금액, 수수료 추출
+  - 실제 청구는 이용금액 + 수수료 = 합계이므로 합계도 생성
+  ```
+
+#### 2.2 분석 결과 저장
+- 구조화된 JSON 형태로 분석 결과 저장
+- 원본 텍스트와 추출된 데이터 매핑 정보 보관
+
+### 3. 검증 규칙 설정
+관리자가 자연어로 검증 규칙을 설정한다.
+
+#### 3.1 검증 규칙 유형
+- 필수 항목 존재 여부 검증
+- 금액 일치 검증
+- 순서 일치 검증
+- 조건부 검증 (특정 조건 충족 시에만 적용)
+
+#### 3.2 검증 규칙 예시
+```
+- 통신비 항목 미신청 시 주의 안내
+- 통신비는 항상 최상단에 배치
+- 청구 명세서의 순서와 경비 항목 입력 순서를 일치
+- 통신비는 청구 명세서 내에 없어도 무방
+- 청구 명세서에 없는데 경비 항목에 있다면 영수증 필수
+- 청구 명세서에 있는데 경비 항목에 없으면 주의 안내
+- "경비 항목 금액 > 청구 명세서 항목 금액" 경고 및 강제 수정 확인
+```
+
+#### 3.3 검증 결과 처리
+- 통과: 그대로 진행
+- 주의: 사용자에게 알림 후 선택적 진행
+- 경고: 수정 필수, 진행 차단
+
+### 4. 관리자 설정 인터페이스
+
+#### 4.1 첨부파일 요구사항 관리 화면
+- CRUD 기능을 갖춘 첨부파일 템플릿 관리
+- 드래그 앤 드롭으로 우선순위 조정
+- 적용 조건 설정 UI
+
+#### 4.2 AI 분석 규칙 관리 화면
+- 자연어 프롬프트 입력 폼
+- 프롬프트 템플릿 라이브러리
+- 테스트 실행 기능 (샘플 파일로 분석 테스트)
+
+#### 4.3 검증 규칙 관리 화면
+- 자연어 검증 규칙 입력 폼
+- 규칙 우선순위 설정
+- 검증 수준 설정 (통과/주의/경고)
+- 규칙 활성화/비활성화 토글
+
+### 5. 사용자 제출 인터페이스
+
+#### 5.1 경비 시트 제출 화면 개선
+- 필수 첨부파일 체크리스트 표시
+- 첨부파일 업로드 상태 표시
+- 실시간 검증 결과 표시
+
+#### 5.2 AI 분석 결과 표시
+- 추출된 데이터 미리보기
+- 경비 항목과 자동 매칭 제안
+- 불일치 항목 하이라이트
+
+#### 5.3 검증 결과 표시
+- 검증 통과/경고/오류 항목 구분 표시
+- 수정 필요 항목 안내
+- 검증 결과 상세 설명
+
+### 6. 백그라운드 처리 시스템
+
+#### 6.1 파일 처리 파이프라인
+1. 파일 업로드 수신
+2. 텍스트 추출 (기존 TextExtractionJob 활용)
+3. AI 분석 실행 (새로운 AttachmentAnalysisJob)
+4. 검증 규칙 적용 (새로운 ValidationJob)
+5. 결과 저장 및 사용자 알림
+
+#### 6.2 비동기 처리
+- Rails 8에 이미 있는 Solid? 기능 사용
+- 진행 상태 실시간 업데이트 (Turbo Streams)
+- 처리 실패 시 재시도 로직
+
+### 7. AI 서비스 통합
+
+#### 7.1 Gemini API 활용
+- 기존 GeminiService 확장
+- 프롬프트 템플릿 시스템 구현
+- 응답 파싱 및 구조화
+
+#### 7.2 프롬프트 엔지니어링
+- 분석용 프롬프트 최적화
+- 검증용 프롬프트 최적화
+- Few-shot 예시 포함
+
+### 8. 데이터베이스 스키마
+
+#### 8.1 신규 테이블
+```ruby
+# attachment_requirements
+- id
+- name (string) # "법인카드 청구서"
+- description (text)
+- required (boolean)
+- file_types (jsonb) # ["pdf", "jpg", "png"]
+- condition_expression (text) # 적용 조건
+- position (integer) # 표시 순서
+- active (boolean)
+- created_at, updated_at
+
+# attachment_analysis_rules
+- id
+- attachment_requirement_id
+- prompt_text (text) # 자연어 분석 프롬프트
+- expected_fields (jsonb) # 추출 예상 필드
+- active (boolean)
+- created_at, updated_at
+
+# attachment_validation_rules
+- id
+- attachment_requirement_id
+- rule_type (string) # "required", "amount_match", "order_match"
+- prompt_text (text) # 자연어 검증 규칙
+- severity (string) # "error", "warning", "info"
+- position (integer)
+- active (boolean)
+- created_at, updated_at
+
+# expense_sheet_attachments
+- id
+- expense_sheet_id
+- attachment_requirement_id
+- attachment_id (ActiveStorage)
+- extracted_text (text)
+- analysis_result (jsonb)
+- validation_result (jsonb)
+- status (string) # "pending", "analyzing", "completed", "failed"
+- created_at, updated_at
+```
+
+### 9. 구현 단계
+
+#### Phase 1: 기초 구조 구축
+1. 데이터베이스 모델 및 마이그레이션 생성
+2. 관리자 CRUD 인터페이스 구현
+3. 첨부파일 요구사항 관리 기능
+
+#### Phase 2: AI 분석 시스템
+1. AI 분석 규칙 관리 기능
+2. AttachmentAnalysisJob 구현
+3. 분석 결과 저장 및 표시
+
+#### Phase 3: 검증 시스템
+1. 검증 규칙 관리 기능
+2. ValidationJob 구현
+3. 검증 결과 처리 로직
+
+#### Phase 4: 사용자 인터페이스
+1. 경비 시트 제출 화면 개선
+2. 실시간 검증 결과 표시
+3. 사용자 피드백 및 수정 안내
+
+#### Phase 5: 최적화 및 테스트
+1. 성능 최적화
+2. 통합 테스트
+3. 사용자 수용 테스트
+
+## 기술 스택
+- Ruby on Rails 8.0.2
+- SQlite 
+- Sidekiq (백그라운드 처리)
+- Turbo/Stimulus (실시간 UI 업데이트)
+- Google Gemini API (AI 분석)
+- ActiveStorage (파일 처리)
+
+## 성공 기준
+- 첨부파일 분석 정확도 95% 이상
+- 검증 규칙 적용률 100%
+- 처리 시간 30초 이내 (일반적인 PDF 기준)
+- 관리자 설정 변경 즉시 반영
+- 사용자 만족도 4.5/5 이상
+
+## 보안 고려사항
+- 민감한 금융 정보 처리 시 암호화
+- AI API 호출 시 개인정보 마스킹
+- 첨부파일 접근 권한 제어
+- 감사 로그 기록
+
+## 향후 확장 가능성
+- OCR 기능 강화 (이미지 품질 개선)
+- 다국어 문서 지원
+- 머신러닝 기반 자동 규칙 생성
+- 타 시스템과의 연동 (ERP, 회계 시스템)
+- 모바일 앱 카메라 직접 촬영 지원

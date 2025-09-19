@@ -1,0 +1,42 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- 헤더 영역 -->
+  <div class="mb-8">
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-semibold text-gray-900">경비 코드 관리</h1>
+        <p class="mt-1 text-sm text-gray-500">경비 항목별 코드와 한도를 관리합니다</p>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4">
+        <%= link_to new_admin_expense_code_path, 
+            class: "tremor-button-primary" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          새 경비 코드
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="tremor-card">
+    <div class="overflow-x-auto">
+      <table class="tremor-table">
+        <thead>
+          <tr>
+            <th class="text-left">코드</th>
+            <th class="text-left">이름</th>
+            <th class="text-right">한도</th>
+            <th class="text-left">조직</th>
+            <th class="text-left">필수 필드</th>
+            <th class="text-left">상태</th>
+            <th class="text-center">작업</th>
+          </tr>
+        </thead>
+        <tbody id="expense_codes">
+          <%= render partial: 'expense_code', collection: @expense_codes %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

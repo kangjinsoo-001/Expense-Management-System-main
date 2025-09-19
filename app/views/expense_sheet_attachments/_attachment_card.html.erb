@@ -1,0 +1,177 @@
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <!-- 헤더 영역 -->
+  <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <!-- 파일 아이콘 -->
+        <div class="flex-shrink-0">
+          <% if attachment.file_attachment && attachment.file_attachment.blob.content_type&.include?('pdf') %>
+            <svg class="h-8 w-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+            </svg>
+          <% else %>
+            <svg class="h-8 w-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+            </svg>
+          <% end %>
+        </div>
+        
+        <!-- 파일 정보 -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-900">
+            <%= attachment.attachment_requirement&.name || (attachment.file_attachment && attachment.file_attachment.filename) || attachment.file_name || "첨부파일" %>
+          </h3>
+          <p class="text-xs text-gray-500">
+            <% if attachment.file_attachment %>
+              <%= number_to_human_size(attachment.file_attachment.blob.byte_size) %> • 
+            <% end %>
+            <%= attachment.created_at.strftime("%Y-%m-%d %H:%M") %>
+          </p>
+        </div>
+      </div>
+      
+      <!-- 처리 상태 -->
+      <% if attachment.status == 'completed' || attachment.analysis_result&.dig('ai_processed') %>
+        <div class="flex items-center text-xs text-gray-500">
+          <svg class="h-4 w-4 text-green-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          AI 처리 완료
+        </div>
+      <% elsif attachment.status == 'processing' %>
+        <div class="flex items-center text-xs text-yellow-600">
+          <svg class="animate-spin h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          AI 처리중...
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- AI 요약 영역 -->
+  <% if attachment.analysis_result&.dig('summary_data').present? %>
+    <div class="p-4 bg-blue-50">
+      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+        <span class="text-lg mr-1">🤖</span>AI 요약 결과
+      </h4>
+      <% summary = attachment.analysis_result['summary_data'] %>
+      
+      <div class="space-y-2">
+        <% if attachment.attachment_requirement&.name %>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500">서류 종류:</span>
+            <span class="text-sm font-medium text-gray-900">
+              <%= attachment.attachment_requirement.name %>
+            </span>
+          </div>
+        <% end %>
+        
+        <% if summary.is_a?(Hash) %>
+          <% if summary['summary_text'] || summary[:summary_text] %>
+            <div class="mt-2 p-2 bg-white rounded text-sm text-gray-700">
+              <%= summary['summary_text'] || summary[:summary_text] %>
+            </div>
+          <% end %>
+          
+          <% if summary['key_information'] || summary[:key_information] %>
+            <div class="mt-2">
+              <span class="text-xs text-gray-500">주요 정보:</span>
+              <div class="mt-1 p-2 bg-white rounded text-sm text-gray-700">
+                <%= simple_format(summary['key_information'] || summary[:key_information]) %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="mt-2 p-2 bg-white rounded text-sm text-gray-700">
+            <%= summary %>
+          </div>
+        <% end %>
+      </div>
+      
+      <% if attachment.extracted_text.present? %>
+        <details class="mt-3 pt-3 border-t border-blue-200">
+          <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+            원본 텍스트 보기
+          </summary>
+          <div class="mt-2 p-2 bg-white rounded text-xs text-gray-600 max-h-40 overflow-y-auto">
+            <%= simple_format(attachment.extracted_text.truncate(1000)) %>
+          </div>
+        </details>
+      <% end %>
+    </div>
+  <% elsif attachment.extracted_text.present? %>
+    <div class="p-4">
+      <h4 class="text-sm font-semibold text-gray-700 mb-2">추출된 텍스트</h4>
+      <div class="p-3 bg-gray-50 rounded text-sm text-gray-600 max-h-60 overflow-y-auto">
+        <%= simple_format(attachment.extracted_text.truncate(1500)) %>
+      </div>
+    </div>
+  <% else %>
+    <div class="p-4 text-sm text-gray-500">
+      첨부파일이 업로드되었습니다.
+    </div>
+  <% end %>
+  
+  <!-- 액션 버튼 -->
+  <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <div class="flex space-x-2">
+        <% if attachment.file_attachment %>
+          <!-- 다운로드 버튼 -->
+          <%= link_to rails_blob_path(attachment.file_attachment, disposition: "attachment"),
+                      class: "inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            다운로드
+          <% end %>
+          
+          <!-- 미리보기 버튼 -->
+          <%= link_to rails_blob_path(attachment.file_attachment, disposition: "inline"),
+                      target: "_blank",
+                      class: "inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            미리보기
+          <% end %>
+        <% end %>
+        
+        <% unless defined?(readonly) && readonly %>
+          <!-- AI 처리 버튼들 (편집 모드에서만) -->
+          <% if attachment.extracted_text.blank? && attachment.status != 'processing' %>
+            <%= button_to "텍스트 추출", 
+                extract_text_expense_sheet_expense_sheet_attachment_path(attachment.expense_sheet, attachment),
+                method: :post,
+                remote: true,
+                class: "inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+          <% end %>
+          
+          <% if attachment.ready_for_ai_summary? %>
+            <%= button_to "AI 요약", 
+                analyze_expense_sheet_expense_sheet_attachment_path(attachment.expense_sheet, attachment),
+                method: :post,
+                remote: true,
+                class: "inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" %>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <% if attachment.attachment_requirement %>
+        <div class="text-xs text-gray-500">
+          <% if attachment.attachment_requirement.required? %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+              필수
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              선택
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

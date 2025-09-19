@@ -1,0 +1,200 @@
+<%# AI 분석 결과 표시 partial %>
+<!-- DEBUG: analysis_result partial 시작 -->
+<% if attachment.completed? && attachment.analysis_result.present? %>
+  <!-- DEBUG: attachment.completed? = <%= attachment.completed? %>, analysis_result 있음 -->
+  <% summary_data = attachment.analysis_result['summary_data'] %>
+  <!-- DEBUG: summary_data = <%= summary_data.inspect[0..200] if summary_data %> -->
+  
+  <% if summary_data.present? %>
+    <div class="mt-3 p-3 bg-gray-50 rounded">
+      <div class="font-medium text-gray-700 mb-2">AI 분석 결과:</div>
+      
+      <% if summary_data['transactions'].present? %>
+        <!-- DEBUG: transactions 있음, 개수: <%= summary_data['transactions'].size %> -->
+        <%# 법인카드 명세서: 거래 내역 테이블 표시 %>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr class="text-xs text-gray-500 uppercase tracking-wider">
+                <th class="px-2 py-1 text-left">이용일자</th>
+                <th class="px-2 py-1 text-left">가맹점명</th>
+                <th class="px-2 py-1 text-right">이용금액</th>
+                <th class="px-2 py-1 text-right">수수료</th>
+                <th class="px-2 py-1 text-right">합계</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% total_amount = 0 %>
+              <% total_fee = 0 %>
+              <% total_sum = 0 %>
+              
+              <% summary_data['transactions'].each do |transaction| %>
+                <%
+                  # 각 거래의 금액 계산
+                  amount = transaction['usage_amount'] || transaction['amount'] || 0
+                  fee = transaction['fee'] || 0
+                  # total이 없으면 amount + fee로 자동 계산
+                  total = transaction['total'] || transaction['total_amount'] || (amount + fee)
+                %>
+                <tr class="text-sm">
+                  <td class="px-2 py-1 text-gray-600">
+                    <%= transaction['usage_date'] || transaction['date'] %>
+                  </td>
+                  <td class="px-2 py-1 text-gray-900">
+                    <%= transaction['merchant_name'] || transaction['merchant'] %>
+                  </td>
+                  <td class="px-2 py-1 text-right text-gray-900">
+                    <%= number_to_currency(amount, unit: "₩", precision: 0) %>
+                  </td>
+                  <td class="px-2 py-1 text-right text-gray-600">
+                    <%= number_to_currency(fee, unit: "₩", precision: 0) %>
+                  </td>
+                  <td class="px-2 py-1 text-right font-medium text-gray-900">
+                    <%= number_to_currency(total, unit: "₩", precision: 0) %>
+                  </td>
+                </tr>
+                
+                <% total_amount += amount %>
+                <% total_fee += fee %>
+                <% total_sum += total %>
+              <% end %>
+              
+              <%# 합계 행 %>
+              <tr class="font-medium bg-gray-100">
+                <td colspan="2" class="px-2 py-2 text-gray-700">
+                  합계 (건수: <%= summary_data['transactions'].size %>건)
+                </td>
+                <td class="px-2 py-2 text-right text-gray-900">
+                  <%= number_to_currency(total_amount, unit: "₩", precision: 0) %>
+                </td>
+                <td class="px-2 py-2 text-right text-gray-900">
+                  <%= number_to_currency(total_fee, unit: "₩", precision: 0) %>
+                </td>
+                <td class="px-2 py-2 text-right text-blue-600">
+                  <%= number_to_currency(total_sum, unit: "₩", precision: 0) %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+      <% elsif summary_data['type'].present? %>
+        <%# 일반 영수증: 타입별 표시 %>
+        <div class="space-y-1 text-sm">
+          <div class="flex">
+            <span class="text-gray-600 mr-2">유형:</span>
+            <span class="text-gray-900 font-medium">
+              <%= case summary_data['type']
+                  when 'telecom' then '통신비'
+                  when 'general' then '일반 영수증'
+                  else '기타'
+                  end %>
+            </span>
+          </div>
+          
+          <% if summary_data['data'].present? %>
+            <% data = summary_data['data'] %>
+            
+            <% if summary_data['type'] == 'telecom' %>
+              <%# 통신비 표시 %>
+              <div class="flex">
+                <span class="text-gray-600 mr-2">청구금액:</span>
+                <span class="text-gray-900 font-medium">
+                  <%= number_to_currency(data['total_amount'] || 0, unit: "₩", precision: 0) %>
+                </span>
+              </div>
+              <% if data['service_charge'].present? && data['service_charge'] > 0 %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2">통신서비스:</span>
+                  <span class="text-gray-900">
+                    <%= number_to_currency(data['service_charge'], unit: "₩", precision: 0) %>
+                  </span>
+                </div>
+              <% end %>
+              <% if data['device_installment'].present? && data['device_installment'] > 0 %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2">단말기할부:</span>
+                  <span class="text-gray-900">
+                    <%= number_to_currency(data['device_installment'], unit: "₩", precision: 0) %>
+                  </span>
+                </div>
+              <% end %>
+              <% if data['discount_amount'].present? && data['discount_amount'] != 0 %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2">할인금액:</span>
+                  <span class="text-red-600">
+                    -<%= number_to_currency(data['discount_amount'].abs, unit: "₩", precision: 0) %>
+                  </span>
+                </div>
+              <% end %>
+              
+            <% elsif summary_data['type'] == 'general' %>
+              <%# 일반 영수증 표시 %>
+              <% if data['store_name'].present? %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2">상호명:</span>
+                  <span class="text-gray-900"><%= data['store_name'] %></span>
+                </div>
+              <% end %>
+              <% if data['total_amount'].present? %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2">금액:</span>
+                  <span class="text-gray-900 font-medium">
+                    <%= number_to_currency(data['total_amount'], unit: "₩", precision: 0) %>
+                  </span>
+                </div>
+              <% end %>
+              <% if data['date'].present? %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2">날짜:</span>
+                  <span class="text-gray-900"><%= data['date'] %></span>
+                </div>
+              <% end %>
+              
+            <% else %>
+              <%# 기타: 모든 데이터 표시 %>
+              <% data.each do |key, value| %>
+                <% next if value.blank? || key == 'type' %>
+                <div class="flex">
+                  <span class="text-gray-600 mr-2"><%= key.humanize %>:</span>
+                  <span class="text-gray-900">
+                    <% if value.is_a?(Numeric) %>
+                      <%= number_to_currency(value, unit: "₩", precision: 0) %>
+                    <% else %>
+                      <%= value %>
+                    <% end %>
+                  </span>
+                </div>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+        
+      <% else %>
+        <%# 기본: 모든 필드 표시 %>
+        <div class="space-y-1 text-sm">
+          <% summary_data.each do |key, value| %>
+            <% next if value.blank? || ['ai_processed', 'ai_processed_at', 'extracted_text'].include?(key) %>
+            <div class="flex">
+              <span class="text-gray-600 mr-2"><%= key.humanize %>:</span>
+              <span class="text-gray-900">
+                <% if value.is_a?(Numeric) %>
+                  <%= number_to_currency(value, unit: "₩", precision: 0) %>
+                <% elsif value.is_a?(Array) %>
+                  <%= value.size %>개 항목
+                <% else %>
+                  <%= value %>
+                <% end %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- DEBUG: summary_data가 없음 -->
+  <% end %>
+<% else %>
+  <!-- DEBUG: attachment.completed? = <%= attachment.completed? if attachment %>, analysis_result = <%= attachment.analysis_result.present? if attachment %> -->
+<% end %>
+<!-- DEBUG: analysis_result partial 끝 -->

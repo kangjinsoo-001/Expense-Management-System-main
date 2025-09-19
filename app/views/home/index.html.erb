@@ -1,0 +1,217 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <% if logged_in? %>
+    <!-- 이번 달 내 경비 합계 -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <%= Date.current.year %>년 <%= Date.current.month %>월 경비 현황
+      </h2>
+      
+      <div class="mb-6">
+        <p class="text-sm text-gray-600">총 경비</p>
+        <p class="text-3xl font-bold text-blue-600"><%= format_currency(@total_amount) %></p>
+      </div>
+      
+      <% if @expenses_by_code.any? %>
+        <div class="border-t pt-4">
+          <h3 class="text-sm font-medium text-gray-700 mb-3">경비 코드별 내역</h3>
+          <div class="space-y-2">
+            <% @expenses_by_code.each do |code_info, amount| %>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">
+                  <%= code_info[0] %> - <%= code_info[1] %>
+                </span>
+                <span class="text-sm font-medium text-gray-900">
+                  <%= format_currency(amount) %>
+                </span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-500">이번 달 경비 항목이 없습니다.</p>
+      <% end %>
+    </div>
+    
+    <!-- 조직장인 경우 경비 통계 메뉴 안내 -->
+    <% if @is_organization_manager %>
+      <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-semibold mb-2">조직 경비 통계</h2>
+            <p class="text-sm opacity-90">관리 조직의 월별 경비 현황을 확인하세요</p>
+          </div>
+          <%= link_to organization_expenses_path, 
+                      class: "inline-flex items-center px-4 py-2 bg-purple-700 hover:bg-purple-800 rounded-lg transition-colors text-white font-medium" do %>
+            <span class="mr-2">경비 통계 보기</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    
+    <!-- 내가 승인해야 하는 건 리스트 -->
+    <% if @pending_approvals.any? %>
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">승인 대기 목록</h2>
+          <%= link_to "전체 보기", approvals_path(tab: 'approval-needed'), 
+              class: "text-sm text-blue-600 hover:text-blue-800",
+              data: { turbo_frame: "_top" } %>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="text-left py-2 text-sm font-medium text-gray-700">유형</th>
+                <th class="text-left py-2 text-sm font-medium text-gray-700">신청자</th>
+                <th class="text-left py-2 text-sm font-medium text-gray-700">날짜</th>
+                <th class="text-left py-2 text-sm font-medium text-gray-700">내용</th>
+                <th class="text-center py-2 text-sm font-medium text-gray-700">액션</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @pending_approvals.each do |approval_request| %>
+                <% next unless approval_request.approvable %>
+                <% presenter = approval_presenter(approval_request.approvable) %>
+                <% next unless presenter %>
+                
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="py-3 text-sm">
+                    <%= approval_type_badge(approval_request.approvable) %>
+                  </td>
+                  <td class="py-3 text-sm text-gray-900">
+                    <%= presenter.owner_name %>
+                  </td>
+                  <td class="py-3 text-sm text-gray-600">
+                    <%= approval_request.created_at.strftime('%m/%d') %>
+                  </td>
+                  <td class="py-3 text-sm text-gray-900 max-w-xs truncate">
+                    <%= presenter.title %><br>
+                    <span class="text-xs text-gray-500"><%= presenter.description %></span>
+                  </td>
+                  <td class="py-3 text-center">
+                    <%= link_to "상세보기", approval_path(approval_request), 
+                        class: "inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                        data: { turbo_frame: "_top" } %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+    
+    <!-- 내가 승인 올린 건들 리스트 -->
+    <% if @my_approval_requests.any? %>
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">내 결재 요청 현황</h2>
+          <%= link_to "전체 보기", approvals_path(tab: 'my-items'), 
+              class: "text-sm text-blue-600 hover:text-blue-800",
+              data: { turbo_frame: "_top" } %>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="text-left py-2 text-sm font-medium text-gray-700">유형</th>
+                <th class="text-left py-2 text-sm font-medium text-gray-700">날짜</th>
+                <th class="text-left py-2 text-sm font-medium text-gray-700">내용</th>
+                <th class="text-center py-2 text-sm font-medium text-gray-700">승인 상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @my_approval_requests.each do |approval_request| %>
+                <% next unless approval_request.approvable %>
+                <% presenter = approval_presenter(approval_request.approvable) %>
+                <% next unless presenter %>
+                
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="py-3 text-sm">
+                    <%= approval_type_badge(approval_request.approvable) %>
+                  </td>
+                  <td class="py-3 text-sm text-gray-600">
+                    <%= approval_request.created_at.strftime('%m/%d') %>
+                  </td>
+                  <td class="py-3 text-sm text-gray-900 max-w-xs truncate">
+                    <%= presenter.title %><br>
+                    <span class="text-xs text-gray-500"><%= presenter.description %></span>
+                  </td>
+                  <td class="py-3 text-center">
+                    <% if approval_request.status_pending? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <%= approval_request.current_status_display %>
+                      </span>
+                      <% if approval_request.pending_approvers.any? %>
+                        <p class="text-xs text-gray-500 mt-1">
+                          대기: <%= approval_request.pending_approvers.map(&:name).join(', ') %>
+                        </p>
+                      <% end %>
+                    <% elsif approval_request.status_approved? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        승인 완료
+                      </span>
+                    <% elsif approval_request.status_rejected? %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        반려됨
+                      </span>
+                      <% rejected_history = approval_request.approval_histories.where(action: 'reject').last %>
+                      <% if rejected_history %>
+                        <p class="text-xs text-gray-500 mt-1">
+                          <%= rejected_history.approver.name %> - <%= rejected_history.comment %>
+                        </p>
+                      <% end %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="max-w-2xl mx-auto text-center py-16">
+      <h1 class="font-bold text-5xl mb-6">경비 관리 시스템</h1>
+      <p class="text-xl text-gray-600 mb-8">
+        효율적인 경비 처리와 승인을 위한 통합 관리 시스템
+      </p>
+      
+      <div>
+        <%= link_to "로그인", login_path, 
+            class: "inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition" %>
+      </div>
+      
+      <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+        <div class="bg-white p-6 rounded-lg shadow">
+          <svg class="w-12 h-12 text-blue-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+          </svg>
+          <h3 class="font-semibold text-lg mb-2">간편한 경비 신청</h3>
+          <p class="text-gray-600">직관적인 인터페이스로 빠르고 정확한 경비 신청</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+          <svg class="w-12 h-12 text-green-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3 class="font-semibold text-lg mb-2">실시간 승인 처리</h3>
+          <p class="text-gray-600">모바일에서도 가능한 빠른 승인 프로세스</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+          <svg class="w-12 h-12 text-purple-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+          </svg>
+          <h3 class="font-semibold text-lg mb-2">통계 및 분석</h3>
+          <p class="text-gray-600">경비 사용 현황을 한눈에 파악하는 대시보드</p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

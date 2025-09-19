@@ -1,0 +1,164 @@
+<%# 이 페이지에 대해서만 Turbo 캐시 완전 비활성화 %>
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- 헤더 -->
+  <div class="tremor-card px-6 py-4 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">
+          <%= "#{@expense_sheet.year}년 #{@expense_sheet.month}월 경비 시트 (제출됨)" %>
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+          제출일: <%= @expense_sheet.submitted_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+        </p>
+      </div>
+      <div class="flex gap-3">
+        <!-- 목록으로 돌아가기 버튼 -->
+        <%= link_to expense_sheets_path(year: @expense_sheet.year, month: @expense_sheet.month),
+                    class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500",
+                    data: { turbo_frame: "_top" } do %>
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          돌아가기
+        <% end %>
+        
+        <!-- 제출 취소 버튼 -->
+        <%= button_to cancel_submission_expense_sheet_path(@expense_sheet),
+                      method: :post,
+                      data: { 
+                        turbo_confirm: "제출을 취소하시겠습니까?\n경비 시트가 수정 가능한 상태로 변경됩니다.\n(개별 경비 항목의 승인 상태는 유지됩니다)"
+                      },
+                      class: "inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" do %>
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          제출 취소
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메트릭 카드 -->
+  <%= render 'metric_cards', expense_sheet: @expense_sheet, expense_items: @expense_items %>
+
+  <!-- 결재 프로세스 섹션 -->
+  <% if @expense_sheet.approval_request.present? %>
+    <!-- 결재 진행 프로그레스 바 -->
+    <%= render 'shared/approval_progress_bar', approval_request: @expense_sheet.approval_request %>
+    
+    <!-- 결재 진행 타임라인 -->
+    <%= render 'approval_timeline', expense_sheet: @expense_sheet, approval_request: @expense_sheet.approval_request %>
+  <% end %>
+
+  <!-- 첨부서류 섹션 (제출된 서류 표시) -->
+  <% if @sheet_attachments.any? %>
+    <div class="bg-white shadow-sm rounded-lg mb-6">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg font-medium leading-6 text-gray-900">첨부 서류</h3>
+        <p class="mt-1 text-sm text-gray-500">제출된 증빙 서류</p>
+      </div>
+      <div class="px-4 py-5 sm:px-6">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <% @sheet_attachments.each do |attachment| %>
+            <%= render 'expense_sheet_attachments/attachment_card', 
+                       attachment: attachment, 
+                       readonly: true %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- AI 검증 결과 (있는 경우) -->
+  <% if @validation_histories.any? || @expense_sheet.validation_result.present? %>
+    <%= render 'validation_details_table', 
+               expense_sheet: @expense_sheet, 
+               expense_items: @expense_items %>
+  <% end %>
+
+  <!-- 경비 항목 테이블 (읽기 전용) -->
+  <% if @expense_items.any? %>
+    <div class="tremor-card">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">경비 항목</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                날짜
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                경비 코드
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                설명
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                코스트센터
+              </th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                금액
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                첨부
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @expense_items.each do |item| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= item.expense_date.strftime("%m/%d") %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= item.expense_code.name %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <%= item.description %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= item.cost_center&.name || "-" %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                  <%= format_currency(item.amount) %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                  <% if item.expense_attachments.any? %>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <%= item.expense_attachments.count %>개
+                    </span>
+                  <% else %>
+                    <span class="text-gray-400">-</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot class="bg-gray-50">
+            <tr>
+              <td colspan="4" class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                합계
+              </td>
+              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
+                <%= format_currency(@expense_items.sum(&:amount)) %>
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div class="tremor-card">
+      <div class="px-6 py-12 text-center">
+        <p class="text-sm text-gray-500">경비 항목이 없습니다.</p>
+      </div>
+    </div>
+  <% end %>
+</div>

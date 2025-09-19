@@ -1,0 +1,193 @@
+<%= turbo_frame_tag "approval_progress_#{dom_id(approval_request)}" do %>
+<%
+  # 승인 대상 객체 가져오기 (ExpenseItem, RequestForm 등)
+  approvable = approval_request.approvable
+  
+  # ExpenseItem인 경우에만 needs_reapproval 체크
+  needs_reapproval = approvable.is_a?(ExpenseItem) && approvable.needs_reapproval?
+  
+  # 전체 단계 수와 현재 진행 상황 계산
+  total_steps = approval_request.approval_line.approval_line_steps.pluck(:step_order).uniq.count
+  
+  # 재승인이 필요한 경우
+  if needs_reapproval
+    # 재승인 진행 중이므로 완료된 단계는 0
+    completed_steps = 0
+    # 현재 단계부터 다시 시작
+    current_step_in_progress = true
+  else
+    completed_steps = approval_request.approval_histories.where(action: 'approve').pluck(:step_order).uniq.count
+    # 현재 단계가 진행 중인 경우
+    current_step_in_progress = approval_request.status == 'pending' && approval_request.current_step.present?
+  end
+  
+  # 진행률 계산
+  if approval_request.status == 'approved' && !needs_reapproval
+    progress_percentage = 100
+  elsif approval_request.status == 'rejected'
+    # 반려된 경우 반려된 시점까지의 진행률
+    rejected_step = approval_request.approval_histories.where(action: 'reject').first&.step_order || 0
+    progress_percentage = (rejected_step.to_f / total_steps * 100).round
+  else
+    # 현재 진행 중인 단계를 0.5로 계산
+    progress_value = completed_steps + (current_step_in_progress ? 0.5 : 0)
+    progress_percentage = (progress_value / total_steps * 100).round
+  end
+  
+  # 상태별 색상
+  progress_color = if needs_reapproval
+    'bg-orange-600'
+  elsif approval_request.status == 'approved'
+    'bg-green-600'
+  elsif approval_request.status == 'rejected'
+    'bg-red-600'
+  else
+    'bg-blue-600'
+  end
+%>
+
+<div class="bg-white rounded-lg p-4 mb-4" data-controller="progress-animation">
+  <!-- 헤더 -->
+  <div class="flex items-center justify-between mb-3">
+    <h4 class="text-sm font-medium text-gray-900">
+      결재 진행 상황
+      <% if needs_reapproval %>
+        <span class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">재승인 진행</span>
+      <% end %>
+    </h4>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-600">
+        <% if needs_reapproval %>
+          재승인: <%= completed_steps %>/<%= total_steps %> 단계
+        <% else %>
+          <%= completed_steps %>/<%= total_steps %> 단계 완료
+        <% end %>
+      </span>
+      <span class="text-sm font-semibold <%= needs_reapproval ? 'text-orange-600' : (approval_request.status == 'approved' ? 'text-green-600' : approval_request.status == 'rejected' ? 'text-red-600' : 'text-blue-600') %>">
+        <%= progress_percentage %>%
+      </span>
+    </div>
+  </div>
+  
+  <!-- 프로그레스 바 -->
+  <div class="relative">
+    <!-- 배경 바 -->
+    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+      <!-- 진행 바 -->
+      <div class="h-full rounded-full transition-all duration-500 ease-out <%= progress_color %>"
+           data-progress-animation-target="bar"
+           style="width: 0%"
+           data-progress-percentage="<%= progress_percentage %>">
+      </div>
+    </div>
+    
+    <!-- 단계 마커 -->
+    <div class="absolute top-0 left-0 w-full h-3 flex items-center justify-between px-1">
+      <% (1..total_steps).each do |step| %>
+        <% 
+          step_position = ((step - 0.5) / total_steps * 100).round
+          
+          # 재승인 상태 처리
+          if needs_reapproval
+            was_approved = approval_request.approval_histories.where(step_order: step, action: 'approve').exists?
+            is_completed = false
+            is_current = approval_request.current_step == step && approval_request.status == 'pending'
+            marker_color = if is_current
+              'bg-orange-500 animate-pulse'
+            elsif was_approved
+              'bg-gray-400'  # 이전 예산 승인은 회색으로
+            else
+              'bg-gray-400'
+            end
+          else
+            is_completed = completed_steps >= step
+            is_current = approval_request.current_step == step && approval_request.status == 'pending'
+            is_rejected = approval_request.approval_histories.where(step_order: step, action: 'reject').exists?
+            marker_color = if is_rejected
+              'bg-red-500'
+            elsif is_completed
+              'bg-green-500'
+            elsif is_current
+              'bg-blue-500 animate-pulse'
+            else
+              'bg-gray-400'
+            end
+          end
+        %>
+        <div class="absolute h-2 w-2 rounded-full -translate-x-1/2 <%= marker_color %>"
+             style="left: <%= step_position %>%"
+             title="<%= step %>단계">
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- 단계별 상세 정보 -->
+  <div class="mt-4 space-y-2">
+    <% approval_request.approval_line.approval_line_steps.group_by(&:step_order).sort.each do |step_order, steps| %>
+      <% 
+        step_histories = approval_request.approval_histories.where(step_order: step_order)
+        
+        # 재승인 상태 처리
+        if needs_reapproval
+          # 재승인 중에는 이전 승인을 완료로 표시하지 않음
+          is_completed = false
+          was_approved = step_histories.where(action: 'approve').exists?  # 예산 승인 여부
+        else
+          is_completed = step_histories.where(action: 'approve').exists?
+          was_approved = false
+        end
+        
+        is_rejected = step_histories.where(action: 'reject').exists?
+        is_current = approval_request.current_step == step_order && approval_request.status == 'pending'
+      %>
+      
+      <div class="flex items-center justify-between text-xs <%= is_current ? (needs_reapproval ? 'text-orange-600 font-medium' : 'text-blue-600 font-medium') : 'text-gray-600' %>">
+        <div class="flex items-center gap-2">
+          <span class="font-medium"><%= step_order %>단계</span>
+          <span class="text-gray-500">
+            <%= steps.map { |s| s.approver.name }.join(', ') %>
+          </span>
+        </div>
+        
+        <div class="flex items-center gap-1">
+          <% if needs_reapproval && was_approved %>
+            <span class="text-gray-500">예산 승인</span>
+            <%= hero_icon('check-circle', size: 'w-4 h-4', css_class: 'text-gray-400') %>
+          <% elsif is_rejected %>
+            <span class="text-red-600">반려</span>
+            <%= hero_icon('x-circle', size: 'w-4 h-4', css_class: 'text-red-500') %>
+          <% elsif is_completed %>
+            <span class="text-green-600">완료</span>
+            <%= hero_icon('check-circle', size: 'w-4 h-4', css_class: 'text-green-500') %>
+          <% elsif is_current %>
+            <span class="<%= needs_reapproval ? 'text-orange-600' : 'text-blue-600' %>">
+              <%= needs_reapproval ? '재승인 대기' : '진행중' %>
+            </span>
+            <%= hero_icon('clock', size: 'w-4 h-4', css_class: needs_reapproval ? 'text-orange-500 animate-spin' : 'text-blue-500 animate-spin') %>
+          <% else %>
+            <span>대기</span>
+            <%= hero_icon('minus-circle', size: 'w-4 h-4', css_class: 'text-gray-400') %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  // Stimulus 컨트롤러를 위한 JavaScript
+  document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('[data-progress-animation-target="bar"]');
+    
+    progressBars.forEach(bar => {
+      const percentage = bar.dataset.progressPercentage;
+      
+      // 애니메이션 효과를 위해 약간의 지연 후 프로그레스 바 업데이트
+      setTimeout(() => {
+        bar.style.width = percentage + '%';
+      }, 100);
+    });
+  });
+</script>
+<% end %>

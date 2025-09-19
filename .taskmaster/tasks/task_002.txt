@@ -1,0 +1,62 @@
+# Task ID: 2
+# Title: 결재선 관리 기능 구현
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: 사용자별 결재선 생성, 수정, 삭제 기능 구현
+# Details:
+- 결재선 CRUD 컨트롤러 구현
+- 결재선 생성/편집 화면 (단계별 승인자 추가)
+- 승인 방식 선택 (전체 승인/단일 승인)
+- 드래그 앤 드롭으로 단계 순서 변경
+- Choice.js를 활용한 승인자 검색/선택
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. ApprovalLinesController 생성 [done]
+### Dependencies: None
+### Description: 결재선 CRUD를 위한 컨트롤러 생성
+### Details:
+- rails generate controller ApprovalLines
+- index, new, create, edit, update, destroy 액션 구현
+- strong parameters 설정
+- 현재 사용자의 결재선만 조회/수정 가능하도록 권한 체크
+
+## 2. 결재선 목록 및 상세 화면 구현 [done]
+### Dependencies: None
+### Description: 결재선 목록 페이지와 상세 정보 표시 화면 구현
+### Details:
+- index.html.erb: 사용자의 결재선 목록 표시
+- show.html.erb: 결재선 상세 정보 및 단계별 승인자 표시
+- _approval_line.html.erb: 결재선 카드 컴포넌트
+- Turbo Frame 적용
+
+## 3. 결재선 생성/편집 폼 구현 [done]
+### Dependencies: None
+### Description: 결재선 생성 및 편집을 위한 폼 구현
+### Details:
+- new.html.erb, edit.html.erb 구현
+- _form.html.erb: 결재선 기본 정보 입력
+- approval_line_form_controller.js: Stimulus 컨트롤러
+- 단계 추가/삭제 기능
+- 승인자 선택 (Choice.js 활용)
+
+## 4. 드래그 앤 드롭으로 단계 순서 변경 기능 [done]
+### Dependencies: None
+### Description: 결재선 단계 순서를 드래그 앤 드롭으로 변경하는 기능 구현
+### Details:
+- Sortable.js 라이브러리 활용
+- approval_line_sortable_controller.js 구현
+- 순서 변경 시 step_order 자동 업데이트
+- 서버에 변경사항 저장
+
+## 5. 메뉴 네비게이션에 결재선 메뉴 추가 [done]
+### Dependencies: None
+### Description: 메인 네비게이션에 결재선 관리 메뉴 추가
+### Details:
+- _navigation.html.erb에 결재선 메뉴 추가
+- 라우팅 설정 (resources :approval_lines)
+- 권한 체크 (로그인한 사용자만 접근 가능)
+

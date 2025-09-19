@@ -1,0 +1,63 @@
+<% content_for :title, "코스트 센터 관리" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-8">
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-semibold text-gray-900">코스트 센터 관리</h1>
+        <p class="mt-1 text-sm text-gray-500">예산 코스트 센터를 관리하고 모니터링합니다</p>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4">
+        <%= link_to new_admin_cost_center_path, 
+            class: "tremor-button-primary" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          새 코스트 센터
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="tremor-card">
+    <div class="overflow-x-auto">
+      <table class="tremor-table">
+        <thead>
+          <tr>
+            <th class="text-left">코드</th>
+            <th class="text-left">이름</th>
+            <th class="text-right">예산</th>
+            <th class="text-left">관리자</th>
+            <th class="text-left">조직</th>
+            <th class="text-left">상태</th>
+            <th class="text-center">작업</th>
+          </tr>
+        </thead>
+        <tbody id="cost_centers">
+          <%= render @cost_centers %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @cost_centers.empty? %>
+      <div class="text-center py-16">
+        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100">
+          <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">코스트 센터가 없습니다</h3>
+        <p class="mt-2 text-sm text-gray-500">새 코스트 센터를 추가하여 예산을 관리하세요</p>
+        <div class="mt-6">
+          <%= link_to new_admin_cost_center_path, 
+              class: "tremor-button-primary" do %>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            첫 코스트 센터 추가
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

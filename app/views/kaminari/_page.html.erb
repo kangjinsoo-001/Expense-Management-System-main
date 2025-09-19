@@ -1,0 +1,10 @@
+<%# 페이지 번호 버튼 %>
+<% if page.current? %>
+  <span class="page current">
+    <%= page %>
+  </span>
+<% else %>
+  <span class="page">
+    <%= link_to page, url, rel: page.rel, class: 'pagination-btn' %>
+  </span>
+<% end %>

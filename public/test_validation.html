@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI 검증 테스트</title>
+  <meta name="csrf-token" content="test">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">AI 검증 테스트</h1>
+    
+    <div class="bg-white p-6 rounded-lg shadow">
+      <p class="mb-4">ExpenseSheet ID: 14 (이현주 8월)</p>
+      
+      <button id="testButton" 
+              class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+        AI 검증 테스트
+      </button>
+      
+      <div id="result" class="mt-4 p-4 bg-gray-100 rounded hidden">
+        <pre id="resultContent"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('testButton').addEventListener('click', async () => {
+      const button = document.getElementById('testButton');
+      const resultDiv = document.getElementById('result');
+      const resultContent = document.getElementById('resultContent');
+      
+      button.disabled = true;
+      button.textContent = '검증 중...';
+      resultDiv.classList.remove('hidden');
+      resultContent.textContent = '1단계 검증 시작...';
+      
+      try {
+        const response = await fetch('/expense_sheets/14/validate_step', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify({ step: 1 })
+        });
+        
+        const text = await response.text();
+        console.log('Response status:', response.status);
+        console.log('Response text:', text);
+        
+        if (response.ok) {
+          try {
+            const data = JSON.parse(text);
+            resultContent.textContent = JSON.stringify(data, null, 2);
+          } catch (e) {
+            resultContent.textContent = 'Response: ' + text;
+          }
+        } else {
+          resultContent.textContent = `Error ${response.status}: ${text}`;
+        }
+      } catch (error) {
+        resultContent.textContent = `Error: ${error.message}`;
+      } finally {
+        button.disabled = false;
+        button.textContent = 'AI 검증 테스트';
+      }
+    });
+  </script>
+</body>
+</html>

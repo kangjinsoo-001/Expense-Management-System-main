@@ -1,0 +1,11 @@
+# Task ID: 40
+# Title: 회의실 예약 시스템 고급 기능 구현
+# Status: pending
+# Dependencies: 39
+# Priority: medium
+# Description: 반복 예약, 알림, 통계 등 고급 기능 추가
+# Details:
+RecurringReservationRule 모델 구현, 예약 알림 기능, 예약 통계 대시보드, 회의실 사용률 분석
+
+# Test Strategy:
+

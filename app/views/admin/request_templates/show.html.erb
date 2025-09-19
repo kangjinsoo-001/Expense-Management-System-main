@@ -1,0 +1,302 @@
+<% content_for :title, @request_template.name %>
+
+<div class="py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-4" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+          <%= link_to root_path, class: "inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600" do %>
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+            </svg>
+            홈
+          <% end %>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <%= link_to "관리자", admin_root_path, class: "ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2" %>
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <%= link_to "템플릿 관리", admin_request_templates_path, class: "ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2" %>
+          </div>
+        </li>
+        <li aria-current="page">
+          <div class="flex items-center">
+            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"><%= @request_template.name %></span>
+          </div>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-6">
+      <div class="flex-1 min-w-0">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+          <%= @request_template.name %>
+        </h2>
+        <div class="mt-2 flex items-center text-sm text-gray-500">
+          <%= @request_template.request_category.name %>
+          <span class="mx-2">•</span>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <%= @request_template.code %>
+          </span>
+          <span class="mx-2">•</span>
+          <% if @request_template.is_active %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              활성
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              비활성
+            </span>
+          <% end %>
+        </div>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4 space-x-2">
+        <%= link_to edit_admin_request_template_path(@request_template), class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" do %>
+          <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          수정
+        <% end %>
+        <%= link_to duplicate_admin_request_template_path(@request_template), data: { turbo_method: :post }, class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" do %>
+          <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          복제
+        <% end %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Template Info -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Basic Info -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              기본 정보
+            </h3>
+          </div>
+          <div class="border-t border-gray-200">
+            <dl>
+              <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">설명</dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                  <%= @request_template.description || '-' %>
+                </dd>
+              </div>
+              <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">생성일</dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                  <%= @request_template.created_at.strftime("%Y-%m-%d %H:%M") %>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Fields -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              필드 (<%= @request_template.fields&.size || 0 %>개)
+            </h3>
+          </div>
+          <div class="border-t border-gray-200">
+            <% if @request_template.fields.present? %>
+              <ul class="divide-y divide-gray-200">
+                <% @request_template.fields.each_with_index do |field, index| %>
+                  <li class="px-4 py-4 sm:px-6">
+                    <div class="flex items-start">
+                      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full <%= field['is_required'] ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' %> text-sm font-medium">
+                        <%= index + 1 %>
+                      </span>
+                      <div class="ml-4 flex-1">
+                        <div class="flex items-center">
+                          <p class="text-sm font-medium text-gray-900">
+                            <%= field['field_label'] %>
+                          </p>
+                          <% if field['is_required'] %>
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                              필수
+                            </span>
+                          <% else %>
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                              선택
+                            </span>
+                          <% end %>
+                        </div>
+                        <p class="text-sm text-gray-500">
+                          키: <%= field['field_key'] %> / 타입: <%= field['field_type'] %>
+                        </p>
+                        <% if field['field_options'].present? %>
+                          <p class="mt-1 text-xs text-gray-500">
+                            옵션: <%= field['field_options'].join(', ') %>
+                          </p>
+                        <% end %>
+                      </div>
+                    </div>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="px-4 py-5 text-sm text-gray-500">필드가 없습니다.</p>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Approval Rules -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              승인 규칙
+            </h3>
+          </div>
+          <div class="border-t border-gray-200">
+            <% if @request_template.request_template_approval_rules.any? %>
+              <ul class="divide-y divide-gray-200">
+                <% @request_template.request_template_approval_rules.includes(:approver_group).order(:order).each do |rule| %>
+                  <li class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-indigo-100 text-indigo-800 text-sm font-medium mr-3">
+                          <%= rule.order %>
+                        </span>
+                        <div>
+                          <p class="text-sm font-medium text-gray-900">
+                            <%= rule.approver_group.name %>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="px-4 py-5 text-sm text-gray-500">승인 규칙이 설정되지 않았습니다.</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Usage Stats -->
+        <div class="bg-white shadow sm:rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              사용 통계
+            </h3>
+            <dl class="mt-5 grid grid-cols-1 gap-5">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">총 신청서</dt>
+                <dd class="mt-1 text-3xl font-semibold text-gray-900">
+                  <%= @request_forms_count %>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Recent Forms -->
+        <div class="bg-white shadow sm:rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+              최근 신청서
+            </h3>
+            <% if @recent_forms.any? %>
+              <ul class="divide-y divide-gray-200">
+                <% @recent_forms.each do |form| %>
+                  <li class="py-3">
+                    <div class="flex items-center space-x-3">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                          <%= form.request_number %>
+                        </p>
+                        <p class="text-sm text-gray-500">
+                          <%= form.user.name %> • <%= form.created_at.strftime("%m/%d") %>
+                        </p>
+                      </div>
+                      <div>
+                        <% case form.status %>
+                        <% when 'draft' %>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                            임시저장
+                          </span>
+                        <% when 'submitted' %>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            제출됨
+                          </span>
+                        <% when 'approved' %>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            승인완료
+                          </span>
+                        <% when 'rejected' %>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                            반려됨
+                          </span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="text-sm text-gray-500">아직 신청서가 없습니다.</p>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-white shadow sm:rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+              작업
+            </h3>
+            <div class="space-y-2">
+              <%= link_to toggle_active_admin_request_template_path(@request_template),
+                  data: { turbo_method: :patch },
+                  class: "w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+                <% if @request_template.is_active %>
+                  <svg class="-ml-1 mr-2 h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                  </svg>
+                  비활성화
+                <% else %>
+                  <svg class="-ml-1 mr-2 h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  활성화
+                <% end %>
+              <% end %>
+              
+              <% unless @request_template.request_forms.exists? %>
+                <%= link_to admin_request_template_path(@request_template),
+                    data: { turbo_method: :delete, turbo_confirm: "정말 삭제하시겠습니까?" },
+                    class: "w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" do %>
+                  <svg class="-ml-1 mr-2 h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  삭제
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

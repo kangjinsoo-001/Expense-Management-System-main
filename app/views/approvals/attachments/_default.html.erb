@@ -1,0 +1,50 @@
+<!-- 기본 첨부파일 템플릿 -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">
+    첨부파일
+    <span class="ml-2 text-sm font-normal text-gray-500">(<%= attachments.count %>개)</span>
+  </h2>
+  
+  <div class="space-y-3">
+    <% attachments.each do |attachment| %>
+      <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+        <div class="flex items-start justify-between">
+          <div class="flex items-start space-x-3 flex-1">
+            <!-- 파일 아이콘 -->
+            <div class="flex-shrink-0">
+              <svg class="h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            
+            <!-- 파일 정보 -->
+            <div class="flex-1">
+              <h4 class="text-sm font-medium text-gray-900">
+                <%= attachment.respond_to?(:file_name) ? attachment.file_name : 'attachment' %>
+              </h4>
+              <p class="text-xs text-gray-500 mt-1">
+                <% if attachment.respond_to?(:file_size) && attachment.file_size %>
+                  <%= number_to_human_size(attachment.file_size) %>
+                <% end %>
+                <% if attachment.created_at %>
+                  • <%= attachment.created_at.strftime('%Y-%m-%d %H:%M') %>
+                <% end %>
+              </p>
+            </div>
+          </div>
+          
+          <!-- 다운로드 버튼 -->
+          <% if attachment.respond_to?(:file) && attachment.file.attached? %>
+            <%= link_to rails_blob_path(attachment.file, disposition: "attachment"),
+                        class: "inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" do %>
+              <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+              </svg>
+              다운로드
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

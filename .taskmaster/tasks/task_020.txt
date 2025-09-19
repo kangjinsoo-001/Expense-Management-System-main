@@ -1,0 +1,43 @@
+# Task ID: 20
+# Title: 경비 통계 대시보드 인터랙티브 개선
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: 왼쪽에 조직도 트리, 오른쪽에 선택된 조직의 경비 현황 표시
+# Details:
+1. 좌측 패널에 전체 조직도 트리 표시\n2. 조직 클릭 시 AJAX로 해당 조직 데이터 로드\n3. Chart.js로 경비 코드별/하위 조직별 차트 구현\n4. 권한 체크: 조직장은 본인 관리 조직만 열람 가능\n5. 권한 없는 조직 클릭 시 '열람 권한 없음' 메시지 표시
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. 조직도 트리 뷰 구현 [done]
+### Dependencies: None
+### Description: 좌측 패널에 전체 조직도를 트리 형태로 표시
+### Details:
+계층구조 시각화, 접기/펼치기 기능, Stimulus 컨트롤러로 인터랙션 처리
+
+## 2. 권한 체크 로직 구현 [done]
+### Dependencies: None
+### Description: 조직장은 본인 관리 조직과 하위 조직만 열람 가능
+### Details:
+can_view_organization_expense? 헬퍼 메서드 추가, 권한 없는 조직 클릭 시 메시지 표시
+
+## 3. AJAX 기반 조직 데이터 로드 [done]
+### Dependencies: None
+### Description: 조직 클릭 시 AJAX로 해당 조직 데이터 요청
+### Details:
+show_details 액션 추가, JSON 응답, 로딩 인디케이터, 에러 처리
+
+## 4. Chart.js 차트 구현 [done]
+### Dependencies: None
+### Description: 경비 코드별/하위 조직별 사용 현황 차트
+### Details:
+수평 바 차트, 높은 금액순 정렬, 반응형 차트
+
+## 5. UI/UX 완성 및 테스트 [done]
+### Dependencies: None
+### Description: 레이아웃 완성 및 권한 시나리오 테스트
+### Details:
+좌측 30%/우측 70% 레이아웃, 모바일 반응형, 성능 최적화
+

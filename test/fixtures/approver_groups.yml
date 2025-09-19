@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: Group One
+  description: Test Group One
+  priority: 1
+  is_active: true
+  created_by: one
+
+two:
+  name: Group Two
+  description: Test Group Two
+  priority: 2
+  is_active: true
+  created_by: two

@@ -1,0 +1,176 @@
+<%= form_with model: [:admin, rule], data: { turbo_frame: "_top", controller: "expense-sheet-condition-builder" } do |form| %>
+  <div id="rule-form">
+    <% if rule.errors.any? %>
+      <div class="rounded-md bg-red-50 p-4 mb-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">오류가 있습니다:</h3>
+            <ul class="mt-2 text-sm text-red-700">
+              <% rule.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="space-y-6">
+      <!-- 규칙 유형 선택 -->
+      <div>
+        <%= form.label :rule_type, "규칙 유형", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :rule_type, 
+            options_for_select([
+              ['총금액', 'total_amount'],
+              ['항목수', 'item_count'],
+              ['제출자', 'submitter_based'],
+              ['코드포함', 'expense_code_based'],
+              ['기타', 'custom']
+            ], rule.rule_type),
+            { prompt: '규칙 유형을 선택하세요' },
+            class: 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
+            data: { 
+              expense_sheet_condition_builder_target: "ruleType",
+              action: "change->expense-sheet-condition-builder#updateConditionFields"
+            } %>
+      </div>
+
+      <!-- 제출자 그룹 선택 (제출자 기반 규칙용) -->
+      <div data-expense-sheet-condition-builder-target="submitterGroup" class="hidden">
+        <%= form.label :submitter_group_id, "제출자 그룹", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :submitter_group_id,
+            options_for_select(ApproverGroup.order(:priority).pluck(:name, :id), rule.submitter_group_id),
+            { include_blank: '선택하세요' },
+            class: 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500' %>
+        <p class="mt-1 text-sm text-gray-500">이 그룹에 속한 사용자가 제출할 때 적용되는 규칙입니다.</p>
+      </div>
+
+      <!-- 조건 설정 영역 -->
+      <div data-expense-sheet-condition-builder-target="conditionFields" class="space-y-4">
+        <!-- 총금액 조건 -->
+        <div data-expense-sheet-condition-builder-target="amountCondition" class="hidden">
+          <label class="block text-sm font-medium text-gray-700">총금액 조건</label>
+          <div class="flex items-center space-x-2 mt-1">
+            <span class="text-sm">총금액이</span>
+            <%= select_tag :amount_operator,
+                options_for_select([
+                  ['초과 (>)', '>'],
+                  ['이상 (>=)', '>='],
+                  ['미만 (<)', '<'],
+                  ['이하 (<=)', '<='],
+                  ['같음 (==)', '==']
+                ]),
+                class: 'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500' %>
+            <%= number_field_tag :amount_threshold, nil,
+                placeholder: "금액",
+                class: 'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
+                min: 0,
+                step: 1000 %>
+            <span class="text-sm">원일 때</span>
+          </div>
+        </div>
+
+        <!-- 항목수 조건 -->
+        <div data-expense-sheet-condition-builder-target="countCondition" class="hidden">
+          <label class="block text-sm font-medium text-gray-700">항목수 조건</label>
+          <div class="flex items-center space-x-2 mt-1">
+            <span class="text-sm">경비 항목이</span>
+            <%= select_tag :count_operator,
+                options_for_select([
+                  ['초과 (>)', '>'],
+                  ['이상 (>=)', '>='],
+                  ['미만 (<)', '<'],
+                  ['이하 (<=)', '<='],
+                  ['같음 (==)', '==']
+                ]),
+                class: 'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500' %>
+            <%= number_field_tag :count_threshold, nil,
+                placeholder: "개수",
+                class: 'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
+                min: 1 %>
+            <span class="text-sm">개일 때</span>
+          </div>
+        </div>
+
+        <!-- 경비 코드 조건 -->
+        <div data-expense-sheet-condition-builder-target="expenseCodeCondition" class="hidden">
+          <label class="block text-sm font-medium text-gray-700">경비 코드 선택</label>
+          <p class="mt-1 text-sm text-gray-500">선택한 경비 코드 중 하나라도 포함되면 이 규칙이 적용됩니다.</p>
+          <div class="mt-2 space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3">
+            <% ExpenseCode.order(:code).each do |expense_code| %>
+              <div class="flex items-center">
+                <%= check_box_tag "expense_codes[]", expense_code.code,
+                    rule.condition&.include?(expense_code.code),
+                    id: "expense_code_#{expense_code.id}",
+                    class: 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded',
+                    data: { expense_sheet_condition_builder_target: "expenseCodeCheckbox" } %>
+                <label for="expense_code_<%= expense_code.id %>" class="ml-2 text-sm text-gray-700">
+                  <%= expense_code.code %> - <%= expense_code.name %>
+                </label>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- 사용자 정의 조건 -->
+        <div data-expense-sheet-condition-builder-target="customCondition" class="hidden">
+          <label class="block text-sm font-medium text-gray-700">사용자 정의 조건</label>
+          <%= text_field_tag :custom_condition, rule.condition,
+              placeholder: "예: #총금액 > 1000000",
+              class: 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500' %>
+          <p class="mt-1 text-sm text-gray-500">조건식을 직접 입력하세요.</p>
+        </div>
+      </div>
+
+      <!-- 승인자 그룹 선택 -->
+      <div>
+        <%= form.label :approver_group_id, "필수 승인자 그룹", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :approver_group_id,
+            options_for_select(ApproverGroup.order(:priority).pluck(:name, :id), rule.approver_group_id),
+            { prompt: '승인자 그룹을 선택하세요' },
+            class: 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500' %>
+        <p class="mt-1 text-sm text-gray-500">이 조건을 만족할 때 필수로 포함되어야 하는 승인자 그룹입니다.</p>
+      </div>
+
+      <!-- 순서 -->
+      <div>
+        <%= form.label :order, "실행 순서", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.number_field :order,
+            class: 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
+            min: 1 %>
+        <p class="mt-1 text-sm text-gray-500">규칙이 평가되는 순서입니다. 낮은 번호가 먼저 실행됩니다.</p>
+      </div>
+
+      <!-- 활성화 상태 -->
+      <div class="flex items-center">
+        <%= form.check_box :is_active, class: 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded' %>
+        <%= form.label :is_active, "활성화", class: 'ml-2 block text-sm text-gray-900' %>
+      </div>
+    </div>
+
+    <!-- 조건식 예시 -->
+    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+      <h4 class="text-sm font-semibold text-blue-900 mb-2">조건식 예시:</h4>
+      <ul class="text-sm text-blue-700 space-y-1">
+        <li><code class="px-1 bg-blue-100 rounded">#총금액 > 500000</code> - 총금액이 50만원 초과</li>
+        <li><code class="px-1 bg-blue-100 rounded">#항목수 >= 10</code> - 경비 항목이 10개 이상</li>
+        <li><code class="px-1 bg-blue-100 rounded">#경비코드:ENTN,CONF</code> - 접대비(ENTN) 또는 회의비(CONF) 포함</li>
+        <li>제출자 기반 규칙은 선택된 그룹 멤버가 제출할 때만 적용됩니다.</li>
+      </ul>
+    </div>
+
+    <!-- 버튼 영역 -->
+    <div class="mt-6 flex justify-end space-x-3">
+      <%= link_to "취소", admin_expense_sheet_approval_rules_path,
+          data: { turbo_frame: "_top" },
+          class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      <%= form.submit "저장", 
+          class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+    </div>
+  </div>
+<% end %>

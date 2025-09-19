@@ -1,0 +1,19 @@
+# Task ID: 44
+# Title: 신청서 작성 기능 구현 (사용자)
+# Status: done
+# Dependencies: 43
+# Priority: high
+# Description: 사용자가 템플릿을 선택하여 신청서를 작성하고 제출할 수 있는 기능을 구현합니다.
+# Details:
+1. RequestFormsController 생성
+2. 카테고리 선택 페이지 (카드 UI)
+3. 템플릿 선택 페이지
+4. 동적 폼 렌더링 (템플릿 필드 기반)
+5. 실시간 유효성 검증 (Stimulus)
+6. 파일 업로드 (Active Storage)
+7. 임시저장 기능 (자동/수동)
+8. 결재선 선택 (기존 ApprovalLine 활용)
+9. 제출 및 상태 관리
+
+# Test Strategy:
+

@@ -1,0 +1,43 @@
+# Task ID: 22
+# Title: 첨부파일 요구사항 관리 기능 구현
+# Status: done
+# Dependencies: 21
+# Priority: high
+# Description: 관리자가 경비 시트 제출 시 필요한 첨부파일 템플릿을 정의하고 관리하는 CRUD 기능 구현
+# Details:
+첨부파일 이름, 필수 여부, 파일 형식, 적용 조건 등을 설정할 수 있는 관리자 인터페이스 구현
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Admin::AttachmentRequirementsController 생성 및 CRUD 액션 구현 [done]
+### Dependencies: None
+### Description: 관리자용 첨부파일 요구사항 컨트롤러 생성 및 CRUD 액션 구현
+### Details:
+index, show, new, create, edit, update, destroy 액션 구현. admin 네임스페이스 사용, strong parameters 적용
+
+## 2. 첨부파일 요구사항 관리 뷰 구현 [done]
+### Dependencies: None
+### Description: 관리자용 첨부파일 요구사항 CRUD 뷰 구현
+### Details:
+index(목록), new/edit(폼), show(상세) 뷰 구현. Turbo Frames와 Stimulus 활용, Bootstrap 스타일링 적용
+
+## 3. AttachmentAnalysisRules 중첩 관리 기능 구현 [done]
+### Dependencies: None
+### Description: 첨부파일 요구사항과 함께 분석 규칙을 관리할 수 있는 중첩 폼 구현
+### Details:
+accepts_nested_attributes_for 활용, 동적 필드 추가/삭제 기능, Stimulus 컨트롤러로 UI 제어
+
+## 4. AttachmentValidationRules 중첩 관리 기능 구현 [done]
+### Dependencies: None
+### Description: 첨부파일 요구사항과 함께 검증 규칙을 관리할 수 있는 중첩 폼 구현
+### Details:
+accepts_nested_attributes_for 활용, 동적 필드 추가/삭제 기능, 검증 규칙 타입별 UI 변경
+
+## 5. 첨부파일 요구사항 관리 라우트 및 메뉴 추가 [done]
+### Dependencies: None
+### Description: 관리자 메뉴에 첨부파일 요구사항 관리 링크 추가 및 라우트 설정
+### Details:
+routes.rb에 admin 네임스페이스 라우트 추가, 관리자 레이아웃에 메뉴 항목 추가, 권한 체크 구현
+

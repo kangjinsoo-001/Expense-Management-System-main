@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>실시간 검증 테스트</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .test-steps {
+            margin-left: 20px;
+        }
+        .test-step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-left: 3px solid #4CAF50;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>경비 항목 실시간 검증 테스트 가이드</h1>
+
+    <div class="test-section">
+        <div class="test-title">테스트 1: 필수 필드 검증</div>
+        <div class="test-steps">
+            <div class="test-step">
+                <strong>1단계:</strong> 경비 항목 작성 페이지로 이동
+                <div class="code">http://localhost:3000/expense_sheets/[ID]/expense_items/new</div>
+            </div>
+            <div class="test-step">
+                <strong>2단계:</strong> 아래 필드를 비워두고 다른 필드로 포커스 이동
+                <ul>
+                    <li>날짜 (expense_date)</li>
+                    <li>금액 (amount)</li>
+                    <li>코스트센터 (cost_center_id)</li>
+                    <li>사유 (description)</li>
+                </ul>
+            </div>
+            <div class="test-step">
+                <strong>기대 결과:</strong>
+                <div class="test-result pass">
+                    ✓ 각 필드 아래에 "XXX 필수" 빨간색 에러 메시지 표시<br>
+                    ✓ 필드 테두리가 빨간색으로 변경<br>
+                    ✓ 제출 버튼 비활성화
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">테스트 2: 멀티셀렉트 필드 검증 (참석자/조직)</div>
+        <div class="test-steps">
+            <div class="test-step">
+                <strong>1단계:</strong> 회식/접대 등 참석자가 필요한 경비 코드 선택
+            </div>
+            <div class="test-step">
+                <strong>2단계:</strong> 참석자 필드에서 아무것도 선택하지 않고 다른 필드로 이동
+            </div>
+            <div class="test-step">
+                <strong>3단계:</strong> 콘솔에서 확인
+                <div class="code">
+                // 개발자 도구 콘솔 열기 (F12)<br>
+                // 다음 로그 확인:<br>
+                "=== Custom field change detected ==="<br>
+                "Field name: expense_item[custom_fields][participants][]"<br>
+                "=== UpdateUI called ==="<br>
+                "Errors: {custom_fields_participants: ['참석자 필수']}"
+                </div>
+            </div>
+            <div class="test-step">
+                <strong>기대 결과:</strong>
+                <div class="test-result pass">
+                    ✓ 참석자 필드 아래 "참석자 필수" 에러 메시지 표시<br>
+                    ✓ Choice.js 선택 박스 테두리 빨간색으로 변경<br>
+                    ✓ 제출 버튼 비활성화
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">테스트 3: 에러 메시지 제거 확인</div>
+        <div class="test-steps">
+            <div class="test-step">
+                <strong>1단계:</strong> 에러가 표시된 필드에 값 입력
+            </div>
+            <div class="test-step">
+                <strong>2단계:</strong> 참석자 필드에서 최소 1명 선택
+            </div>
+            <div class="test-step">
+                <strong>기대 결과:</strong>
+                <div class="test-result pass">
+                    ✓ 값을 입력한 필드의 에러 메시지 즉시 사라짐<br>
+                    ✓ 필드 테두리 정상 색상으로 복원<br>
+                    ✓ 모든 필수 필드 입력 시 제출 버튼 활성화
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">테스트 4: 경비 한도 초과 검증</div>
+        <div class="test-steps">
+            <div class="test-step">
+                <strong>1단계:</strong> 한도가 설정된 경비 코드 선택 (예: 택시비 50,000원)
+            </div>
+            <div class="test-step">
+                <strong>2단계:</strong> 금액 필드에 한도 초과 금액 입력 (예: 60,000원)
+            </div>
+            <div class="test-step">
+                <strong>기대 결과:</strong>
+                <div class="test-result pass">
+                    ✓ 첨부파일 섹션에 "경비 한도(₩50,000)를 초과했습니다" 메시지 표시<br>
+                    ✓ 제출 버튼 비활성화
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">디버깅 명령어</div>
+        <div class="code">
+// 콘솔에서 현재 검증 상태 확인
+const controller = document.querySelector('[data-controller*="unified-validation"]')._stimulusApp.getControllerForElementAndIdentifier(document.querySelector('[data-controller*="unified-validation"]'), 'unified-validation')
+console.log('Validation passed:', controller.validationPassed)
+
+// 수동으로 검증 실행
+controller.performValidation()
+
+// 현재 에러 확인
+console.log('Field errors:', document.querySelectorAll('.field-error-message'))
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">문제 해결 체크리스트</div>
+        <ul>
+            <li>☐ unified_validation_controller.js가 폼에 연결되어 있는지 확인</li>
+            <li>☐ data-controller="unified-validation" 속성이 form 태그에 있는지 확인</li>
+            <li>☐ 콘솔에 JavaScript 에러가 없는지 확인</li>
+            <li>☐ Choice.js가 멀티셀렉트 필드에 제대로 초기화되었는지 확인</li>
+            <li>☐ 서버 응답이 정상적으로 오는지 네트워크 탭에서 확인</li>
+        </ul>
+    </div>
+</body>
+</html>

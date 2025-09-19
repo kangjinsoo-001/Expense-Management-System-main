@@ -1,0 +1,341 @@
+<div class="container mx-auto px-4 py-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">승인 대시보드</h1>
+  </div>
+
+  <!-- 탭 네비게이션과 컨텐츠 -->
+  <div>
+    <!-- 탭 네비게이션 -->
+    <div class="border-b border-gray-200 mb-6">
+      <nav class="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
+        <%= link_to approvals_path(tab: 'all-items'), 
+            class: "tab-link whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm #{@active_tab == 'all-items' ? 'border-blue-500 text-blue-600 active' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}" do %>
+          <span class="hidden sm:inline">전체 목록</span>
+          <span class="sm:hidden">전체</span>
+          <span class="ml-1 sm:ml-2 <%= @active_tab == 'all-items' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600' %> py-0.5 px-1.5 sm:px-2.5 rounded-full text-xs font-medium">
+            <%= @all_requests.total_count %>
+          </span>
+        <% end %>
+        <%= link_to approvals_path(tab: 'my-items'), 
+            class: "tab-link whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm #{@active_tab == 'my-items' ? 'border-blue-500 text-blue-600 active' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}" do %>
+          <span class="hidden sm:inline">승인 요청 목록</span>
+          <span class="sm:hidden">내가 올린</span>
+          <span class="ml-1 sm:ml-2 <%= @active_tab == 'my-items' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600' %> py-0.5 px-1.5 sm:px-2.5 rounded-full text-xs font-medium">
+            <%= @my_requests.total_count %>
+          </span>
+        <% end %>
+        <%= link_to approvals_path(tab: 'approval-needed'), 
+            class: "tab-link whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm #{@active_tab == 'approval-needed' ? 'border-blue-500 text-blue-600 active' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}" do %>
+          <span class="hidden sm:inline">승인 필요 목록</span>
+          <span class="sm:hidden">승인 필요</span>
+          <span id="approval-count" class="ml-1 sm:ml-2 <%= @active_tab == 'approval-needed' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600' %> py-0.5 px-1.5 sm:px-2.5 rounded-full text-xs font-medium">
+            <%= @approval_requests.total_count %>
+          </span>
+        <% end %>
+        <%= link_to approvals_path(tab: 'reference-items'), 
+            class: "tab-link whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm #{@active_tab == 'reference-items' ? 'border-blue-500 text-blue-600 active' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}" do %>
+          <span class="hidden sm:inline">참조 목록</span>
+          <span class="sm:hidden">참조</span>
+          <span class="ml-1 sm:ml-2 <%= @active_tab == 'reference-items' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600' %> py-0.5 px-1.5 sm:px-2.5 rounded-full text-xs font-medium">
+            <%= @reference_requests.total_count %>
+          </span>
+        <% end %>
+      </nav>
+    </div>
+    
+    <!-- 전체 목록 -->
+    <div id="all-items" class="tab-content <%= @active_tab == 'all-items' ? '' : 'hidden' %>">
+      <% if @all_requests.any? %>
+        <!-- 데스크톱: 테이블 뷰 -->
+        <div class="hidden md:block bg-white shadow overflow-hidden sm:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청일
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청자
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  유형
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  내용
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  진행 상태
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  현재 승인자
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only">작업</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @all_requests.each do |request| %>
+                <%= render_approval_request_row(request, show_requester: true, show_current_approver: true) %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 모바일: 카드 뷰 -->
+        <div class="md:hidden space-y-4">
+          <% @all_requests.each do |request| %>
+            <%= render_approval_request_card(request) %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">승인 요청이 없습니다</h3>
+          <p class="mt-1 text-sm text-gray-500">아직 관련된 승인 요청이 없습니다.</p>
+        </div>
+      <% end %>
+      
+      <!-- 하단 페이징 네비게이션 -->
+      <% if @all_requests.total_pages > 1 %>
+        <div class="mt-4">
+          <%= paginate @all_requests, param_name: 'all_page', 
+              outer_window: 1, 
+              window: 2,
+              params: { tab: 'all-items' } %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 내가 올린 승인 요청 목록 -->
+    <div id="my-items" class="tab-content <%= @active_tab == 'my-items' ? '' : 'hidden' %>">
+      <% if @my_requests.any? %>
+        <!-- 데스크톱: 테이블 뷰 -->
+        <div class="hidden md:block bg-white shadow overflow-hidden sm:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청일
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  유형
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  내용
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  진행 상태
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  현재 승인자
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only">작업</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @my_requests.each do |request| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= request.created_at.strftime('%Y-%m-%d %H:%M') %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= approval_type_badge(request.approvable) %>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <% presenter = approval_presenter(request.approvable) %>
+                    <div class="font-medium"><%= presenter&.title %></div>
+                    <div class="text-gray-500 text-xs"><%= presenter&.description %></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <%= approval_status_badge(request.status) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <%= request.current_approver_names %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <%= link_to '상세보기', approval_path(request), class: 'text-indigo-600 hover:text-indigo-900' %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 모바일: 카드 뷰 -->
+        <div class="md:hidden space-y-4">
+          <% @my_requests.each do |request| %>
+            <%= render_approval_request_card(request) %>
+          <% end %>
+        </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="mt-4">
+          <%= paginate @my_requests, param_name: :my_page, 
+              params: { tab: 'my-items' } %>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">승인 요청 내역이 없습니다</h3>
+          <p class="mt-1 text-sm text-gray-500">아직 승인 요청한 항목이 없습니다.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 승인 필요 목록 (기존 승인 대기 목록) -->
+    <div id="approval-needed" class="tab-content <%= @active_tab == 'approval-needed' ? '' : 'hidden' %>" data-controller="batch-approval">
+      <% if @approval_requests.any? %>
+        <!-- 일괄 승인 버튼 -->
+        <div class="mb-4 flex justify-end">
+          <button type="button" 
+                  data-action="click->batch-approval#approveSelected"
+                  data-batch-approval-target="approveButton"
+                  class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled>
+            선택 항목 일괄 승인
+          </button>
+        </div>
+        
+        <!-- 데스크톱: 테이블 뷰 -->
+        <div class="hidden md:block bg-white shadow overflow-hidden sm:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-center">
+                  <input type="checkbox" 
+                         data-batch-approval-target="selectAll"
+                         data-action="change->batch-approval#toggleAll"
+                         class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청일
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청자
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  유형
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  내용
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  진행 상태
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only">작업</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @approval_requests.each do |request| %>
+                <%= render_approval_request_row(request, 
+                    show_checkbox: true, 
+                    show_requester: true, 
+                    use_turbo_frame: true) %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 모바일: 카드 뷰 -->
+        <div class="md:hidden space-y-4">
+          <% @approval_requests.each do |request| %>
+            <%= render_approval_request_card(request, show_checkbox: true) %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">승인 대기 중인 항목이 없습니다</h3>
+          <p class="mt-1 text-sm text-gray-500">현재 승인이 필요한 항목이 없습니다.</p>
+        </div>
+      <% end %>
+      
+      <!-- 하단 페이징 네비게이션 -->
+      <% if @approval_requests.total_pages > 1 %>
+        <div class="mt-4">
+          <%= paginate @approval_requests, param_name: 'approval_page', 
+              outer_window: 1, 
+              window: 2,
+              params: { tab: 'approval-needed' } %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 참조 목록 -->
+    <div id="reference-items" class="tab-content <%= @active_tab == 'reference-items' ? '' : 'hidden' %>">
+      <% if @reference_requests.any? %>
+        <!-- 데스크톱: 테이블 뷰 -->
+        <div class="hidden md:block bg-white shadow overflow-hidden sm:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청일
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  신청자
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  유형
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  내용
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  진행 상태
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only">작업</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @reference_requests.each do |request| %>
+                <%= render_approval_request_row(request, show_requester: true) %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 모바일: 카드 뷰 -->
+        <div class="md:hidden space-y-4">
+          <% @reference_requests.each do |request| %>
+            <%= render_approval_request_card(request) %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">참조 항목이 없습니다</h3>
+          <p class="mt-1 text-sm text-gray-500">현재 참조로 지정된 항목이 없습니다.</p>
+        </div>
+      <% end %>
+      
+      <!-- 하단 페이징 네비게이션 -->
+      <% if @reference_requests.total_pages > 1 %>
+        <div class="mt-4">
+          <%= paginate @reference_requests, param_name: 'reference_page', 
+              outer_window: 1, 
+              window: 2,
+              params: { tab: 'reference-items' } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

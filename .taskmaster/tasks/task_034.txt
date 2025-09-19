@@ -1,0 +1,31 @@
+# Task ID: 34
+# Title: 백그라운드 처리 파이프라인 구축
+# Status: pending
+# Dependencies: 32, 33
+# Priority: high
+# Description: Solid Queue를 활용한 비동기 파일 처리 파이프라인 구현
+# Details:
+Rails 8 내장 Solid Queue 설정 및 Job 체인 구현. 파일 업로드 → 텍스트 추출 → AI 분석 → 검증 → 결과 저장의 순차적 처리. 실패 시 재시도 로직 및 상태 추적 구현
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Solid Queue 설정 및 초기화 [done]
+### Dependencies: None
+### Description: Rails 8 내장 Solid Queue 설정
+### Details:
+config/solid_queue.yml 설정, 큐 우선순위 설정, 동시 처리 워커 수 설정
+
+## 2. Job 체인 및 워크플로우 구현 [in-progress]
+### Dependencies: None
+### Description: 파일 처리 파이프라인 워크플로우 구현
+### Details:
+업로드 → TextExtractionJob → AttachmentAnalysisJob → ValidationJob 순차 실행 체인 구현
+
+## 3. 재시도 및 오류 처리 로직 구현 [pending]
+### Dependencies: None
+### Description: Job 실패 시 재시도 및 오류 처리
+### Details:
+재시도 횟수 제한, 지수 백오프, 오류 알림, 실패 Job 대시보드 구현
+

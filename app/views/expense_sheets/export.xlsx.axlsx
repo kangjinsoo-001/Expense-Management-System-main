@@ -1,0 +1,223 @@
+wb = xlsx_package.workbook
+
+# 스타일 정의
+wb.styles do |style|
+  # 제목 스타일
+  title_style = style.add_style(
+    b: true,
+    sz: 16,
+    alignment: { horizontal: :center, vertical: :center },
+    font_name: 'Arial'
+  )
+  
+  # Period 레이블 스타일
+  period_label_style = style.add_style(
+    b: true,
+    sz: 11,
+    alignment: { horizontal: :left, vertical: :center }
+  )
+  
+  # Period 값 스타일
+  period_value_style = style.add_style(
+    sz: 11,
+    alignment: { horizontal: :left, vertical: :center }
+  )
+  
+  # 헤더 스타일
+  header_style = style.add_style(
+    b: true,
+    sz: 11,
+    alignment: { horizontal: :center, vertical: :center },
+    bg_color: "D9E2F3",
+    border: { style: :thin, color: "000000" }
+  )
+  
+  # 일반 셀 스타일
+  cell_style = style.add_style(
+    sz: 10,
+    alignment: { horizontal: :left, vertical: :center },
+    border: { style: :thin, color: "000000" }
+  )
+  
+  # 날짜 스타일
+  date_style = style.add_style(
+    sz: 10,
+    alignment: { horizontal: :center, vertical: :center },
+    border: { style: :thin, color: "000000" }
+  )
+  
+  # 숫자 스타일 (천단위 구분)
+  number_style = style.add_style(
+    sz: 10,
+    alignment: { horizontal: :right, vertical: :center },
+    border: { style: :thin, color: "000000" },
+    num_fmt: 3  # 천단위 구분 숫자 형식
+  )
+  
+  # Total 레이블 스타일
+  total_label_style = style.add_style(
+    b: true,
+    sz: 11,
+    alignment: { horizontal: :center, vertical: :center },
+    bg_color: "F2F2F2",
+    border: { style: :thin, color: "000000" }
+  )
+  
+  # Total 금액 스타일
+  total_number_style = style.add_style(
+    b: true,
+    sz: 11,
+    alignment: { horizontal: :right, vertical: :center },
+    bg_color: "F2F2F2",
+    border: { style: :thin, color: "000000" },
+    num_fmt: 3
+  )
+  
+  # 서명란 레이블 스타일
+  signature_label_style = style.add_style(
+    sz: 10,
+    alignment: { horizontal: :left, vertical: :center }
+  )
+  
+  # 서명란 값 스타일
+  signature_value_style = style.add_style(
+    sz: 10,
+    alignment: { horizontal: :center, vertical: :center },
+    border: { style: :none, color: "000000", edges: [:bottom] }
+  )
+  
+  # 관리팀 입력란 헤더 스타일
+  admin_header_style = style.add_style(
+    b: true,
+    sz: 11,
+    alignment: { horizontal: :left, vertical: :center },
+    bg_color: "E7E6E6"
+  )
+
+  # 워크시트 추가
+  wb.add_worksheet(name: "#{@expense_sheet.year}년 #{@expense_sheet.month}월 경비") do |sheet|
+    # 빈 행 추가 (레이아웃 조정)
+    sheet.add_row []
+    sheet.add_row []
+    
+    # 제목 행
+    sheet.add_row ["", "경비청구서", "", "", "", "", ""], style: [nil, title_style, title_style, title_style, title_style, title_style, title_style]
+    sheet.merge_cells "B3:G3"
+    
+    # Period 행
+    start_date = Date.new(@expense_sheet.year, @expense_sheet.month, 1)
+    end_date = Date.new(@expense_sheet.year, @expense_sheet.month, -1)
+    period_text = "#{start_date.strftime('%Y-%m-%d')} ~ #{end_date.strftime('%Y-%m-%d')}"
+    
+    sheet.add_row ["", "Period :", period_text, "", "", "", ""], 
+                  style: [nil, period_label_style, period_value_style, period_value_style, period_value_style, period_value_style, period_value_style]
+    sheet.merge_cells "C4:G4"
+    
+    # 빈 행 추가 (여백용)
+    sheet.add_row []
+    
+    # 헤더 행
+    headers = ["", "Date", "Code", "Description", "Amount", "Cost Center", "Comments"]
+    sheet.add_row headers, style: [nil, header_style, header_style, header_style, header_style, header_style, header_style]
+    
+    # 데이터 행 - is_draft가 false인 항목만
+    total_amount = 0
+    @expense_sheet.expense_items
+                  .where(is_draft: false)
+                  .includes(:expense_code, :cost_center)
+                  .ordered
+                  .each do |item|
+      row_data = [
+        "",  # A열 비움
+        item.expense_date.strftime("%m/%d"),
+        item.expense_code&.code || "",
+        item.display_description,
+        item.amount,
+        item.cost_center&.name || "",
+        item.remarks || ""
+      ]
+      
+      styles = [
+        nil,             # A열
+        date_style,      # 날짜
+        cell_style,      # 코드
+        cell_style,      # 설명
+        number_style,    # 금액
+        cell_style,      # 코스트센터
+        cell_style       # 코멘트
+      ]
+      
+      sheet.add_row row_data, style: styles
+      total_amount += item.amount
+    end
+    
+    # Total 행
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "Total", "", "", total_amount, "", ""], 
+                  style: [nil, total_label_style, total_label_style, total_label_style, total_number_style, cell_style, cell_style]
+    sheet.merge_cells "B#{current_row}:D#{current_row}"
+    
+    # 빈 행 추가
+    sheet.add_row []
+    
+    # 서명란
+    # Submitted by
+    submitted_date = @expense_sheet.submitted_at || Date.current
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "Submitted by", "", @expense_sheet.user.name, "Date", submitted_date.strftime("%Y-%m-%d"), ""], 
+                  style: [nil, signature_label_style, nil, signature_value_style, signature_label_style, signature_value_style, nil]
+    sheet.merge_cells "B#{current_row}:C#{current_row}"
+    sheet.merge_cells "F#{current_row}:G#{current_row}"
+    
+    # Reviewed by
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "Reviewed by", "", "", "Date", "", ""], 
+                  style: [nil, signature_label_style, nil, signature_value_style, signature_label_style, signature_value_style, nil]
+    sheet.merge_cells "B#{current_row}:C#{current_row}"
+    sheet.merge_cells "F#{current_row}:G#{current_row}"
+    
+    # Approved by
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "Approved  by", "", "", "Date", "", ""], 
+                  style: [nil, signature_label_style, nil, signature_value_style, signature_label_style, signature_value_style, nil]
+    sheet.merge_cells "B#{current_row}:C#{current_row}"
+    sheet.merge_cells "F#{current_row}:G#{current_row}"
+    
+    # 빈 행 추가
+    sheet.add_row []
+    sheet.add_row []
+    
+    # 관리팀 입력란
+    sheet.add_row []
+    sheet.add_row ["", "관리팀 입력란", "", "", "", "", ""], style: [nil, admin_header_style, admin_header_style, admin_header_style, admin_header_style, admin_header_style, admin_header_style]
+    sheet.add_row []
+    
+    # 경비 지급 및 전표작성 영역 (같은 행에 표시)
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "경비 지급", "", "", "전표작성 및 입력", "", ""], style: [nil, signature_label_style, nil, nil, signature_label_style, nil, nil]
+    
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "    일   자:", "", "", "  일   자:", "", ""], style: [nil, signature_label_style, nil, nil, signature_label_style, nil, nil]
+    
+    current_row = sheet.rows.length + 1
+    sheet.add_row ["", "    담당자:", "", "", "  담당자:", "", ""], style: [nil, signature_label_style, nil, nil, signature_label_style, nil, nil]
+    
+    # 열 너비 설정
+    # Date: 12 * 0.7 = 8.4 → 8
+    # Code: 10 * 0.7 = 7
+    # Description: 45 + 줄인 만큼 = 73
+    # Amount: 13 (유지)
+    # Cost Center: 20 * 0.7 = 14
+    # Comments: 30 * 0.5 = 15
+    sheet.column_widths 3, 8, 7, 73, 13, 14, 15
+    
+    # 인쇄 설정 - 한 페이지에 맞추기
+    sheet.page_setup.fit_to_width = 1
+    sheet.page_setup.fit_to_height = 1
+    sheet.page_setup.orientation = :landscape  # 가로 방향
+    sheet.page_margins.top = 0.5
+    sheet.page_margins.bottom = 0.5
+    sheet.page_margins.left = 0.5
+    sheet.page_margins.right = 0.5
+  end
+end

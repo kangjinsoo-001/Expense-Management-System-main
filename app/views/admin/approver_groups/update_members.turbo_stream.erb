@@ -1,0 +1,31 @@
+<%= turbo_stream.replace "members_list_wrapper" do %>
+  <%= render 'members_list_wrapper', approver_group: @approver_group, members: @members %>
+<% end %>
+
+<%= turbo_stream.update "[data-approver-group-target='memberCount']", @members.count.to_s %>
+
+<%= turbo_stream.prepend "flash_container" do %>
+  <%= render partial: "shared/flash_message", locals: { type: :notice, message: '멤버가 성공적으로 업데이트되었습니다.' } %>
+<% end %>
+
+<%# 편집 폼 업데이트 (숨김 상태로) %>
+<%= turbo_stream.replace "member_edit_form" do %>
+  <div id="member_edit_form" 
+       data-approver-group-target="editForm"
+       class="hidden mb-4">
+    <%= render 'edit_members_form', 
+               approver_group: @approver_group, 
+               current_members: @members,
+               all_users: User.includes(:organization).order(:name) %>
+  </div>
+<% end %>
+
+<%# 버튼 텍스트 원래대로 %>
+<%= turbo_stream.append "flash_container" do %>
+  <script>
+    const editButton = document.querySelector('[data-approver-group-target="editButton"]');
+    if (editButton) {
+      editButton.textContent = '멤버 수정';
+    }
+  </script>
+<% end %>

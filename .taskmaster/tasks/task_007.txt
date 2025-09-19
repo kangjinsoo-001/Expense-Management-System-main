@@ -1,0 +1,71 @@
+# Task ID: 7
+# Title: 테스트 코드 작성 및 검증
+# Status: done
+# Dependencies: 1, 2, 3, 4, 5
+# Priority: medium
+# Description: 결재선 시스템 전체에 대한 테스트 코드 작성
+# Details:
+- 모델 단위 테스트
+- 컨트롤러 통합 테스트
+- 승인 프로세스 시나리오 테스트
+- 동시성 제어 테스트
+- 권한 검증 테스트
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. 모델 단위 테스트 작성 [done]
+### Dependencies: None
+### Description: 결재선 관련 모델들의 단위 테스트 작성
+### Details:
+- test/models/approval_line_test.rb
+- test/models/approval_line_step_test.rb
+- test/models/approval_request_test.rb
+- test/models/approval_history_test.rb
+- 모델 validation 테스트
+- 관계(association) 테스트
+- 메서드 동작 테스트
+
+## 2. 컨트롤러 통합 테스트 작성 [done]
+### Dependencies: None
+### Description: 결재선 관련 컨트롤러들의 통합 테스트 작성
+### Details:
+- test/controllers/approval_lines_controller_test.rb
+- test/controllers/approvals_controller_test.rb
+- 권한 체크 테스트 (자신의 결재선만 수정 가능)
+- CRUD 동작 테스트
+- 잘못된 파라미터 처리 테스트
+- Turbo Stream 응답 테스트
+
+## 3. 승인 프로세스 시나리오 테스트 [done]
+### Dependencies: None
+### Description: 전체 승인 프로세스의 엔드투엔드 시나리오 테스트
+### Details:
+- 결재선 생성 → 경비 항목 적용 → 승인 요청 → 승인/반려 전체 플로우
+- 다단계 승인 시나리오 테스트
+- 전체 승인 필요 vs 단일 승인 가능 동작 확인
+- 반려 시 프로세스 중단 확인
+- 참조자 권한 테스트 (열람만 가능)
+
+## 4. 동시성 제어 테스트 [done]
+### Dependencies: None
+### Description: 여러 승인자가 동시에 처리할 때의 동시성 제어 테스트
+### Details:
+- 같은 단계의 여러 승인자가 동시에 승인 시도
+- 전체 승인 필요 방식에서 race condition 방지 확인
+- 단일 승인 가능 방식에서 첫 번째 승인만 유효한지 확인
+- 데이터베이스 락 메커니즘 테스트
+- 중복 승인 방지 로직 검증
+
+## 5. 권한 검증 테스트 [done]
+### Dependencies: None
+### Description: 사용자 권한에 따른 접근 제어 테스트
+### Details:
+- 결재선 소유자만 수정/삭제 가능한지 검증
+- 승인자로 지정된 사용자만 승인/반려 가능한지 확인
+- 참조자는 열람만 가능한지 확인
+- 승인 이력 수정 불가 테스트
+- 타인의 결재선 접근 차단 테스트
+- 로그인하지 않은 사용자 접근 차단
+

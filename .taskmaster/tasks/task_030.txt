@@ -1,0 +1,37 @@
+# Task ID: 30
+# Title: 첨부파일 요구사항 관리 시스템 데이터베이스 구축
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: AttachmentRequirement, AttachmentAnalysisRule, AttachmentValidationRule, ExpenseSheetAttachment 모델 및 마이그레이션 생성
+# Details:
+SQLite 데이터베이스에 첨부파일 관련 모든 테이블 생성. JSONB 타입 대신 SQLite에서 지원하는 JSON 타입 사용. 모델 간 관계 설정 및 검증 규칙 구현
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. AttachmentRequirement 모델 생성 [done]
+### Dependencies: None
+### Description: 첨부파일 요구사항 정의를 위한 모델 및 마이그레이션 생성
+### Details:
+name, description, required, file_types(JSON), condition_expression, position, active 필드 포함
+
+## 2. AttachmentAnalysisRule 모델 생성 [done]
+### Dependencies: None
+### Description: AI 분석 규칙 저장을 위한 모델 및 마이그레이션 생성
+### Details:
+attachment_requirement_id, prompt_text, expected_fields(JSON), active 필드 포함. AttachmentRequirement와 belongs_to 관계 설정
+
+## 3. AttachmentValidationRule 모델 생성 [done]
+### Dependencies: None
+### Description: 검증 규칙 저장을 위한 모델 및 마이그레이션 생성
+### Details:
+attachment_requirement_id, rule_type, prompt_text, severity(통과/주의/경고), position, active 필드 포함
+
+## 4. ExpenseSheetAttachment 모델 생성 [done]
+### Dependencies: None
+### Description: 제출된 첨부파일 정보 저장을 위한 모델 및 마이그레이션 생성
+### Details:
+expense_sheet_id, attachment_requirement_id, ActiveStorage attachment, extracted_text, analysis_result(JSON), validation_result(JSON), status 필드 포함
+

@@ -1,0 +1,42 @@
+<div class="approval-step relative">
+  <%= step_form.hidden_field :id if step.persisted? %>
+  <%= step_form.hidden_field :_destroy, value: false %>
+  <%= step_form.hidden_field :step_order %>
+  <% if step.role_approve? %>
+    <%= step_form.hidden_field :approval_type, value: step.approval_type || 'single_allowed', class: 'approval-type-hidden' %>
+  <% end %>
+  
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="md:col-span-2">
+      <% if step_form.index == 0 %>
+        <%= step_form.label :approver_id, "승인자", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <% end %>
+      <%= step_form.select :approver_id, 
+                           options_for_select(@users.map { |u| 
+                             org_name = u.organization&.name || "소속 없음"
+                             ["#{u.name} (#{org_name})", u.id] 
+                           }, step.approver_id),
+                           { prompt: "승인자를 선택하세요" },
+                           { class: "w-full approver-select" } %>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <% if step_form.index == 0 %>
+        <%= step_form.label :role, "역할", class: "sr-only" %>
+      <% end %>
+      <%= step_form.select :role,
+                           options_for_select([['승인', 'approve'], ['참조', 'reference']], step.role || 'approve'),
+                           {},
+                           { class: "flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 role-select" } %>
+      
+      <button type="button"
+              data-action="click->approval-line-form#removeApprover"
+              class="text-red-600 hover:text-red-800 transition-colors"
+              title="삭제">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1577 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "결재선 모델 및 데이터베이스 구조 설계",
+        "description": "ApprovalLine, ApprovalLineStep, ApprovalRequest, ApprovalHistory 모델 설계 및 마이그레이션 생성",
+        "details": "PRD에 정의된 데이터 모델을 기반으로 Rails 모델 생성:\n- ApprovalLine: 결재선 마스터 정보\n- ApprovalLineStep: 결재선 단계별 승인자 정보\n- ApprovalRequest: 경비 항목별 승인 요청\n- ApprovalHistory: 승인/반려 이력",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ApprovalLine 모델 생성",
+            "description": "결재선 마스터 정보를 저장하는 모델 생성",
+            "details": "rails generate model ApprovalLine user:references name:string is_active:boolean",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 2,
+            "title": "ApprovalLineStep 모델 생성",
+            "description": "결재선 단계별 승인자 정보를 저장하는 모델 생성",
+            "details": "rails generate model ApprovalLineStep approval_line:references approver:references step_order:integer role:string approval_type:string",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 3,
+            "title": "ApprovalRequest 모델 생성",
+            "description": "경비 항목별 승인 요청을 관리하는 모델 생성",
+            "details": "rails generate model ApprovalRequest expense_item:references approval_line:references current_step:integer status:string",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 4,
+            "title": "ApprovalHistory 모델 생성",
+            "description": "승인/반려 이력을 저장하는 모델 생성",
+            "details": "rails generate model ApprovalHistory approval_request:references approver:references step_order:integer role:string action:string comment:text approved_at:datetime",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 5,
+            "title": "모델 관계 설정 및 validation 추가",
+            "description": "모델 간 관계 설정 및 데이터 검증 로직 추가",
+            "details": "- has_many, belongs_to 관계 설정\n- 필수 필드 validation\n- enum 정의 (status, role, action 등)\n- 인덱스 추가\n- 마이그레이션 실행",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "결재선 관리 기능 구현",
+        "description": "사용자별 결재선 생성, 수정, 삭제 기능 구현",
+        "details": "- 결재선 CRUD 컨트롤러 구현\n- 결재선 생성/편집 화면 (단계별 승인자 추가)\n- 승인 방식 선택 (전체 승인/단일 승인)\n- 드래그 앤 드롭으로 단계 순서 변경\n- Choice.js를 활용한 승인자 검색/선택",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ApprovalLinesController 생성",
+            "description": "결재선 CRUD를 위한 컨트롤러 생성",
+            "details": "- rails generate controller ApprovalLines\n- index, new, create, edit, update, destroy 액션 구현\n- strong parameters 설정\n- 현재 사용자의 결재선만 조회/수정 가능하도록 권한 체크",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 2,
+            "title": "결재선 목록 및 상세 화면 구현",
+            "description": "결재선 목록 페이지와 상세 정보 표시 화면 구현",
+            "details": "- index.html.erb: 사용자의 결재선 목록 표시\n- show.html.erb: 결재선 상세 정보 및 단계별 승인자 표시\n- _approval_line.html.erb: 결재선 카드 컴포넌트\n- Turbo Frame 적용",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 3,
+            "title": "결재선 생성/편집 폼 구현",
+            "description": "결재선 생성 및 편집을 위한 폼 구현",
+            "details": "- new.html.erb, edit.html.erb 구현\n- _form.html.erb: 결재선 기본 정보 입력\n- approval_line_form_controller.js: Stimulus 컨트롤러\n- 단계 추가/삭제 기능\n- 승인자 선택 (Choice.js 활용)",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 4,
+            "title": "드래그 앤 드롭으로 단계 순서 변경 기능",
+            "description": "결재선 단계 순서를 드래그 앤 드롭으로 변경하는 기능 구현",
+            "details": "- Sortable.js 라이브러리 활용\n- approval_line_sortable_controller.js 구현\n- 순서 변경 시 step_order 자동 업데이트\n- 서버에 변경사항 저장",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 5,
+            "title": "메뉴 네비게이션에 결재선 메뉴 추가",
+            "description": "메인 네비게이션에 결재선 관리 메뉴 추가",
+            "details": "- _navigation.html.erb에 결재선 메뉴 추가\n- 라우팅 설정 (resources :approval_lines)\n- 권한 체크 (로그인한 사용자만 접근 가능)",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "경비 항목에 결재선 적용 기능 구현",
+        "description": "경비 항목 생성/수정 시 결재선 선택 및 적용 기능",
+        "details": "- 경비 항목 폼에 결재선 선택 UI 추가 (칩 형태)\n- 선택한 결재선의 승인자 미리보기\n- ExpenseItem 모델에 approval_line_id 추가\n- 결재선 선택 시 ApprovalRequest 자동 생성",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ExpenseItem 모델에 결재선 관련 필드 추가",
+            "description": "경비 항목에 결재선 정보를 저장할 수 있도록 모델 수정",
+            "details": "- approval_line_id 컬럼 추가 마이그레이션\n- ExpenseItem 모델에 belongs_to :approval_line, optional: true 관계 추가\n- has_one :approval_request 관계 추가",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 2,
+            "title": "경비 항목 폼에 결재선 선택 UI 추가",
+            "description": "경비 항목 생성/수정 폼에 결재선 선택 칩 UI 구현",
+            "details": "- expense_items/_form.html.erb 수정\n- 사용자의 결재선 목록을 칩 형태로 표시\n- 결재선 선택 시 승인자 미리보기 표시\n- expense_item_approval_controller.js Stimulus 컨트롤러 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 3,
+            "title": "ApprovalRequest 자동 생성 로직 구현",
+            "description": "경비 항목 저장 시 결재선이 선택된 경우 ApprovalRequest 자동 생성",
+            "details": "- ExpenseItem 모델에 after_create 콜백 추가\n- create_approval_request 메서드 구현\n- 결재선의 첫 번째 단계로 current_step 설정\n- status를 'pending'으로 초기화",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 4,
+            "title": "ExpenseItemsController 수정",
+            "description": "컨트롤러에서 결재선 관련 파라미터 처리",
+            "details": "- expense_item_params에 approval_line_id 추가\n- 사용자의 결재선 목록을 @approval_lines로 전달\n- 결재선 선택된 경우 승인자 정보 포함하여 응답",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "승인 대시보드 구현",
+        "description": "승인자를 위한 승인 대기 목록 및 처리 화면 구현",
+        "details": "- 승인 대기 항목 목록 표시\n- 역할별 필터링 (승인/참조)\n- 승인/반려 처리 기능\n- 승인 의견 및 반려 사유 입력\n- 결재 진행 상태 시각화",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          1,
+          3
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ApprovalsController 생성",
+            "description": "승인 대시보드를 위한 컨트롤러 생성",
+            "details": "- rails generate controller Approvals\n- index: 승인 대기 목록 표시\n- show: 승인 상세 정보 표시\n- approve/reject 액션 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 2,
+            "title": "승인 대기 목록 화면 구현",
+            "description": "승인자가 처리해야 할 항목 목록 화면 구현",
+            "details": "- approvals/index.html.erb 구현\n- 현재 사용자가 승인해야 할 항목만 표시\n- 역할별 탭 (승인/참조)\n- 필터링 및 정렬 기능\n- 페이지네이션",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 3,
+            "title": "승인 상세 화면 및 처리 기능 구현",
+            "description": "개별 승인 항목의 상세 정보 표시 및 승인/반려 처리",
+            "details": "- approvals/show.html.erb 구현\n- 경비 항목 상세 정보 표시\n- 결재 진행 상태 타임라인\n- 승인/반려 버튼 및 의견 입력 폼\n- Turbo를 활용한 실시간 업데이트",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 4,
+            "title": "승인/반려 처리 로직 구현",
+            "description": "승인자가 승인 또는 반려를 처리하는 서비스 로직 구현",
+            "details": "- ApprovalService 또는 ApprovalRequest 모델에 처리 메서드 구현\n- 승인 처리: process_approval(approver, action, comment)\n- 전체 승인 필요/단일 승인 가능 로직 처리\n- 다음 단계로 진행 또는 완료 처리\n- 반려 시 전체 프로세스 중단\n- ApprovalHistory 기록 생성",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "결재 상태 표시 및 이력 관리",
+        "description": "경비 시트와 항목에서 결재 진행 상태 표시 및 이력 조회",
+        "details": "- 경비 시트 목록에서 결재 상태 표시\n- 경비 항목별 상세 결재 진행 현황\n- 승인/반려 이력 조회\n- 타임라인 형태의 결재 진행 상황 UI",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          1,
+          3,
+          4
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "경비 시트 목록에 결재 상태 표시",
+            "description": "경비 시트 목록에서 결재 진행 상태를 간략하게 표시",
+            "details": "- expense_sheets/index.html.erb 수정\n- 결재선이 적용된 항목의 상태 표시\n- 예: \"결재진행중 - 최효진\", \"결재완료\", \"반려됨\"\n- 상태별 색상 구분 (진행중: 파란색, 완료: 녹색, 반려: 빨간색)",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 2,
+            "title": "경비 항목 상세 결재 진행 현황 표시",
+            "description": "개별 경비 항목에서 상세한 결재 진행 상황을 표시",
+            "details": "- expense_items/show.html.erb 또는 부분 뷰 수정\n- 전체 결재선과 각 단계별 상태 표시\n- 현재 대기 중인 승인자 강조 표시\n- 각 단계의 승인/반려 일시 표시\n- 승인자의 의견/반려 사유 표시",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 3,
+            "title": "승인/반려 이력 조회 기능 구현",
+            "description": "결재 처리 이력을 조회할 수 있는 기능 구현",
+            "details": "- ApprovalHistory 데이터 조회 로직\n- _approval_history.html.erb 부분 뷰 생성\n- 이력 목록 표시 (처리자, 일시, 액션, 코멘트)\n- 시간순 정렬 (최신 이력이 위로)\n- 모달 또는 확장 가능한 섹션으로 표시",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 4,
+            "title": "타임라인 형태의 결재 진행 상황 UI 구현",
+            "description": "결재 진행 과정을 시각적으로 표현하는 타임라인 UI 구현",
+            "details": "- _approval_timeline.html.erb 컴포넌트 생성\n- 각 단계를 노드로 표현 (완료/진행중/대기 상태)\n- 승인자 정보와 처리 시간 표시\n- 현재 진행 단계 하이라이트\n- Tailwind CSS로 반응형 타임라인 디자인\n- 세로형(모바일) / 가로형(데스크톱) 레이아웃",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "UI/UX 개선 및 반응형 디자인",
+        "description": "결재선 시스템의 사용자 인터페이스 개선 및 모바일 대응",
+        "details": "- 역할별 아이콘/색상 구분\n- 승인 방식 시각적 표시\n- 모바일 반응형 디자인\n- Turbo Frames/Streams 활용한 실시간 업데이트\n- 프로그레스 바 등 진행 상태 시각화",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "역할별 아이콘 및 색상 시스템 구현",
+            "description": "승인자 역할에 따른 시각적 구분을 위한 아이콘과 색상 시스템 구현",
+            "details": "- 승인자: 체크 아이콘 (HeroIcon check-circle) + 파란색\n- 참조자: 눈 아이콘 (HeroIcon eye) + 회색\n- 헬퍼 메서드 생성: role_icon, role_color\n- 전체 승인 필요: 사람 아이콘 여러 개 표시\n- 단일 승인 가능: 사람 아이콘 하나 표시\n- CSS 클래스 정의 및 일관된 적용",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 2,
+            "title": "모바일 반응형 레이아웃 구현",
+            "description": "모바일 기기에서도 편리하게 사용할 수 있도록 반응형 디자인 적용",
+            "details": "- 모든 결재선 관련 화면 반응형 처리\n- 테이블 → 카드 형태 변환 (모바일)\n- 승인/반려 버튼 크기 및 간격 조정\n- 터치 친화적인 인터페이스\n- 작은 화면에서도 가독성 유지\n- Tailwind responsive 클래스 활용",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 3,
+            "title": "Turbo Frames/Streams를 활용한 실시간 업데이트",
+            "description": "결재 처리 시 화면을 실시간으로 업데이트하는 기능 구현",
+            "details": "- 승인/반려 처리 시 Turbo Stream 응답\n- 결재 상태 변경 시 관련 UI 자동 업데이트\n- 승인 대기 목록 실시간 갱신\n- 알림 메시지 표시 (flash 대신 Turbo Stream)\n- 페이지 새로고침 없이 상태 변경\n- broadcast를 활용한 다중 사용자 업데이트 고려",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 4,
+            "title": "프로그레스 바 및 진행 상태 시각화",
+            "description": "결재 진행 상황을 직관적으로 보여주는 프로그레스 바 구현",
+            "details": "- 전체 단계 대비 현재 진행 단계 표시\n- 프로그레스 바 컴포넌트 구현\n- 완료된 단계: 녹색, 현재 단계: 파란색, 대기 단계: 회색\n- 퍼센트 표시 (예: 2/5 단계 완료 - 40%)\n- 승인자 수에 따른 세부 진행률 표시\n- 애니메이션 효과로 부드러운 전환",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "테스트 코드 작성 및 검증",
+        "description": "결재선 시스템 전체에 대한 테스트 코드 작성",
+        "details": "- 모델 단위 테스트\n- 컨트롤러 통합 테스트\n- 승인 프로세스 시나리오 테스트\n- 동시성 제어 테스트\n- 권한 검증 테스트",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "모델 단위 테스트 작성",
+            "description": "결재선 관련 모델들의 단위 테스트 작성",
+            "details": "- test/models/approval_line_test.rb\n- test/models/approval_line_step_test.rb\n- test/models/approval_request_test.rb\n- test/models/approval_history_test.rb\n- 모델 validation 테스트\n- 관계(association) 테스트\n- 메서드 동작 테스트",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 2,
+            "title": "컨트롤러 통합 테스트 작성",
+            "description": "결재선 관련 컨트롤러들의 통합 테스트 작성",
+            "details": "- test/controllers/approval_lines_controller_test.rb\n- test/controllers/approvals_controller_test.rb\n- 권한 체크 테스트 (자신의 결재선만 수정 가능)\n- CRUD 동작 테스트\n- 잘못된 파라미터 처리 테스트\n- Turbo Stream 응답 테스트",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 3,
+            "title": "승인 프로세스 시나리오 테스트",
+            "description": "전체 승인 프로세스의 엔드투엔드 시나리오 테스트",
+            "details": "- 결재선 생성 → 경비 항목 적용 → 승인 요청 → 승인/반려 전체 플로우\n- 다단계 승인 시나리오 테스트\n- 전체 승인 필요 vs 단일 승인 가능 동작 확인\n- 반려 시 프로세스 중단 확인\n- 참조자 권한 테스트 (열람만 가능)",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 4,
+            "title": "동시성 제어 테스트",
+            "description": "여러 승인자가 동시에 처리할 때의 동시성 제어 테스트",
+            "details": "- 같은 단계의 여러 승인자가 동시에 승인 시도\n- 전체 승인 필요 방식에서 race condition 방지 확인\n- 단일 승인 가능 방식에서 첫 번째 승인만 유효한지 확인\n- 데이터베이스 락 메커니즘 테스트\n- 중복 승인 방지 로직 검증",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 5,
+            "title": "권한 검증 테스트",
+            "description": "사용자 권한에 따른 접근 제어 테스트",
+            "details": "- 결재선 소유자만 수정/삭제 가능한지 검증\n- 승인자로 지정된 사용자만 승인/반려 가능한지 확인\n- 참조자는 열람만 가능한지 확인\n- 승인 이력 수정 불가 테스트\n- 타인의 결재선 접근 차단 테스트\n- 로그인하지 않은 사용자 접근 차단",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "승인자 그룹 모델 및 데이터베이스 구조 설계",
+        "description": "ApproverGroup, ApproverGroupMember, ExpenseCodeApprovalRule 모델과 마이그레이션 생성",
+        "details": "- ApproverGroup: 승인자 그룹 마스터 정보 (name, description, priority, is_active)\n- ApproverGroupMember: 그룹 멤버 관계 (approver_group_id, user_id, added_by, added_at)\n- ExpenseCodeApprovalRule: 경비 코드별 승인 규칙 (expense_code_id, condition, approver_group_id, order)\n- 각 모델의 관계 설정 및 validation 추가\n- 우선순위 시스템 구현 (1~10)",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "승인자 그룹 관리 기능 구현",
+        "description": "관리자용 승인자 그룹 CRUD 및 멤버 관리 기능 구현",
+        "details": "- Admin::ApproverGroupsController 생성\n- 그룹 목록 (우선순위순 정렬)\n- 그룹 생성/수정/삭제\n- 그룹 멤버 추가/제거 기능\n- 활성화/비활성화 토글\n- 그룹별 멤버 목록 표시",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          8
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "경비 코드별 승인 규칙 설정 기능",
+        "description": "경비 코드 관리 화면에 승인 규칙 설정 기능 추가",
+        "details": "- ExpenseCodesController 확장\n- 승인 규칙 영역 추가 (조건식, 승인자 그룹 선택)\n- 조건식 입력 UI (예: #금액 > 300000)\n- 승인자 그룹 드롭다운\n- 규칙 우선순위 설정\n- 규칙 미리보기 기능",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          8,
+          9
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "조건식 파서 및 평가 엔진 구현",
+        "description": "Ruby 기반 안전한 조건식 평가 시스템 구현",
+        "details": "- ConditionParser 클래스 구현\n- 지원 연산자: >, <, >=, <=, ==, !=\n- 지원 필드: #금액, #날짜, #커스텀필드명\n- 토큰화 및 파싱 로직\n- 안전한 평가를 위한 샌드박스\n- 에러 처리 및 검증",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          10
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "결재선 검증 로직 구현",
+        "description": "경비 항목 생성/수정 시 승인자 그룹 요구사항 검증",
+        "details": "- ExpenseItem 모델에 검증 로직 추가\n- 선택된 결재선의 승인자들이 속한 그룹 확인\n- 경비 코드의 승인 규칙과 대조\n- 우선순위 기반 위계 검증 (상위 그룹이 하위 그룹 충족)\n- 미충족 시 상세한 에러 메시지\n- ApprovalLineValidator 클래스 구현",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "UI/UX 개선 및 통합",
+        "description": "승인자 그룹 시스템의 사용자 인터페이스 개선",
+        "details": "- 경비 항목 폼에서 결재선 선택 시 실시간 검증 표시\n- 필수 승인자 그룹 미충족 시 경고 UI\n- 충족된 그룹을 체크 아이콘으로 표시\n- 각 승인자가 속한 그룹 뱃지 표시\n- 관리자 메뉴에 승인자 그룹 관리 추가\n- Turbo를 활용한 실시간 피드백",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          12
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "테스트 코드 작성 및 검증",
+        "description": "승인자 그룹 시스템 전체 테스트 코드 작성",
+        "details": "- 모델 단위 테스트 (ApproverGroup, ApproverGroupMember, ExpenseCodeApprovalRule)\n- 조건식 파서 테스트\n- 결재선 검증 로직 테스트\n- 우선순위 위계 시스템 테스트\n- 컨트롤러 통합 테스트\n- 시나리오 테스트 (금액별 승인자 요구사항)",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Gemini API 통합 설정",
+        "description": "Google Gemini Flash-lite 모델 API 통합을 위한 기반 구조 구축",
+        "details": "- Gemini API gem 설치 및 설정\n- 환경 변수 및 API 키 관리 체계 구축\n- 기본 API 호출 서비스 클래스 구현\n- 에러 처리 및 로깅 구조",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Gemini API gem 설치 및 설정",
+            "description": "Google Gemini API Ruby SDK 설치 및 기본 설정",
+            "details": "- google-generative-ai gem 추가\n- Gemfile 업데이트 및 bundle install\n- 기본 설정 파일 생성",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 2,
+            "title": "환경 변수 및 API 키 관리",
+            "description": "Gemini API 키를 안전하게 관리하기 위한 환경 설정",
+            "details": "- .env 파일에 GEMINI_API_KEY 추가\n- credentials.yml.enc에 production API 키 저장\n- 환경별 API 키 관리 구조",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 3,
+            "title": "GeminiService 클래스 구현",
+            "description": "Gemini API와 통신하는 서비스 클래스 구현",
+            "details": "- app/services/gemini_service.rb 생성\n- API 호출 메서드 구현\n- 에러 처리 및 재시도 로직\n- 응답 파싱 및 포맷팅",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 4,
+            "title": "로깅 및 모니터링 구조",
+            "description": "API 호출 로깅 및 모니터링 시스템 구축",
+            "details": "- API 호출 로그 기록\n- 성공/실패 메트릭 추적\n- API 사용량 모니터링\n- 디버깅을 위한 상세 로그",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 15
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "영수증 분류 및 요약 엔진 구현",
+        "description": "AI 기반 영수증 유형 분류 및 맞춤형 요약 생성 로직 구현",
+        "details": "- 영수증 유형 자동 분류 로직 (통신비/일반/기타)\n- 통신비 영수증 요약 프롬프트 개발\n- 일반 영수증 요약 프롬프트 개발\n- 요약 결과 구조화 및 JSON 포맷팅",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          15
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ReceiptAnalyzer 서비스 구현",
+            "description": "영수증 분석 및 요약을 조율하는 메인 서비스 클래스",
+            "details": "- GeminiService를 활용한 분석 플로우 구현\n- 영수증 유형별 처리 로직\n- 에러 핸들링 및 폴백 처리",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 16
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "데이터베이스 스키마 업데이트",
+        "description": "AI 요약 기능을 위한 데이터베이스 스키마 변경",
+        "details": "- attachments 테이블에 summary_data (JSON) 필드 추가\n- receipt_type (string) 필드 추가 (통신비/일반/기타)\n- processing_stage (enum) 필드 추가 (분석중/추출완료/요약완료)\n- 마이그레이션 파일 생성 및 실행",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "백그라운드 처리 Job 구현",
+        "description": "비동기 AI 요약 처리를 위한 백그라운드 Job 시스템 구현",
+        "details": "- AttachmentSummaryJob 구현\n- 처리 상태 실시간 업데이트 (Turbo Streams)\n- 재시도 로직 및 에러 처리\n- API 호출 제한 관리",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          15,
+          16,
+          17
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "TextExtractionJob 구현",
+            "description": "첨부파일에서 텍스트를 추출하는 백그라운드 작업",
+            "details": "- PDF/이미지 파일 텍스트 추출\n- OCR 처리\n- 처리 상태 업데이트",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 18
+          },
+          {
+            "id": 2,
+            "title": "AttachmentSummaryJob 구현",
+            "description": "AI 요약 처리를 위한 백그라운드 작업",
+            "details": "- Gemini API를 통한 영수증 분석\n- 요약 결과 저장\n- Turbo Streams로 실시간 업데이트",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 18
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "UI/UX 개선 및 테스트",
+        "description": "AI 요약 기능의 사용자 인터페이스 개선 및 통합 테스트",
+        "details": "- 처리 단계 표시 UI 업데이트 (분석중→추출완료→요약완료)\n- 요약 결과 표시 컴포넌트 개발\n- 원본 텍스트와 요약 토글 기능\n- 다양한 영수증 형식 테스트\n- 프롬프트 최적화",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          18
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "경비 통계 대시보드 인터랙티브 개선",
+        "description": "왼쪽에 조직도 트리, 오른쪽에 선택된 조직의 경비 현황 표시",
+        "details": "1. 좌측 패널에 전체 조직도 트리 표시\\n2. 조직 클릭 시 AJAX로 해당 조직 데이터 로드\\n3. Chart.js로 경비 코드별/하위 조직별 차트 구현\\n4. 권한 체크: 조직장은 본인 관리 조직만 열람 가능\\n5. 권한 없는 조직 클릭 시 '열람 권한 없음' 메시지 표시",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "조직도 트리 뷰 구현",
+            "description": "좌측 패널에 전체 조직도를 트리 형태로 표시",
+            "details": "계층구조 시각화, 접기/펼치기 기능, Stimulus 컨트롤러로 인터랙션 처리",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 2,
+            "title": "권한 체크 로직 구현",
+            "description": "조직장은 본인 관리 조직과 하위 조직만 열람 가능",
+            "details": "can_view_organization_expense? 헬퍼 메서드 추가, 권한 없는 조직 클릭 시 메시지 표시",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 3,
+            "title": "AJAX 기반 조직 데이터 로드",
+            "description": "조직 클릭 시 AJAX로 해당 조직 데이터 요청",
+            "details": "show_details 액션 추가, JSON 응답, 로딩 인디케이터, 에러 처리",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 4,
+            "title": "Chart.js 차트 구현",
+            "description": "경비 코드별/하위 조직별 사용 현황 차트",
+            "details": "수평 바 차트, 높은 금액순 정렬, 반응형 차트",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 5,
+            "title": "UI/UX 완성 및 테스트",
+            "description": "레이아웃 완성 및 권한 시나리오 테스트",
+            "details": "좌측 30%/우측 70% 레이아웃, 모바일 반응형, 성능 최적화",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 20
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "title": "첨부파일 요구사항 모델 및 데이터베이스 구조 설계",
+        "description": "AttachmentRequirement, AttachmentAnalysisRule, AttachmentValidationRule, ExpenseSheetAttachment 모델 설계 및 마이그레이션 생성",
+        "details": "경비 시트 제출 시 필요한 첨부파일 요구사항을 정의하고 AI 분석/검증 규칙을 저장하는 데이터베이스 구조 설계",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "AttachmentRequirement 모델 설계 및 마이그레이션",
+            "description": "경비 시트별 첨부파일 요구사항을 정의하는 모델 생성",
+            "details": "- expense_sheet_id, expense_code_id 관계 설정\n- file_type (영수증, 계약서, 청구서 등)\n- is_required (필수 여부)\n- max_file_size, allowed_formats\n- validation_rules (JSON)",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 21
+          },
+          {
+            "id": 2,
+            "title": "AttachmentAnalysisRule 모델 설계 및 마이그레이션",
+            "description": "AI 첨부파일 분석 규칙을 정의하는 모델 생성",
+            "details": "- rule_name, rule_type (OCR, 이미지 분류, 텍스트 추출 등)\n- expense_code_id 관계\n- ai_model_config (사용할 AI 모델 설정)\n- extraction_fields (추출할 필드 정의)\n- confidence_threshold",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 21
+          },
+          {
+            "id": 3,
+            "title": "AttachmentValidationRule 모델 설계 및 마이그레이션",
+            "description": "첨부파일 검증 규칙을 정의하는 모델 생성",
+            "details": "- validation_type (파일 크기, 형식, 내용 검증 등)\n- expense_code_id, attachment_requirement_id 관계\n- validation_params (JSON - 검증 파라미터)\n- error_message (검증 실패시 메시지)\n- is_active, priority",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 21
+          },
+          {
+            "id": 4,
+            "title": "ExpenseSheetAttachment 모델 설계 및 마이그레이션",
+            "description": "경비 시트에 첨부된 파일을 관리하는 모델 생성",
+            "details": "- expense_sheet_id, attachment_requirement_id 관계\n- file_path, file_name, file_size, mime_type\n- ai_analysis_result (JSON - AI 분석 결과)\n- validation_status (pending, valid, invalid)\n- uploaded_at, analyzed_at",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 21
+          },
+          {
+            "id": 5,
+            "title": "모델 간 관계 설정 및 테스트",
+            "description": "생성된 모델들 간의 관계 설정 및 통합 테스트",
+            "details": "- has_many, belongs_to 관계 설정\n- 모델 검증 규칙 추가\n- 시드 데이터 생성\n- 모델 유닛 테스트 작성\n- 관계 테스트 작성",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 21
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "title": "첨부파일 요구사항 관리 기능 구현",
+        "description": "관리자가 경비 시트 제출 시 필요한 첨부파일 템플릿을 정의하고 관리하는 CRUD 기능 구현",
+        "details": "첨부파일 이름, 필수 여부, 파일 형식, 적용 조건 등을 설정할 수 있는 관리자 인터페이스 구현",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          21
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Admin::AttachmentRequirementsController 생성 및 CRUD 액션 구현",
+            "description": "관리자용 첨부파일 요구사항 컨트롤러 생성 및 CRUD 액션 구현",
+            "details": "index, show, new, create, edit, update, destroy 액션 구현. admin 네임스페이스 사용, strong parameters 적용",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 22
+          },
+          {
+            "id": 2,
+            "title": "첨부파일 요구사항 관리 뷰 구현",
+            "description": "관리자용 첨부파일 요구사항 CRUD 뷰 구현",
+            "details": "index(목록), new/edit(폼), show(상세) 뷰 구현. Turbo Frames와 Stimulus 활용, Bootstrap 스타일링 적용",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 22
+          },
+          {
+            "id": 3,
+            "title": "AttachmentAnalysisRules 중첩 관리 기능 구현",
+            "description": "첨부파일 요구사항과 함께 분석 규칙을 관리할 수 있는 중첩 폼 구현",
+            "details": "accepts_nested_attributes_for 활용, 동적 필드 추가/삭제 기능, Stimulus 컨트롤러로 UI 제어",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 22
+          },
+          {
+            "id": 4,
+            "title": "AttachmentValidationRules 중첩 관리 기능 구현",
+            "description": "첨부파일 요구사항과 함께 검증 규칙을 관리할 수 있는 중첩 폼 구현",
+            "details": "accepts_nested_attributes_for 활용, 동적 필드 추가/삭제 기능, 검증 규칙 타입별 UI 변경",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 22
+          },
+          {
+            "id": 5,
+            "title": "첨부파일 요구사항 관리 라우트 및 메뉴 추가",
+            "description": "관리자 메뉴에 첨부파일 요구사항 관리 링크 추가 및 라우트 설정",
+            "details": "routes.rb에 admin 네임스페이스 라우트 추가, 관리자 레이아웃에 메뉴 항목 추가, 권한 체크 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 22
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "title": "AI 분석 규칙 설정 기능 구현",
+        "description": "관리자가 자연어로 AI 분석 요구사항을 설정하고 관리하는 기능 구현",
+        "details": "자연어 프롬프트 입력, 추출 필드 정의, 프롬프트 템플릿 라이브러리, 샘플 파일 테스트 기능 포함",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          21
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "검증 규칙 설정 기능 구현",
+        "description": "관리자가 자연어로 검증 규칙을 설정하고 관리하는 기능 구현",
+        "details": "자연어 검증 규칙 입력, 검증 수준 설정(통과/주의/경고), 우선순위 설정, 규칙 활성화/비활성화 기능",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          21
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "첨부파일 분석 Job 구현",
+        "description": "업로드된 첨부파일을 AI로 분석하는 백그라운드 Job 구현",
+        "details": "AttachmentAnalysisJob 구현, GeminiService 확장, 프롬프트 템플릿 시스템, 분석 결과 JSON 저장",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          21,
+          23
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "검증 Job 구현",
+        "description": "분석된 첨부파일 내용과 경비 항목을 비교 검증하는 백그라운드 Job 구현",
+        "details": "ValidationJob 구현, 검증 규칙 적용 엔진, 검증 결과 처리(통과/주의/경고), 사용자 알림",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          21,
+          24,
+          25
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "경비 시트 제출 화면 개선",
+        "description": "사용자가 경비 시트 제출 시 첨부파일 요구사항을 확인하고 업로드할 수 있는 UI 개선",
+        "details": "필수 첨부파일 체크리스트, 업로드 상태 표시, 실시간 검증 결과 표시, Turbo Streams 활용",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          22,
+          25,
+          26
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "AI 분석 결과 표시 기능 구현",
+        "description": "AI가 분석한 첨부파일 내용을 사용자에게 표시하고 경비 항목과 매칭하는 기능",
+        "details": "추출된 데이터 미리보기, 경비 항목 자동 매칭 제안, 불일치 항목 하이라이트, 수정 안내",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          25,
+          27
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "테스트 코드 작성 및 검증",
+        "description": "첨부파일 관리 시스템 전체에 대한 테스트 코드 작성",
+        "details": "모델 단위 테스트, 컨트롤러 통합 테스트, AI 분석/검증 프로세스 테스트, 사용자 시나리오 테스트",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "첨부파일 요구사항 관리 시스템 데이터베이스 구축",
+        "description": "AttachmentRequirement, AttachmentAnalysisRule, AttachmentValidationRule, ExpenseSheetAttachment 모델 및 마이그레이션 생성",
+        "details": "SQLite 데이터베이스에 첨부파일 관련 모든 테이블 생성. JSONB 타입 대신 SQLite에서 지원하는 JSON 타입 사용. 모델 간 관계 설정 및 검증 규칙 구현",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "AttachmentRequirement 모델 생성",
+            "description": "첨부파일 요구사항 정의를 위한 모델 및 마이그레이션 생성",
+            "details": "name, description, required, file_types(JSON), condition_expression, position, active 필드 포함",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 30
+          },
+          {
+            "id": 2,
+            "title": "AttachmentAnalysisRule 모델 생성",
+            "description": "AI 분석 규칙 저장을 위한 모델 및 마이그레이션 생성",
+            "details": "attachment_requirement_id, prompt_text, expected_fields(JSON), active 필드 포함. AttachmentRequirement와 belongs_to 관계 설정",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 30
+          },
+          {
+            "id": 3,
+            "title": "AttachmentValidationRule 모델 생성",
+            "description": "검증 규칙 저장을 위한 모델 및 마이그레이션 생성",
+            "details": "attachment_requirement_id, rule_type, prompt_text, severity(통과/주의/경고), position, active 필드 포함",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 30
+          },
+          {
+            "id": 4,
+            "title": "ExpenseSheetAttachment 모델 생성",
+            "description": "제출된 첨부파일 정보 저장을 위한 모델 및 마이그레이션 생성",
+            "details": "expense_sheet_id, attachment_requirement_id, ActiveStorage attachment, extracted_text, analysis_result(JSON), validation_result(JSON), status 필드 포함",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 30
+          }
+        ]
+      },
+      {
+        "id": 31,
+        "title": "관리자 CRUD 인터페이스 구현",
+        "description": "첨부파일 요구사항, AI 분석 규칙, 검증 규칙 관리를 위한 관리자 인터페이스 구현",
+        "details": "Admin 네임스페이스에 AttachmentRequirementsController, AnalysisRulesController, ValidationRulesController 구현. 드래그앤드롭 순서 변경, 활성화/비활성화 토글, 자연어 프롬프트 입력 UI 포함",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          30
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "AttachmentRequirementsController 생성",
+            "description": "첨부파일 요구사항 관리를 위한 Admin 컨트롤러 생성",
+            "details": "Admin::AttachmentRequirementsController CRUD 액션 구현. index, new, create, edit, update, destroy, reorder 액션",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 31
+          },
+          {
+            "id": 2,
+            "title": "첨부파일 요구사항 관리 View 구현",
+            "description": "첨부파일 템플릿 목록, 생성/수정 폼 화면 구현",
+            "details": "드래그앤드롭 순서 변경, 활성화/비활성화 토글, 조건 설정 UI 포함. Stimulus 컨트롤러로 인터랙티브 기능 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 31
+          },
+          {
+            "id": 3,
+            "title": "AI 분석/검증 규칙 관리 인터페이스 구현",
+            "description": "자연어 프롬프트 입력 및 규칙 관리 UI 구현",
+            "details": "AnalysisRulesController, ValidationRulesController 구현. 자연어 프롬프트 에디터, 테스트 실행 기능, 규칙 우선순위 설정 UI",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 31
+          }
+        ]
+      },
+      {
+        "id": 32,
+        "title": "AI 분석 시스템 구현",
+        "description": "Gemini API를 활용한 첨부파일 내용 분석 및 데이터 추출 시스템 구현",
+        "details": "AttachmentAnalysisJob 구현, GeminiService 확장, 프롬프트 템플릿 시스템 구축. 자연어 프롬프트를 Gemini API에 전달하여 구조화된 JSON 형태로 분석 결과 저장",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          30,
+          31
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "AttachmentAnalysisService 구현",
+            "description": "AI 분석 요청을 처리하는 서비스 클래스 구현",
+            "details": "GeminiService를 확장하여 자연어 프롬프트를 Gemini API에 전달. 응답을 구조화된 JSON으로 파싱",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 32
+          },
+          {
+            "id": 2,
+            "title": "AttachmentAnalysisJob 구현",
+            "description": "첨부파일 분석을 비동기로 처리하는 Job 구현",
+            "details": "업로드된 파일의 텍스트를 추출하고 AI 분석 서비스 호출. 분석 결과를 ExpenseSheetAttachment에 저장",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 32
+          },
+          {
+            "id": 3,
+            "title": "프롬프트 템플릿 엔진 구현",
+            "description": "관리자 입력 프롬프트를 효과적인 AI 프롬프트로 변환",
+            "details": "변수 치환, Few-shot 예시 삽입, 컨텍스트 정보 추가 기능. PromptTemplateService 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 32
+          }
+        ]
+      },
+      {
+        "id": 33,
+        "title": "검증 시스템 구현",
+        "description": "경비 항목과 첨부파일 내용을 비교 검증하는 시스템 구현",
+        "details": "ValidationJob 구현, 통과/주의/경고 3단계 검증 레벨 적용. 금액 일치, 순서 일치, 필수 항목 존재 여부 등 다양한 검증 규칙 처리. 자연어 검증 규칙을 코드로 변환하여 실행",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          30,
+          32
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ValidationService 구현",
+            "description": "검증 규칙을 실행하는 서비스 클래스 구현",
+            "details": "자연어 검증 규칙을 Ruby 코드로 변환. 금액 일치, 순서 일치, 필수 항목 존재 여부 등 검증 로직 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 33
+          },
+          {
+            "id": 2,
+            "title": "ValidationJob 구현",
+            "description": "AI 분석 결과와 경비 항목을 비교 검증하는 Job",
+            "details": "AttachmentAnalysisJob 완료 후 실행. 통과/주의/경고 레벨 판정 및 결과 저장",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 33
+          },
+          {
+            "id": 3,
+            "title": "검증 결과 처리 로직 구현",
+            "description": "검증 레벨에 따른 처리 로직 구현",
+            "details": "통과는 진행, 주의는 사용자 확인 후 진행, 경고는 수정 필수. ValidationResultHandler 서비스 구현",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 33
+          }
+        ]
+      },
+      {
+        "id": 34,
+        "title": "백그라운드 처리 파이프라인 구축",
+        "description": "Solid Queue를 활용한 비동기 파일 처리 파이프라인 구현",
+        "details": "Rails 8 내장 Solid Queue 설정 및 Job 체인 구현. 파일 업로드 → 텍스트 추출 → AI 분석 → 검증 → 결과 저장의 순차적 처리. 실패 시 재시도 로직 및 상태 추적 구현",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          32,
+          33
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Solid Queue 설정 및 초기화",
+            "description": "Rails 8 내장 Solid Queue 설정",
+            "details": "config/solid_queue.yml 설정, 큐 우선순위 설정, 동시 처리 워커 수 설정",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 34
+          },
+          {
+            "id": 2,
+            "title": "Job 체인 및 워크플로우 구현",
+            "description": "파일 처리 파이프라인 워크플로우 구현",
+            "details": "업로드 → TextExtractionJob → AttachmentAnalysisJob → ValidationJob 순차 실행 체인 구현",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 34
+          },
+          {
+            "id": 3,
+            "title": "재시도 및 오류 처리 로직 구현",
+            "description": "Job 실패 시 재시도 및 오류 처리",
+            "details": "재시도 횟수 제한, 지수 백오프, 오류 알림, 실패 Job 대시보드 구현",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 34
+          }
+        ]
+      },
+      {
+        "id": 35,
+        "title": "사용자 제출 인터페이스 개선",
+        "description": "경비 시트 제출 화면에 첨부파일 관리 및 검증 결과 표시 기능 추가",
+        "details": "Turbo Streams를 활용한 실시간 UI 업데이트. 필수 첨부파일 체크리스트, AI 분석 결과 미리보기, 검증 결과 실시간 표시. 통과/주의/경고 레벨별 색상 구분 및 수정 가이드 제공",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          30,
+          34
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "경비 시트 제출 폼 개선",
+            "description": "첨부파일 요구사항 체크리스트 표시",
+            "details": "필수 첨부파일 목록, 업로드 상태 표시, 조건부 요구사항 동적 표시",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 2,
+            "title": "실시간 분석/검증 결과 표시",
+            "description": "Turbo Streams를 활용한 실시간 UI 업데이트",
+            "details": "AI 분석 진행 상태, 추출된 데이터 미리보기, 검증 결과 실시간 표시. 통과/주의/경고 색상 구분",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 3,
+            "title": "경비 항목 자동 매칭 UI 구현",
+            "description": "AI 분석 결과와 경비 항목 자동 매칭 제안",
+            "details": "추출된 데이터와 경비 항목 자동 매칭, 불일치 항목 하이라이트, 수정 제안 UI",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          }
+        ]
+      },
+      {
+        "id": 36,
+        "title": "프롬프트 템플릿 시스템 구축",
+        "description": "AI 분석 및 검증을 위한 재사용 가능한 프롬프트 템플릿 시스템 구현",
+        "details": "관리자가 작성한 자연어 규칙을 효과적인 AI 프롬프트로 변환. Few-shot 예시 포함, 변수 치환 시스템, 프롬프트 버전 관리 기능. 템플릿 라이브러리 및 테스트 기능 제공",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          31,
+          32
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "프롬프트 템플릿 라이브러리 구축",
+            "description": "재사용 가능한 프롬프트 템플릿 관리 시스템",
+            "details": "템플릿 저장/불러오기, 카테고리별 분류, 버전 관리, 변수 정의 시스템",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 36
+          },
+          {
+            "id": 2,
+            "title": "프롬프트 테스트 환경 구현",
+            "description": "샘플 파일로 프롬프트 테스트 실행 기능",
+            "details": "테스트 파일 업로드, 프롬프트 실행, 결과 미리보기, 성능 측정",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 36
+          }
+        ]
+      },
+      {
+        "id": 37,
+        "title": "모니터링 및 로깅 시스템 구현",
+        "description": "AI 분석 및 검증 과정의 모니터링, 감사 로그 기록 시스템 구현",
+        "details": "처리 시간 측정, 성공/실패율 통계, AI API 사용량 추적. 민감정보 마스킹, 감사 로그 기록, 오류 추적 및 알림 시스템. 관리자 대시보드에서 실시간 모니터링 가능",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          34,
+          35
+        ],
+        "priority": "low",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "처리 통계 대시보드 구현",
+            "description": "AI 분석 및 검증 통계 모니터링 대시보드",
+            "details": "처리 시간, 성공/실패율, API 사용량, 비용 추적 대시보드",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 37
+          },
+          {
+            "id": 2,
+            "title": "감사 로그 시스템 구현",
+            "description": "AI 처리 과정 감사 로그 기록 시스템",
+            "details": "민감정보 마스킹, 처리 이력 기록, 오류 추적, 보안 감사 로그",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 37
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "title": "통합 테스트 및 최적화",
+        "description": "전체 시스템의 통합 테스트 작성 및 성능 최적화",
+        "details": "모델 단위 테스트, 컨트롤러 통합 테스트, Job 처리 테스트, AI 분석/검증 프로세스 엔드투엔드 테스트. 성능 병목 지점 파악 및 최적화, 캐싱 전략 구현",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "모델 단위 테스트 작성",
+            "description": "첨부파일 관련 모든 모델의 단위 테스트",
+            "details": "AttachmentRequirement, AttachmentAnalysisRule, AttachmentValidationRule, ExpenseSheetAttachment 모델 테스트",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 38
+          },
+          {
+            "id": 2,
+            "title": "서비스 및 Job 통합 테스트 작성",
+            "description": "AI 분석 및 검증 서비스의 통합 테스트",
+            "details": "AttachmentAnalysisService, ValidationService, 각종 Job들의 통합 테스트. Mock Gemini API 응답 처리",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 38
+          },
+          {
+            "id": 3,
+            "title": "엔드투엔드 시나리오 테스트",
+            "description": "전체 첨부파일 처리 워크플로우 테스트",
+            "details": "파일 업로드 → AI 분석 → 검증 → 결과 표시까지 전체 프로세스 테스트. 성능 측정 및 최적화",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 38
+          }
+        ]
+      },
+      {
+        "id": 39,
+        "title": "회의실 예약 시스템 데이터베이스 모델 설계",
+        "description": "Room, RoomReservation, RecurringReservationRule 모델 및 마이그레이션 생성",
+        "details": "회의실 정보(이름, 층), 예약 정보(신청자, 날짜, 시간, 사용 목적), 반복 예약 규칙을 관리하는 모델 생성. 필요한 인덱스와 제약조건 설정",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 40,
+        "title": "회의실 예약 시스템 고급 기능 구현",
+        "description": "반복 예약, 알림, 통계 등 고급 기능 추가",
+        "details": "RecurringReservationRule 모델 구현, 예약 알림 기능, 예약 통계 대시보드, 회의실 사용률 분석",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          39
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 41,
+        "title": "신청서 관리 시스템 - 데이터베이스 모델 및 마이그레이션 생성",
+        "description": "신청서 관리 시스템의 기본 데이터베이스 구조를 생성합니다.",
+        "details": "1. RequestCategory 모델 및 마이그레이션 생성\n2. RequestTemplate 모델 및 마이그레이션 생성  \n3. RequestTemplateField 모델 및 마이그레이션 생성\n4. RequestForm 모델 및 마이그레이션 생성\n5. RequestFormAttachment 모델 및 마이그레이션 생성\n6. RequestTemplateApprovalRule 모델 및 마이그레이션 생성\n7. 모델 간 관계(associations) 설정\n8. 검증 규칙 및 스코프 추가",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "RequestCategory 모델 및 마이그레이션 생성",
+            "description": "카테고리 모델과 테이블 생성",
+            "details": "name, description, icon, color, display_order, is_active 필드 포함",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 41
+          },
+          {
+            "id": 2,
+            "title": "RequestTemplate 모델 및 마이그레이션 생성",
+            "description": "템플릿 모델과 테이블 생성",
+            "details": "request_category_id, name, code, description, instructions, display_order, is_active, attachment_required, auto_numbering, version 필드 포함",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 41
+          }
+        ]
+      },
+      {
+        "id": 42,
+        "title": "카테고리 관리 기능 구현 (관리자)",
+        "description": "관리자가 신청서 카테고리를 관리할 수 있는 CRUD 기능을 구현합니다.",
+        "details": "1. Admin::RequestCategoriesController 생성\n2. 카테고리 목록 페이지 (index)\n3. 카테고리 생성/수정 폼 (new, edit)\n4. 카테고리 저장/업데이트 (create, update)\n5. 카테고리 삭제 (destroy)\n6. 아이콘 및 색상 선택 UI\n7. 표시 순서 드래그앤드롭 (Stimulus)\n8. 활성/비활성 토글 기능",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          41
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 43,
+        "title": "템플릿 관리 및 필드 빌더 구현 (관리자)",
+        "description": "관리자가 신청서 템플릿을 생성하고 동적 필드를 구성할 수 있는 기능을 구현합니다.",
+        "details": "1. Admin::RequestTemplatesController 생성\n2. 템플릿 CRUD 기능\n3. RequestTemplateField nested attributes\n4. 필드 빌더 UI (Stimulus controller)\n5. 필드 타입별 옵션 설정\n6. 필수/선택 필드 설정\n7. 실시간 폼 미리보기\n8. 템플릿 복사 기능\n9. 검증 규칙 설정 UI",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          41,
+          42
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 44,
+        "title": "신청서 작성 기능 구현 (사용자)",
+        "description": "사용자가 템플릿을 선택하여 신청서를 작성하고 제출할 수 있는 기능을 구현합니다.",
+        "details": "1. RequestFormsController 생성\n2. 카테고리 선택 페이지 (카드 UI)\n3. 템플릿 선택 페이지\n4. 동적 폼 렌더링 (템플릿 필드 기반)\n5. 실시간 유효성 검증 (Stimulus)\n6. 파일 업로드 (Active Storage)\n7. 임시저장 기능 (자동/수동)\n8. 결재선 선택 (기존 ApprovalLine 활용)\n9. 제출 및 상태 관리",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          43
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 45,
+        "title": "승인 시스템 통합 (경비/신청서 Polymorphic 변환)",
+        "description": "경비 시트/항목/코드의 승인 시스템과 신청서 승인 시스템을 polymorphic 관계로 통합하여 하나의 통합된 승인 시스템으로 만듭니다.",
+        "details": "1. ApprovalRequest 테이블에 polymorphic 컬럼 추가 (approvable_type, approvable_id)\n2. 기존 expense_item_id 데이터를 polymorphic 관계로 마이그레이션\n3. ApprovalRequest 모델 관계를 polymorphic으로 수정\n4. ExpenseItem, ExpenseSheet, ExpenseCode 모델에 has_many :approval_requests, as: :approvable 추가\n5. RequestForm 모델에 has_many :approval_requests, as: :approvable 추가\n6. ApprovalsController를 수정하여 경비/신청서 타입 모두 처리\n7. 승인 대시보드에서 경비 항목과 신청서를 구분하여 표시\n8. 승인/반려 프로세스가 두 타입 모두에서 정상 작동하는지 테스트",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          44
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Polymorphic 마이그레이션 생성",
+            "description": "ApprovalRequest 테이블에 approvable_type, approvable_id 컬럼 추가",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 45
+          },
+          {
+            "id": 2,
+            "title": "기존 데이터 마이그레이션",
+            "description": "expense_item_id 데이터를 polymorphic 관계로 변환",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "parentTaskId": 45
+          },
+          {
+            "id": 3,
+            "title": "ApprovalRequest 모델 수정",
+            "description": "belongs_to :approvable, polymorphic: true 관계 설정",
+            "status": "done",
+            "dependencies": [
+              2
+            ],
+            "parentTaskId": 45
+          },
+          {
+            "id": 4,
+            "title": "경비 모델들에 polymorphic 관계 추가",
+            "description": "ExpenseItem, ExpenseSheet, ExpenseCode에 has_many :approval_requests, as: :approvable 추가",
+            "status": "done",
+            "dependencies": [
+              3
+            ],
+            "parentTaskId": 45
+          },
+          {
+            "id": 5,
+            "title": "RequestForm 모델에 polymorphic 관계 추가",
+            "description": "RequestForm에 has_many :approval_requests, as: :approvable 추가",
+            "status": "done",
+            "dependencies": [
+              3
+            ],
+            "parentTaskId": 45
+          },
+          {
+            "id": 6,
+            "title": "ApprovalsController 수정",
+            "description": "경비와 신청서 타입을 모두 처리하도록 컨트롤러 로직 수정",
+            "status": "done",
+            "dependencies": [
+              4,
+              5
+            ],
+            "parentTaskId": 45
+          },
+          {
+            "id": 7,
+            "title": "승인 대시보드 UI 개선",
+            "description": "경비 항목과 신청서를 구분하여 표시하는 UI 구현",
+            "status": "done",
+            "dependencies": [
+              6
+            ],
+            "parentTaskId": 45
+          },
+          {
+            "id": 8,
+            "title": "통합 테스트 및 검증",
+            "description": "경비와 신청서 모두에서 승인/반려 프로세스가 정상 작동하는지 테스트",
+            "status": "done",
+            "dependencies": [
+              7
+            ],
+            "parentTaskId": 45
+          }
+        ]
+      },
+      {
+        "id": 46,
+        "title": "신청서 조회 및 상태 관리",
+        "description": "사용자가 자신의 신청서를 조회하고 상태를 확인할 수 있는 기능을 구현합니다.",
+        "details": "1. 내 신청서 목록 페이지\n2. 상태별 필터링 (대기, 승인, 반려 등)\n3. 검색 기능 (제목, 날짜, 카테고리)\n4. 신청서 상세 보기\n5. 승인 진행 상황 표시\n6. 반려 사유 표시\n7. 신청서 인쇄 기능\n8. 신청서 취소 기능",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          45
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 47,
+        "title": "신청서 대시보드 및 통계",
+        "description": "신청서 현황을 한눈에 볼 수 있는 대시보드와 통계 기능을 구현합니다.",
+        "details": "1. 신청서 현황 대시보드\n2. 카테고리별 신청 통계\n3. 월별/분기별 신청 추이\n4. 승인율/반려율 통계\n5. 평균 처리 시간 분석\n6. 템플릿별 사용 빈도\n7. 부서별 신청 현황\n8. 실시간 업데이트 (Turbo Streams)",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          46
+        ],
+        "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "시드 데이터 및 테스트",
+        "description": "신청서 시스템의 시드 데이터를 생성하고 전체 기능을 테스트합니다.",
+        "details": "1. 카테고리 시드 데이터 생성\n2. 샘플 템플릿 생성 (각 카테고리별 2-3개)\n3. 템플릿 필드 시드 데이터\n4. 샘플 신청서 데이터\n5. 모델 테스트 작성\n6. 컨트롤러 테스트 작성\n7. 통합 테스트\n8. 성능 최적화",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          47
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 49,
+        "title": "신청서 시스템 버그 수정 및 개선",
+        "description": "신청서 결재선 검증 로직 수정, 권한 그룹 표시 개선, 중복 페이지 제거",
+        "details": "1. 결재선 검증 로직 수정 (결재 없음을 오류로 인식)\n2. 사용자 권한 그룹 표시 개선 (최상위 권한 표시)\n3. 불필요한 select_approval_line 페이지 제거\n4. RequestForm 모델 polymorphic 관계 임시 비활성화\n5. 존재하지 않는 필드 참조 제거 (purpose, content, description)",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          44
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 50,
+        "title": "로그인 폼 Turbo 호환성 개선",
+        "description": "sessions/new.html.erb의 로그인 폼에서 local: true를 제거하고 Turbo를 활성화",
+        "details": "1. app/views/sessions/new.html.erb에서 local: true 제거\n2. SessionsController의 create 액션에서 적절한 status 코드 추가\n3. 로그인 성공/실패 시 Turbo를 통한 리다이렉션 처리 확인\n4. 에러 메시지가 Turbo로 적절히 표시되는지 테스트",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 51,
+        "title": "어드민 경비 시트 목록 검색 폼 Turbo 호환성 개선",
+        "description": "admin/expense_sheets/index.html.erb의 검색 폼에서 local: true를 제거하고 Turbo Frame을 활용한 부분 업데이트 구현",
+        "details": "1. app/views/admin/expense_sheets/index.html.erb에서 local: true 제거\n2. 검색 결과를 Turbo Frame으로 감싸서 부분 업데이트 가능하도록 수정\n3. Admin::ExpenseSheetsController의 index 액션에서 Turbo Frame 요청 처리\n4. 검색 파라미터가 URL에 유지되면서 목록만 업데이트되는지 테스트\n5. 페이지네이션이 Turbo와 함께 정상 동작하는지 확인",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 52,
+        "title": "어드민 신청서 템플릿 폼 Turbo 호환성 개선",
+        "description": "admin/request_templates/_form.html.erb의 폼에서 local: true를 제거하고 Turbo 활성화",
+        "details": "1. app/views/admin/request_templates/_form.html.erb에서 local: true 제거\n2. Admin::RequestTemplatesController의 create/update 액션에 status: :see_other 추가\n3. 템플릿 생성/수정 후 목록 페이지로 리다이렉션 확인\n4. 유효성 검증 실패 시 에러 메시지가 Turbo로 표시되는지 테스트\n5. 동적 필드 추가/삭제 기능이 Turbo와 함께 정상 동작하는지 확인",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "어드민 신청서 카테고리 폼 Turbo 호환성 개선",
+        "description": "admin/request_categories/_form.html.erb의 폼에서 local: true를 제거하고 Turbo 활성화",
+        "details": "1. app/views/admin/request_categories/_form.html.erb에서 local: true 제거\n2. Admin::RequestCategoriesController의 create/update 액션에 status: :see_other 추가\n3. 카테고리 생성/수정 후 목록 페이지로 리다이렉션 확인\n4. 유효성 검증 실패 시 에러 메시지가 Turbo로 표시되는지 테스트",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 54,
+        "title": "사용자 폼 Turbo 호환성 개선",
+        "description": "users/_form.html.erb의 폼에서 local: true를 제거하고 Turbo 활성화",
+        "details": "1. app/views/users/_form.html.erb에서 local: true 제거\n2. UsersController의 create/update 액션에 status: :see_other 추가\n3. 사용자 정보 생성/수정 후 적절한 페이지로 리다이렉션 확인\n4. 프로필 이미지 업로드가 Turbo와 함께 정상 동작하는지 테스트\n5. 유효성 검증 실패 시 에러 메시지가 Turbo로 표시되는지 확인",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 55,
+        "title": "조직 폼 Turbo 호환성 개선",
+        "description": "organizations/_form.html.erb의 폼에서 local: true를 제거하고 Turbo 활성화",
+        "details": "1. app/views/organizations/_form.html.erb에서 local: true 제거\n2. OrganizationsController의 create/update 액션에 status: :see_other 추가\n3. 조직 정보 생성/수정 후 적절한 페이지로 리다이렉션 확인\n4. 상위 조직 선택 등 관계 설정이 Turbo와 함께 정상 동작하는지 테스트\n5. 유효성 검증 실패 시 에러 메시지가 Turbo로 표시되는지 확인",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "activeTag": "master",
+      "created": "2025-08-03T01:52:29.760Z",
+      "description": "Tasks for master context",
+      "updated": "2025-09-07T23:59:41.499Z"
+    }
+  }
+}

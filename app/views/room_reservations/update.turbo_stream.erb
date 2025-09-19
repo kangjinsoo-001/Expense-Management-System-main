@@ -1,0 +1,46 @@
+<%# tbody 전체를 교체하여 Stimulus 컨트롤러 재연결 %>
+<% Rails.logger.info "🎯 [update.turbo_stream] 전달할 회의실 개수: #{@filtered_rooms&.count}" %>
+<% Rails.logger.info "🎯 [update.turbo_stream] 회의실 목록: #{@filtered_rooms&.map(&:name)&.join(', ')}" %>
+<%= turbo_stream.replace "calendar_grid" do %>
+  <tbody id="calendar_grid" 
+         class="bg-white">
+    <%= render partial: 'calendar_grid', locals: { 
+      filtered_rooms: @filtered_rooms, 
+      reservations: @reservations, 
+      date: @date, 
+      current_user: current_user,
+      highlight_reservation_id: @highlight_reservation_id
+    } %>
+  </tbody>
+<% end %>
+
+<%# 편집 모달 숨기기 - JavaScript로 처리 %>
+<%= turbo_stream.append "flash_messages" do %>
+  <script>
+    (function() {
+      const editModal = document.getElementById('editReservationModal');
+      if (editModal) {
+        editModal.classList.add('hidden');
+      }
+      
+      // 캘린더 열 개수 확인
+      setTimeout(() => {
+        const calendarGrid = document.getElementById('calendar_grid');
+        if (calendarGrid) {
+          const firstRow = calendarGrid.querySelector('tbody tr');
+          if (firstRow) {
+            const cells = firstRow.querySelectorAll('td[data-room-id]');
+            console.log('🏢 렌더링된 캘린더 열 개수:', cells.length);
+            console.log('🏢 각 열의 회의실 ID:', Array.from(cells).map(td => td.dataset.roomId));
+          }
+        }
+        
+        // 필터 상태 확인
+        const locationFilter = document.querySelector('#location-filter');
+        if (locationFilter) {
+          console.log('📍 현재 필터 선택값:', locationFilter.value || '전체');
+        }
+      }, 100);
+    })();
+  </script>
+<% end %>

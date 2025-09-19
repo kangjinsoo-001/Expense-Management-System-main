@@ -1,0 +1,31 @@
+# Task ID: 35
+# Title: 사용자 제출 인터페이스 개선
+# Status: pending
+# Dependencies: 30, 34
+# Priority: medium
+# Description: 경비 시트 제출 화면에 첨부파일 관리 및 검증 결과 표시 기능 추가
+# Details:
+Turbo Streams를 활용한 실시간 UI 업데이트. 필수 첨부파일 체크리스트, AI 분석 결과 미리보기, 검증 결과 실시간 표시. 통과/주의/경고 레벨별 색상 구분 및 수정 가이드 제공
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. 경비 시트 제출 폼 개선 [pending]
+### Dependencies: None
+### Description: 첨부파일 요구사항 체크리스트 표시
+### Details:
+필수 첨부파일 목록, 업로드 상태 표시, 조건부 요구사항 동적 표시
+
+## 2. 실시간 분석/검증 결과 표시 [pending]
+### Dependencies: None
+### Description: Turbo Streams를 활용한 실시간 UI 업데이트
+### Details:
+AI 분석 진행 상태, 추출된 데이터 미리보기, 검증 결과 실시간 표시. 통과/주의/경고 색상 구분
+
+## 3. 경비 항목 자동 매칭 UI 구현 [pending]
+### Dependencies: None
+### Description: AI 분석 결과와 경비 항목 자동 매칭 제안
+### Details:
+추출된 데이터와 경비 항목 자동 매칭, 불일치 항목 하이라이트, 수정 제안 UI
+

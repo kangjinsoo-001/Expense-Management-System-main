@@ -1,0 +1,25 @@
+<div class="p-3 bg-gray-50 rounded-md">
+  <div class="flex items-center justify-between mb-2">
+    <p class="text-sm font-medium text-gray-700">선택된 결재선</p>
+    <span class="text-xs text-gray-500"><%= approval_line.name %></span>
+  </div>
+  <div class="flex items-center space-x-2">
+    <% approval_line.approval_line_steps.ordered.approvers.each_with_index do |step, index| %>
+      <% if index > 0 %>
+        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      <% end %>
+      <div class="flex items-center px-2 py-1 bg-white border border-gray-300 rounded text-xs">
+        <span class="font-medium"><%= step.step_order %>.</span>
+        <span class="ml-1"><%= step.approver.name %></span>
+        <% if step.approver.approver_groups.any? %>
+          <% highest_group = step.approver.approver_groups.max_by(&:priority) %>
+          <span class="ml-1 text-gray-500">(<%= highest_group.name %>)</span>
+        <% elsif step.approver.title.present? %>
+          <span class="ml-1 text-gray-500">(<%= step.approver.title %>)</span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

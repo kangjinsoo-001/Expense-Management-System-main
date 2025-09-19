@@ -1,0 +1,11 @@
+# Task ID: 23
+# Title: AI 분석 규칙 설정 기능 구현
+# Status: done
+# Dependencies: 21
+# Priority: high
+# Description: 관리자가 자연어로 AI 분석 요구사항을 설정하고 관리하는 기능 구현
+# Details:
+자연어 프롬프트 입력, 추출 필드 정의, 프롬프트 템플릿 라이브러리, 샘플 파일 테스트 기능 포함
+
+# Test Strategy:
+

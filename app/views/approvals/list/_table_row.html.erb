@@ -1,0 +1,61 @@
+<!-- 승인 요청 목록 테이블 행 -->
+<% turbo_frame = defined?(use_turbo_frame) && use_turbo_frame ? dom_id(request) : nil %>
+<%= content_tag(turbo_frame ? :turbo_frame : :tr, 
+    class: "hover:bg-gray-50", 
+    id: turbo_frame) do %>
+  
+  <% if show_checkbox %>
+    <td class="px-6 py-4 text-center">
+      <input type="checkbox" 
+             data-batch-approval-target="checkbox"
+             data-action="change->batch-approval#updateButtonState"
+             data-approval-id="<%= request.id %>"
+             class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+    </td>
+  <% end %>
+  
+  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    <%= request.created_at.strftime('%Y-%m-%d %H:%M') %>
+  </td>
+  
+  <% if show_requester %>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <%= presenter.owner_name %>
+    </td>
+  <% end %>
+  
+  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    <%= approval_type_badge(request.approvable) %>
+  </td>
+  
+  <td class="px-6 py-4 text-sm text-gray-900">
+    <div class="font-medium"><%= presenter.title %></div>
+    <div class="text-gray-500 text-xs"><%= presenter.description %></div>
+  </td>
+  
+  <td class="px-6 py-4 whitespace-nowrap">
+    <%= approval_status_badge(request.status) %>
+  </td>
+  
+  <% if show_current_approver %>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <% if request.status == 'pending' && request.current_approver %>
+        <div class="flex items-center gap-1">
+          <span class="text-gray-600"><%= request.current_approver.name %></span>
+          <span class="text-xs text-gray-400">대기</span>
+        </div>
+      <% elsif request.status == 'approved' %>
+        <span class="text-green-600">승인 완료</span>
+      <% elsif request.status == 'rejected' %>
+        <span class="text-red-600">반려됨</span>
+      <% else %>
+        <span class="text-gray-400">-</span>
+      <% end %>
+    </td>
+  <% end %>
+  
+  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+    <%= link_to '상세보기', approval_path(request), 
+        class: 'text-blue-600 hover:text-blue-900' %>
+  </td>
+<% end %>

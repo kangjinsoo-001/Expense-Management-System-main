@@ -1,0 +1,154 @@
+<%= form_with model: reservation do |form| %>
+  <!-- 에러 메시지 표시 -->
+  <% if reservation.errors.any? %>
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+      <div class="flex">
+        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            <%= reservation.errors.count %>개의 오류가 발생했습니다:
+          </h3>
+          <div class="mt-2 text-sm text-red-700">
+            <ul class="list-disc list-inside space-y-1">
+              <% reservation.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="space-y-6">
+    <!-- 1. 회의실 선택 -->
+    <div>
+      <%= form.label :room_id, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+        회의실 <span class="text-red-500">*</span>
+      <% end %>
+      <%= form.select :room_id, 
+          options_from_collection_for_select(@rooms, :id, -> (r) { "[#{r.category}] #{r.name}" }, reservation.room_id),
+          { prompt: "회의실을 선택하세요" },
+          class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm #{reservation.errors[:room_id].any? ? 'border-red-300' : 'border-gray-300'}",
+          autofocus: (params[:from_drag] != "true" && params[:modal] == "true" && !reservation.persisted?) %>
+      <% if reservation.errors[:room_id].any? %>
+        <p class="mt-1 text-sm text-red-600"><%= reservation.errors[:room_id].first %></p>
+      <% end %>
+    </div>
+
+    <!-- 2. 예약 날짜 -->
+    <div>
+      <%= form.label :reservation_date, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+        예약 날짜 <span class="text-red-500">*</span>
+      <% end %>
+      <p class="text-xs text-blue-600 mb-1">회의실을 사용할 날짜를 선택해주세요 (오늘부터 1년 이내)</p>
+      <% 
+        min_date = Date.today
+        max_date = Date.today + 1.year
+      %>
+      <%= form.date_field :reservation_date, 
+          value: reservation.reservation_date || Date.current,
+          min: min_date,
+          max: max_date,
+          class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm #{reservation.errors[:reservation_date].any? ? 'border-red-300' : 'border-gray-300'}",
+          data: { 
+            reservation_date: true,
+            min_date: min_date.to_s,
+            max_date: max_date.to_s
+          } %>
+      <p class="mt-1 text-xs text-gray-500">
+        예약 가능 기간: <%= min_date.strftime('%Y년 %m월 %d일') %> ~ <%= max_date.strftime('%Y년 %m월 %d일') %>
+      </p>
+      <% if reservation.errors[:reservation_date].any? %>
+        <p class="mt-1 text-sm text-red-600"><%= reservation.errors[:reservation_date].first %></p>
+      <% end %>
+    </div>
+
+    <!-- 3. 시간 선택 (그리드 레이아웃) -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div>
+        <%= form.label :start_time, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          시작 시간 <span class="text-red-500">*</span>
+        <% end %>
+        <% time_options = [] %>
+        <% (9..17).each do |hour| %>
+          <% %w[00 15 30 45].each do |minute| %>
+            <% time = "#{hour.to_s.rjust(2, '0')}:#{minute}" %>
+            <% time_options << [time, time] %>
+          <% end %>
+        <% end %>
+        <%= form.select :start_time, 
+            options_for_select(time_options, reservation.start_time&.strftime("%H:%M")),
+            { prompt: "시간을 선택하세요" },
+            class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm #{reservation.errors[:start_time].any? ? 'border-red-300' : 'border-gray-300'}" %>
+        <% if reservation.errors[:start_time].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= reservation.errors[:start_time].first %></p>
+        <% end %>
+      </div>
+
+      <div>
+        <%= form.label :end_time, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          종료 시간 <span class="text-red-500">*</span>
+        <% end %>
+        <% time_options = [] %>
+        <% (9..18).each do |hour| %>
+          <% if hour == 18 %>
+            <% time_options << ["18:00", "18:00"] %>
+          <% else %>
+            <% %w[00 15 30 45].each do |minute| %>
+              <% time = "#{hour.to_s.rjust(2, '0')}:#{minute}" %>
+              <% time_options << [time, time] %>
+            <% end %>
+          <% end %>
+        <% end %>
+        <%= form.select :end_time, 
+            options_for_select(time_options, reservation.end_time&.strftime("%H:%M")),
+            { prompt: "시간을 선택하세요" },
+            class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm #{reservation.errors[:end_time].any? ? 'border-red-300' : 'border-gray-300'}" %>
+        <% if reservation.errors[:end_time].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= reservation.errors[:end_time].first %></p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 4. 사용 목적 -->
+    <div>
+      <%= form.label :purpose, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+        사용 목적 <span class="text-red-500">*</span>
+      <% end %>
+      <%= form.text_field :purpose, 
+          class: "mt-1 block w-full px-3 py-2 bg-white border rounded-md focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:text-sm #{reservation.errors[:purpose].any? ? 'border-red-300' : 'border-gray-300'}",
+          placeholder: "예: 주간 팀 미팅, 고객 미팅, 프로젝트 리뷰 등",
+          data: { purpose_input: true },
+          autofocus: (params[:from_drag] == "true" && params[:modal] == "true" && !reservation.persisted?) %>
+      <% if reservation.errors[:purpose].any? %>
+        <p class="mt-1 text-sm text-red-600"><%= reservation.errors[:purpose].first %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 버튼 영역 -->
+  <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end gap-3">
+    <% if params[:modal] == "true" || reservation.errors.any? %>
+      <% # 수정 모달인지 생성 모달인지 구분 %>
+      <% if reservation.persisted? %>
+        <button type="button" data-action="click->room-calendar#closeEditModal"
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          취소
+        </button>
+      <% else %>
+        <button type="button" data-action="click->room-calendar#closeAndResetModal"
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          취소
+        </button>
+      <% end %>
+    <% else %>
+      <%= link_to "취소", room_reservations_path, 
+          class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+    <% end %>
+    <%= form.submit reservation.persisted? ? "수정" : "저장", 
+        class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+  </div>
+<% end %>

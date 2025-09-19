@@ -1,0 +1,11 @@
+# Task ID: 27
+# Title: 경비 시트 제출 화면 개선
+# Status: done
+# Dependencies: 22, 25, 26
+# Priority: medium
+# Description: 사용자가 경비 시트 제출 시 첨부파일 요구사항을 확인하고 업로드할 수 있는 UI 개선
+# Details:
+필수 첨부파일 체크리스트, 업로드 상태 표시, 실시간 검증 결과 표시, Turbo Streams 활용
+
+# Test Strategy:
+

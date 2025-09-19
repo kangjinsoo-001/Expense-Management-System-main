@@ -1,0 +1,11 @@
+# Task ID: 24
+# Title: 검증 규칙 설정 기능 구현
+# Status: done
+# Dependencies: 21
+# Priority: high
+# Description: 관리자가 자연어로 검증 규칙을 설정하고 관리하는 기능 구현
+# Details:
+자연어 검증 규칙 입력, 검증 수준 설정(통과/주의/경고), 우선순위 설정, 규칙 활성화/비활성화 기능
+
+# Test Strategy:
+

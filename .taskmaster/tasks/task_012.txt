@@ -1,0 +1,16 @@
+# Task ID: 12
+# Title: 결재선 검증 로직 구현
+# Status: done
+# Dependencies: 8, 9, 10, 11
+# Priority: high
+# Description: 경비 항목 생성/수정 시 승인자 그룹 요구사항 검증
+# Details:
+- ExpenseItem 모델에 검증 로직 추가
+- 선택된 결재선의 승인자들이 속한 그룹 확인
+- 경비 코드의 승인 규칙과 대조
+- 우선순위 기반 위계 검증 (상위 그룹이 하위 그룹 충족)
+- 미충족 시 상세한 에러 메시지
+- ApprovalLineValidator 클래스 구현
+
+# Test Strategy:
+

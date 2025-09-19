@@ -1,0 +1,31 @@
+# Task ID: 33
+# Title: 검증 시스템 구현
+# Status: done
+# Dependencies: 30, 32
+# Priority: high
+# Description: 경비 항목과 첨부파일 내용을 비교 검증하는 시스템 구현
+# Details:
+ValidationJob 구현, 통과/주의/경고 3단계 검증 레벨 적용. 금액 일치, 순서 일치, 필수 항목 존재 여부 등 다양한 검증 규칙 처리. 자연어 검증 규칙을 코드로 변환하여 실행
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. ValidationService 구현 [done]
+### Dependencies: None
+### Description: 검증 규칙을 실행하는 서비스 클래스 구현
+### Details:
+자연어 검증 규칙을 Ruby 코드로 변환. 금액 일치, 순서 일치, 필수 항목 존재 여부 등 검증 로직 구현
+
+## 2. ValidationJob 구현 [done]
+### Dependencies: None
+### Description: AI 분석 결과와 경비 항목을 비교 검증하는 Job
+### Details:
+AttachmentAnalysisJob 완료 후 실행. 통과/주의/경고 레벨 판정 및 결과 저장
+
+## 3. 검증 결과 처리 로직 구현 [done]
+### Dependencies: None
+### Description: 검증 레벨에 따른 처리 로직 구현
+### Details:
+통과는 진행, 주의는 사용자 확인 후 진행, 경고는 수정 필수. ValidationResultHandler 서비스 구현
+

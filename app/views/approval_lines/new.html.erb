@@ -1,0 +1,14 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-6">
+    <div class="flex items-center text-sm text-gray-500 mb-4">
+      <%= link_to "← 결재선 목록", approval_lines_path, class: "hover:text-gray-700" %>
+    </div>
+    
+    <h1 class="text-2xl font-semibold text-gray-900">새 결재선 만들기</h1>
+    <p class="mt-2 text-sm text-gray-600">
+      경비 항목 승인을 위한 결재선을 생성합니다. 승인 단계와 각 단계별 승인자를 설정하세요.
+    </p>
+  </div>
+
+  <%= render 'form', approval_line: @approval_line %>
+</div>

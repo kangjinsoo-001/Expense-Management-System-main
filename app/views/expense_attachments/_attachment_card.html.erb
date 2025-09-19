@@ -1,0 +1,85 @@
+<%# Turbo Frame과 Stream을 위한 컨테이너 %>
+<%= turbo_stream_from "attachment_#{attachment.id}" %>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" 
+     id="attachment_<%= attachment.id %>">
+  
+  <%# 헤더 영역 %>
+  <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <%# 파일 아이콘 %>
+        <div class="flex-shrink-0">
+          <% if attachment.file.content_type&.include?('pdf') %>
+            <svg class="h-8 w-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+            </svg>
+          <% else %>
+            <svg class="h-8 w-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+            </svg>
+          <% end %>
+        </div>
+        
+        <%# 파일 정보 %>
+        <div>
+          <h3 class="text-sm font-medium text-gray-900">
+            <%= attachment.file.filename if attachment.file.attached? %>
+          </h3>
+          <p class="text-xs text-gray-500">
+            <%= number_to_human_size(attachment.file.byte_size) if attachment.file.attached? %>
+            • <%= attachment.created_at.strftime("%Y-%m-%d %H:%M") %>
+          </p>
+        </div>
+      </div>
+      
+      <%# 처리 상태 %>
+      <div id="attachment_<%= attachment.id %>_status">
+        <%= render 'expense_attachments/extraction_status', attachment: attachment %>
+      </div>
+    </div>
+  </div>
+  
+  <%# 요약 영역 %>
+  <div class="p-4" id="attachment_<%= attachment.id %>_summary">
+    <%= render 'expense_attachments/summary', attachment: attachment %>
+  </div>
+  
+  <%# 액션 버튼 %>
+  <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <div class="flex space-x-2">
+        <% if attachment.file.attached? %>
+          <%= link_to "다운로드", 
+              rails_blob_path(attachment.file, disposition: "attachment"),
+              class: "inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <% end %>
+        
+        <% if attachment.extracted_text.blank? && attachment.processing_stage != 'extracting' %>
+          <%= button_to "텍스트 추출", 
+              extract_text_expense_attachment_path(attachment),
+              method: :post,
+              remote: true,
+              class: "inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <% end %>
+        
+        <% if attachment.ready_for_ai_summary? %>
+          <%= button_to "AI 요약", 
+              summarize_expense_attachment_path(attachment),
+              method: :post,
+              remote: true,
+              class: "inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" %>
+        <% end %>
+      </div>
+      
+      <% if attachment.ai_processed? %>
+        <div class="flex items-center text-xs text-gray-500">
+          <svg class="h-4 w-4 text-green-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          AI 처리 완료
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

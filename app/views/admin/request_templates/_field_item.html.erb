@@ -1,0 +1,71 @@
+<div class="field-item bg-gray-50 p-4 rounded-lg">
+  <div class="flex justify-between items-start mb-3">
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+      필드 <%= index + 1 %>
+    </span>
+    <button type="button" onclick="removeField(this)" class="text-red-600 hover:text-red-900">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+  
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div>
+      <label class="block text-xs font-medium text-gray-700">필드 키</label>
+      <input type="text" 
+             name="request_template[fields][][field_key]"
+             value="<%= field['field_key'] %>"
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+             placeholder="예: user_name"
+             required>
+    </div>
+    
+    <div>
+      <label class="block text-xs font-medium text-gray-700">필드 라벨</label>
+      <input type="text" 
+             name="request_template[fields][][field_label]"
+             value="<%= field['field_label'] %>"
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+             placeholder="예: 사용자명"
+             required>
+    </div>
+    
+    <div>
+      <label class="block text-xs font-medium text-gray-700">필드 타입</label>
+      <select name="request_template[fields][][field_type]"
+              onchange="toggleOptions(this)"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              required>
+        <option value="text" <%= 'selected' if field['field_type'] == 'text' %>>텍스트</option>
+        <option value="textarea" <%= 'selected' if field['field_type'] == 'textarea' %>>긴 텍스트</option>
+        <option value="select" <%= 'selected' if field['field_type'] == 'select' %>>선택</option>
+        <option value="date" <%= 'selected' if field['field_type'] == 'date' %>>날짜</option>
+        <option value="checkbox" <%= 'selected' if field['field_type'] == 'checkbox' %>>체크박스</option>
+        <option value="file" <%= 'selected' if field['field_type'] == 'file' %>>파일</option>
+      </select>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <div class="field-options" style="<%= field['field_type'] == 'select' ? 'display: block;' : 'display: none;' %>">
+      <label class="block text-xs font-medium text-gray-700">선택 옵션 (쉼표로 구분)</label>
+      <input type="text" 
+             name="request_template[fields][][field_options][]"
+             value="<%= field['field_options']&.join(', ') %>"
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+             placeholder="예: 옵션1, 옵션2, 옵션3">
+    </div>
+    
+    <div class="flex items-center">
+      <input type="checkbox" 
+             name="request_template[fields][][is_required]"
+             value="true"
+             <%= 'checked' if field['is_required'] %>
+             class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+      <label class="ml-2 block text-sm text-gray-900">
+        필수 필드
+      </label>
+    </div>
+  </div>
+</div>

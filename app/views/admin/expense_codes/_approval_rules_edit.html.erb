@@ -1,0 +1,49 @@
+<!-- 승인 규칙 관리 섹션 (편집 페이지용) -->
+<div class="bg-white shadow-sm rounded-lg p-6" id="approval_rules_section">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-medium text-gray-900">승인 규칙</h3>
+  </div>
+  
+  <!-- 기존 승인 규칙 목록 -->
+  <div class="mb-4">
+    <%= render 'admin/expense_codes/approval_rules_list', expense_code: expense_code, approval_rules: approval_rules %>
+  </div>
+  
+  <!-- 승인 규칙 추가 폼 (별도 폼으로 분리) -->
+  <%= form_with url: add_approval_rule_admin_expense_code_path(expense_code), 
+                model: [expense_code.expense_code_approval_rules.build],
+                scope: :expense_code_approval_rule,
+                local: false,
+                html: { id: 'add_approval_rule_form' } do |f| %>
+    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+      <h4 class="text-sm font-medium text-gray-900 mb-3">새 승인 규칙 추가</h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <%= f.text_field :condition,
+            placeholder: '조건식 (예: #금액 > 300000)',
+            class: "rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+        
+        <%= f.select :approver_group_id,
+            options_from_collection_for_select(available_groups, :id, :name),
+            { include_blank: '승인 그룹 선택' },
+            class: "rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+        
+        <div class="flex items-center gap-3">
+          <label class="inline-flex items-center">
+            <%= f.check_box :is_active, { checked: true },
+                class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" %>
+            <span class="ml-2 text-sm text-gray-700">활성</span>
+          </label>
+        </div>
+        
+        <%= f.submit '규칙 추가',
+            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      </div>
+    </div>
+  <% end %>
+  
+  <div class="mt-3 text-xs text-gray-500">
+    <p>* 승인 규칙은 위에서부터 아래로 순서대로 평가됩니다.</p>
+    <p>* 조건식이 참인 첫 번째 규칙의 승인자 그룹이 필수 승인자가 됩니다.</p>
+    <p>* 드래그앤드롭으로 규칙 순서를 변경할 수 있습니다.</p>
+  </div>
+</div>

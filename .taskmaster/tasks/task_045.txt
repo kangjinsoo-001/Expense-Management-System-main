@@ -1,0 +1,68 @@
+# Task ID: 45
+# Title: 승인 시스템 통합 (경비/신청서 Polymorphic 변환)
+# Status: pending
+# Dependencies: 44
+# Priority: high
+# Description: 경비 시트/항목/코드의 승인 시스템과 신청서 승인 시스템을 polymorphic 관계로 통합하여 하나의 통합된 승인 시스템으로 만듭니다.
+# Details:
+1. ApprovalRequest 테이블에 polymorphic 컬럼 추가 (approvable_type, approvable_id)
+2. 기존 expense_item_id 데이터를 polymorphic 관계로 마이그레이션
+3. ApprovalRequest 모델 관계를 polymorphic으로 수정
+4. ExpenseItem, ExpenseSheet, ExpenseCode 모델에 has_many :approval_requests, as: :approvable 추가
+5. RequestForm 모델에 has_many :approval_requests, as: :approvable 추가
+6. ApprovalsController를 수정하여 경비/신청서 타입 모두 처리
+7. 승인 대시보드에서 경비 항목과 신청서를 구분하여 표시
+8. 승인/반려 프로세스가 두 타입 모두에서 정상 작동하는지 테스트
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Polymorphic 마이그레이션 생성 [pending]
+### Dependencies: None
+### Description: ApprovalRequest 테이블에 approvable_type, approvable_id 컬럼 추가
+### Details:
+
+
+## 2. 기존 데이터 마이그레이션 [pending]
+### Dependencies: 45.1
+### Description: expense_item_id 데이터를 polymorphic 관계로 변환
+### Details:
+
+
+## 3. ApprovalRequest 모델 수정 [pending]
+### Dependencies: 45.2
+### Description: belongs_to :approvable, polymorphic: true 관계 설정
+### Details:
+
+
+## 4. 경비 모델들에 polymorphic 관계 추가 [pending]
+### Dependencies: 45.3
+### Description: ExpenseItem, ExpenseSheet, ExpenseCode에 has_many :approval_requests, as: :approvable 추가
+### Details:
+
+
+## 5. RequestForm 모델에 polymorphic 관계 추가 [pending]
+### Dependencies: 45.3
+### Description: RequestForm에 has_many :approval_requests, as: :approvable 추가
+### Details:
+
+
+## 6. ApprovalsController 수정 [pending]
+### Dependencies: 45.4, 45.5
+### Description: 경비와 신청서 타입을 모두 처리하도록 컨트롤러 로직 수정
+### Details:
+
+
+## 7. 승인 대시보드 UI 개선 [pending]
+### Dependencies: 45.6
+### Description: 경비 항목과 신청서를 구분하여 표시하는 UI 구현
+### Details:
+
+
+## 8. 통합 테스트 및 검증 [pending]
+### Dependencies: 45.7
+### Description: 경비와 신청서 모두에서 승인/반려 프로세스가 정상 작동하는지 테스트
+### Details:
+
+

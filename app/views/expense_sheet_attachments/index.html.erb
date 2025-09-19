@@ -1,0 +1,92 @@
+<div class="max-w-6xl mx-auto">
+  <!-- 헤더 영역 -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <%= link_to expense_sheets_path(year: @expense_sheet.year, month: @expense_sheet.month), 
+                    class: "inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-100 transition-colors" do %>
+          <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        <% end %>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">첨부파일 관리</h1>
+          <p class="mt-1 text-sm text-gray-500">
+            <%= "#{@expense_sheet.year}년 #{@expense_sheet.month}월 경비 시트" %>
+          </p>
+        </div>
+      </div>
+      
+      <%= link_to "새 첨부파일 업로드", 
+                  new_expense_sheet_expense_sheet_attachment_path(@expense_sheet),
+                  class: "tremor-btn tremor-btn-primary",
+                  data: { turbo_frame: "attachment-form-modal" } %>
+    </div>
+  </div>
+
+  <!-- 업로드 상태 요약 -->
+  <div id="upload-status" class="mb-6">
+    <%= render partial: "upload_status", locals: { expense_sheet: @expense_sheet } %>
+  </div>
+
+  <!-- 필수 첨부파일 체크리스트 -->
+  <div class="tremor-card mb-6">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">필수 첨부파일 체크리스트</h3>
+      
+      <div class="space-y-3">
+        <% @required_attachments.each do |requirement| %>
+          <div class="flex items-center justify-between p-3 rounded-lg <%= @uploaded_requirement_ids.include?(requirement.id) ? 'bg-green-50' : 'bg-gray-50' %>">
+            <div class="flex items-center gap-3">
+              <% if @uploaded_requirement_ids.include?(requirement.id) %>
+                <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              <% else %>
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              <% end %>
+              
+              <div>
+                <div class="font-medium text-gray-900"><%= requirement.name %></div>
+                <div class="text-sm text-gray-500"><%= requirement.description %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  허용 파일 형식: <%= requirement.file_types.join(", ") %>
+                </div>
+              </div>
+            </div>
+            
+            <% if @uploaded_requirement_ids.include?(requirement.id) %>
+              <span class="text-sm text-green-600 font-medium">업로드 완료</span>
+            <% else %>
+              <span class="text-sm text-red-600 font-medium">미업로드</span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 업로드된 첨부파일 목록 -->
+  <div class="tremor-card">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">업로드된 첨부파일</h3>
+      
+      <div id="sheet-attachments-list" class="space-y-3">
+        <% if @attachments.any? %>
+          <% @attachments.each do |attachment| %>
+            <%= render partial: "attachment", locals: { attachment: attachment } %>
+          <% end %>
+        <% else %>
+          <div class="text-center py-8 text-gray-500">
+            업로드된 첨부파일이 없습니다.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 첨부파일 업로드 모달 -->
+<%= turbo_frame_tag "attachment-form-modal" %>

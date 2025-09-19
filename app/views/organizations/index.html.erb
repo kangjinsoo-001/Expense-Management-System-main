@@ -1,0 +1,108 @@
+<% content_for :title, "조직 관리" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-8">
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-semibold text-gray-900">조직 관리</h1>
+        <p class="mt-1 text-sm text-gray-500">조직 구조와 부서를 관리합니다</p>
+      </div>
+      <% if current_user.admin? || current_user.manager? %>
+        <div class="mt-4 flex md:mt-0 md:ml-4">
+          <%= link_to new_organization_path, class: "tremor-button-primary" do %>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            새 조직 추가
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="tremor-card">
+    <div class="overflow-x-auto">
+      <table class="tremor-table">
+        <thead>
+          <tr>
+            <th class="text-left">조직명</th>
+            <th class="text-left">코드</th>
+            <th class="text-left">조직장</th>
+            <th class="text-left">소속 인원</th>
+            <th class="text-center w-24">작업</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @organizations.each do |organization| %>
+            <tr>
+              <td class="font-medium">
+                <%= link_to organization.name, organization_path(organization), class: "text-blue-600 hover:text-blue-700" %>
+              </td>
+              <td>
+                <%= organization.code %>
+              </td>
+              <td>
+                <%= organization.manager&.name || "-" %>
+              </td>
+              <td>
+                <%= organization.users_count %>명
+              </td>
+              <td class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <%= link_to organization_path(organization), 
+                              class: "p-1.5 rounded hover:bg-gray-100 transition-colors group",
+                              title: "보기" do %>
+                    <svg class="h-4 w-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  <% end %>
+                  <% if can_manage_organization?(organization) %>
+                    <%= link_to edit_organization_path(organization), 
+                                class: "p-1.5 rounded hover:bg-gray-100 transition-colors group",
+                                title: "편집" do %>
+                      <svg class="h-4 w-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    <% end %>
+                    <%= link_to organization_path(organization), 
+                                data: { turbo_method: :delete, turbo_confirm: "정말로 삭제하시겠습니까?" }, 
+                                class: "p-1.5 rounded hover:bg-red-50 transition-colors group",
+                                title: "삭제" do %>
+                      <svg class="h-4 w-4 text-gray-500 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+            <%= render 'organization_tree', organization: organization, level: 1 %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    
+    <% if @organizations.empty? %>
+      <div class="text-center py-16">
+        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100">
+          <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">조직이 없습니다</h3>
+        <p class="mt-2 text-sm text-gray-500">첫 조직을 추가해보세요</p>
+        <% if current_user.admin? || current_user.manager? %>
+          <div class="mt-6">
+            <%= link_to new_organization_path, class: "tremor-button-primary" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              첫 조직 추가하기
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,18 @@
+# Task ID: 42
+# Title: 카테고리 관리 기능 구현 (관리자)
+# Status: done
+# Dependencies: 41
+# Priority: high
+# Description: 관리자가 신청서 카테고리를 관리할 수 있는 CRUD 기능을 구현합니다.
+# Details:
+1. Admin::RequestCategoriesController 생성
+2. 카테고리 목록 페이지 (index)
+3. 카테고리 생성/수정 폼 (new, edit)
+4. 카테고리 저장/업데이트 (create, update)
+5. 카테고리 삭제 (destroy)
+6. 아이콘 및 색상 선택 UI
+7. 표시 순서 드래그앤드롭 (Stimulus)
+8. 활성/비활성 토글 기능
+
+# Test Strategy:
+

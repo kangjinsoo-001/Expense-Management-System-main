@@ -1,0 +1,85 @@
+<%# 경비 시트 전체 검증 결과 %>
+<div id="expense_sheet_validation_result" class="sheet-validation-result">
+  <% if validation_result.present? %>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">검증 결과</h3>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= expense_sheet.validation_badge_class %>">
+          <%= expense_sheet.validation_status_label %>
+        </span>
+      </div>
+      
+      <%# 필수 첨부파일 검증 결과 %>
+      <% if validation_result[:required_attachments].present? %>
+        <div class="mb-6">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">필수 첨부파일</h4>
+          <div class="space-y-2">
+            <% validation_result[:required_attachments][:results].each do |result| %>
+              <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                <span class="text-sm text-gray-900"><%= result[:requirement_name] %></span>
+                <% if result[:attached] %>
+                  <span class="flex items-center text-sm text-green-600">
+                    <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    첨부됨
+                  </span>
+                <% else %>
+                  <span class="flex items-center text-sm text-red-600">
+                    <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    누락됨
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      
+      <%# 첨부파일 검증 결과 %>
+      <% if validation_result[:attachment_validations].present? && validation_result[:attachment_validations].any? %>
+        <div class="mb-6">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">첨부파일 검증</h4>
+          <div class="space-y-3">
+            <% validation_result[:attachment_validations].each do |attachment_validation| %>
+              <div class="border border-gray-200 rounded p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-gray-900"><%= attachment_validation[:file_name] %></span>
+                  <span class="text-xs px-2 py-1 rounded <%= attachment_validation[:passed] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+                    <%= attachment_validation[:passed] ? '통과' : '실패' %>
+                  </span>
+                </div>
+                
+                <% if attachment_validation[:rule_results].present? %>
+                  <div class="space-y-1">
+                    <% attachment_validation[:rule_results].each do |rule_result| %>
+                      <div class="flex items-start gap-2 text-xs">
+                        <% if rule_result[:passed] %>
+                          <svg class="h-3 w-3 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                          </svg>
+                        <% else %>
+                          <svg class="h-3 w-3 mt-0.5 text-<%= rule_result[:severity] == 'error' ? 'red' : 'yellow' %>-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                          </svg>
+                        <% end %>
+                        <span class="text-gray-600"><%= rule_result[:message] %></span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      
+      <%# 검증 시각 %>
+      <div class="text-xs text-gray-500 text-right">
+        검증 시각: <%= validation_result[:validated_at]&.strftime('%Y-%m-%d %H:%M:%S') %>
+      </div>
+    </div>
+  <% end %>
+</div>

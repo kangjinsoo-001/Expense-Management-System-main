@@ -1,0 +1,109 @@
+<%= form_with(model: user) do |form| %>
+  <% if user.errors.any? %>
+    <div class="tremor-card mb-6 border-red-200 bg-red-50">
+      <div class="p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">
+              <%= user.errors.count %>개의 오류가 발생했습니다:
+            </h3>
+            <div class="mt-2 text-sm text-red-700">
+              <ul class="list-disc list-inside">
+                <% user.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="space-y-6">
+    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+      <div class="sm:col-span-1">
+        <%= form.label :email, "이메일", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.email_field :email, 
+            class: "tremor-input mt-1",
+            placeholder: "user@example.com" %>
+      </div>
+
+      <div class="sm:col-span-1">
+        <%= form.label :name, "이름", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :name, 
+            class: "tremor-input mt-1",
+            placeholder: "홍길동" %>
+      </div>
+
+      <div class="sm:col-span-1">
+        <%= form.label :employee_id, "사번", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :employee_id, 
+            class: "tremor-input mt-1",
+            placeholder: "EMP0001" %>
+      </div>
+
+      <div class="sm:col-span-1">
+        <%= form.label :role, "역할", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :role, 
+            options_for_select([
+              ['일반 사용자', 'employee'],
+              ['매니저', 'manager'],
+              ['재무팀', 'finance'],
+              ['관리자', 'admin']
+            ], user.role), 
+            {}, 
+            class: "tremor-select mt-1" %>
+      </div>
+
+      <div class="sm:col-span-2">
+        <%= form.label :organization_id, "소속 조직", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :organization_id, 
+            options_from_collection_for_select(Organization.all, :id, :name, user.organization_id),
+            { include_blank: "조직 없음" },
+            class: "tremor-select mt-1" %>
+      </div>
+    </div>
+
+    <% unless user.new_record? %>
+      <div class="border-t border-gray-200 pt-6">
+        <h3 class="text-lg font-medium text-gray-900">비밀번호 변경</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          비밀번호를 변경하지 않으려면 비워두세요.
+        </p>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+      <div class="sm:col-span-1">
+        <%= form.label :password, "비밀번호", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.password_field :password, 
+            class: "tremor-input mt-1",
+            placeholder: "비밀번호 입력" %>
+        <% if @minimum_password_length %>
+          <p class="mt-2 text-sm text-gray-500">
+            최소 <%= @minimum_password_length %>자 이상
+          </p>
+        <% end %>
+      </div>
+
+      <div class="sm:col-span-1">
+        <%= form.label :password_confirmation, "비밀번호 확인", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.password_field :password_confirmation, 
+            class: "tremor-input mt-1",
+            placeholder: "비밀번호 재입력" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+    <%= link_to "취소", users_path, class: "tremor-button-secondary" %>
+    <%= form.submit user.new_record? ? "사용자 생성" : "사용자 수정", 
+        class: "tremor-button-primary" %>
+  </div>
+<% end %>

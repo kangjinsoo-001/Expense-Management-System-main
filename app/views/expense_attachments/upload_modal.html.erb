@@ -1,0 +1,145 @@
+<%= turbo_frame_tag "attachment_upload_modal" do %>
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40"></div>
+  
+  <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-3xl sm:w-full" 
+           data-controller="receipt-upload"
+           data-receipt-upload-expense-item-id-value="<%= @expense_item&.id %>">
+        
+        <!-- 헤더 -->
+        <div class="bg-white px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">첨부 파일 업로드 및 확인</h3>
+            <button type="button"
+                    data-action="click->receipt-upload#close"
+                    class="text-gray-400 hover:text-gray-500">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 본문 -->
+        <div class="bg-white px-6 py-4">
+          <!-- Step 1: 파일 업로드 -->
+          <div data-receipt-upload-target="uploadStep">
+            <h4 class="text-sm font-medium text-gray-900 mb-4">1단계: 첨부 파일 선택</h4>
+            
+            <!-- 파일 선택 영역 -->
+            <div>
+              <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                   data-receipt-upload-target="dropZone">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                
+                <input type="file"
+                       accept="application/pdf,image/jpeg,image/jpg,image/png"
+                       class="hidden"
+                       data-receipt-upload-target="fileInput"
+                       data-action="change->receipt-upload#fileSelected" />
+                
+                <button type="button" 
+                        class="mt-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        data-action="click->receipt-upload#triggerFileSelect">
+                  <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  파일 선택
+                </button>
+                
+                <p class="mt-2 text-xs text-gray-500">
+                  또는 파일을 여기로 드래그하세요
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                  PDF, JPG, PNG 파일만 가능 (10MB 이하)
+                </p>
+              </div>
+            </div>
+            
+            <!-- 선택된 파일 표시 -->
+            <div class="hidden mt-4" data-receipt-upload-target="selectedFile">
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center">
+                  <svg class="h-8 w-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900" data-receipt-upload-target="fileName">파일명</p>
+                    <p class="text-xs text-gray-500" data-receipt-upload-target="fileSize">크기</p>
+                  </div>
+                </div>
+                <button type="button" 
+                        class="text-gray-400 hover:text-gray-500"
+                        data-action="click->receipt-upload#clearFile">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <button type="button"
+                      class="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      data-action="click->receipt-upload#uploadFile">
+                업로드 및 분석 시작
+              </button>
+            </div>
+          </div>
+          
+          <!-- Step 2: 처리 중 -->
+          <div class="hidden" data-receipt-upload-target="processingStep">
+            <h4 class="text-sm font-medium text-gray-900 mb-4">2단계: 첨부 파일 분석 중</h4>
+            
+            <div class="text-center py-8">
+              <svg class="animate-spin h-10 w-10 text-indigo-600 mx-auto" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p class="mt-4 text-sm text-gray-600">첨부 파일을 분석하고 있습니다...</p>
+              <p class="mt-2 text-xs text-gray-500" data-receipt-upload-target="processingStatus">파일 업로드 중...</p>
+            </div>
+          </div>
+          
+          <!-- Step 3: 결과 확인 -->
+          <div class="hidden" data-receipt-upload-target="confirmStep">
+            <h4 class="text-sm font-medium text-gray-900 mb-4">3단계: 추출된 텍스트 확인</h4>
+            
+            <div class="space-y-4">
+              <!-- 추출된 텍스트 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">추출된 텍스트</label>
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg max-h-80 overflow-y-auto">
+                  <pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono" data-receipt-upload-target="extractedText"></pre>
+                </div>
+              </div>
+              
+              <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                  추출된 텍스트를 확인해주세요. 첨부 파일 정보가 올바르게 추출되었는지 검토하신 후 확인 버튼을 클릭하세요.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 푸터 -->
+        <div class="bg-gray-50 px-6 py-3 flex justify-between">
+          <button type="button"
+                  data-action="click->receipt-upload#close"
+                  class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            취소
+          </button>
+          
+          <button type="button"
+                  class="hidden inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  data-receipt-upload-target="confirmButton"
+                  data-action="click->receipt-upload#confirmData">
+            확인 및 적용
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

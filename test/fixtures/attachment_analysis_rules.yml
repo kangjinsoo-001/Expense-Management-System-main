@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  attachment_requirement: one
+  prompt_text: MyText
+  expected_fields: MyText
+  active: false
+
+two:
+  attachment_requirement: two
+  prompt_text: MyText
+  expected_fields: MyText
+  active: false

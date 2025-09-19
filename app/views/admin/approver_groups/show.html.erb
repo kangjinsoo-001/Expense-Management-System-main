@@ -1,0 +1,82 @@
+<div class="container mx-auto px-4 py-8" data-controller="approver-group">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold"><%= @approver_group.name %></h1>
+    <div class="space-x-2">
+      <%= link_to '수정', edit_admin_approver_group_path(@approver_group),
+                  class: 'btn btn-secondary',
+                  data: { turbo_frame: :modal } %>
+      <%= link_to '목록으로', admin_approver_groups_path, class: 'btn btn-secondary' %>
+    </div>
+  </div>
+
+  <!-- 그룹 정보 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-xl font-semibold mb-4">그룹 정보</h2>
+    <dl class="space-y-3">
+      <div>
+        <dt class="text-sm font-medium text-gray-500">설명</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @approver_group.description || '-' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">우선순위</dt>
+        <dd class="mt-1">
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+            <%= @approver_group.priority %>
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">상태</dt>
+        <dd class="mt-1">
+          <% if @approver_group.is_active? %>
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+              활성
+            </span>
+          <% else %>
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+              비활성
+            </span>
+          <% end %>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">생성자</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @approver_group.created_by.name %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">생성일</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= l(@approver_group.created_at, format: :long) %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- 멤버 목록 -->
+  <div class="mt-6 bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold">그룹 멤버 (<span data-approver-group-target="memberCount"><%= @members.count %></span>명)</h2>
+      <button type="button" 
+              data-action="click->approver-group#toggleEditMode"
+              data-approver-group-target="editButton"
+              class="btn btn-secondary">
+        멤버 수정
+      </button>
+    </div>
+    
+    <!-- 편집 폼 (초기에는 숨김) -->
+    <div id="member_edit_form" 
+         data-approver-group-target="editForm"
+         class="hidden mb-4">
+      <%= render 'edit_members_form', 
+                 approver_group: @approver_group, 
+                 current_members: @members,
+                 all_users: User.includes(:organization).order(:name) %>
+    </div>
+    
+    <!-- 멤버 목록 -->
+    <div data-approver-group-target="membersList">
+      <%= render 'members_list_wrapper', approver_group: @approver_group, members: @members %>
+    </div>
+  </div>
+</div>
+
+<%= turbo_frame_tag :modal %>

@@ -1,0 +1,11 @@
+# Task ID: 28
+# Title: AI 분석 결과 표시 기능 구현
+# Status: done
+# Dependencies: 25, 27
+# Priority: medium
+# Description: AI가 분석한 첨부파일 내용을 사용자에게 표시하고 경비 항목과 매칭하는 기능
+# Details:
+추출된 데이터 미리보기, 경비 항목 자동 매칭 제안, 불일치 항목 하이라이트, 수정 안내
+
+# Test Strategy:
+

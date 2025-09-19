@@ -1,0 +1,29 @@
+<%# 페이지네이터 메인 템플릿 %>
+<%= paginator.render do %>
+  <nav class="pagination-container" role="navigation" aria-label="pagination">
+    <div class="pagination-wrapper">
+      <%# 첫 페이지로 %>
+      <%= first_page_tag unless current_page.first? %>
+      
+      <%# 이전 페이지로 %>
+      <%= prev_page_tag unless current_page.first? %>
+      
+      <%# 페이지 번호들 %>
+      <div class="page-numbers">
+        <% each_page do |page| %>
+          <% if page.display_tag? %>
+            <%= page_tag page %>
+          <% elsif !page.was_truncated? %>
+            <%= gap_tag %>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <%# 다음 페이지로 %>
+      <%= next_page_tag unless current_page.last? %>
+      
+      <%# 마지막 페이지로 %>
+      <%= last_page_tag unless current_page.last? %>
+    </div>
+  </nav>
+<% end %>

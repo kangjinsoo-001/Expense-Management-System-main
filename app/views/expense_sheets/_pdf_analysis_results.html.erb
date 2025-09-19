@@ -1,0 +1,195 @@
+<%= turbo_frame_tag "pdf_analysis_results" do %>
+<div class="bg-white shadow rounded-lg mb-6" data-controller="pdf-analysis">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-medium leading-6 text-gray-900">PDF 분석 결과</h3>
+        <p class="mt-1 text-sm text-gray-500">업로드된 PDF 파일의 거래 내역 분석 및 매칭 결과</p>
+      </div>
+      <% if pdf_analysis_results.any? %>
+        <button type="button"
+                data-action="click->pdf-analysis#toggleAll"
+                class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <span data-pdf-analysis-target="toggleText">모두 펼치기</span>
+        </button>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="divide-y divide-gray-200">
+    <% if pdf_analysis_results.any? %>
+      <% pdf_analysis_results.each_with_index do |result, index| %>
+        <div class="px-4 py-4" data-pdf-analysis-target="resultItem">
+          <!-- 분석 결과 헤더 -->
+          <div class="flex items-center justify-between cursor-pointer"
+               data-action="click->pdf-analysis#toggle"
+               data-index="<%= index %>">
+            <div class="flex items-center space-x-3">
+              <svg class="h-5 w-5 text-gray-400 transform transition-transform duration-200"
+                   data-pdf-analysis-target="chevron"
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-gray-900"><%= result.filename %></p>
+                <p class="text-xs text-gray-500">
+                  <%= result.analysis_data['pages'] %>페이지 · 
+                  <%= result.card_type.present? ? t("card_types.#{result.card_type}") : '카드사 미확인' %> · 
+                  <%= result.created_at.strftime("%Y-%m-%d %H:%M") %>
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+              <% if result.analysis_data['transaction_count'].to_i > 0 %>
+                <div class="text-right">
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= format_currency(result.total_amount || 0) %>
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    거래 <%= result.analysis_data['transaction_count'] %>건
+                  </p>
+                </div>
+              <% end %>
+              
+              <% match_rate = result.analysis_data['match_rate'].to_f %>
+              <div class="text-center">
+                <div class="flex items-center">
+                  <% if match_rate >= 0.8 %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                      <%= (match_rate * 100).round %>% 매칭
+                    </span>
+                  <% elsif match_rate >= 0.5 %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                      <%= (match_rate * 100).round %>% 매칭
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                      </svg>
+                      <%= (match_rate * 100).round %>% 매칭
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 분석 결과 상세 (접혀있음) -->
+          <div class="mt-4 hidden" data-pdf-analysis-target="details">
+            <!-- 매칭된 거래 내역 -->
+            <% matches = result.transaction_matches.includes(:expense_item) %>
+            <% if matches.any? %>
+              <h4 class="text-sm font-medium text-gray-900 mb-3">매칭된 거래 내역</h4>
+              <div class="space-y-2 mb-4">
+                <% matches.each do |match| %>
+                  <div class="bg-green-50 rounded-lg p-3">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <div class="flex items-center space-x-2">
+                          <p class="text-sm font-medium text-gray-900">
+                            <%= match.transaction_date %> · <%= match.transaction_description %>
+                          </p>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            <%= match.match_type_label %>
+                          </span>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1">
+                          거래금액: <%= format_currency(match.transaction_amount) %> 
+                          → 경비항목: <%= link_to match.expense_item.description, 
+                                                edit_expense_sheet_expense_item_path(@expense_sheet, match.expense_item),
+                                                class: "text-indigo-600 hover:text-indigo-900 underline" %>
+                          (<%= format_currency(match.expense_item.amount) %>)
+                        </p>
+                        <% if match.amount_difference > 0 %>
+                          <p class="text-xs text-orange-600 mt-1">
+                            금액 차이: <%= format_currency(match.amount_difference) %> 
+                            (<%= match.amount_difference_percentage %>%)
+                          </p>
+                        <% end %>
+                      </div>
+                      <div class="ml-4">
+                        <% if match.high_confidence? %>
+                          <span class="text-xs text-green-600 font-medium">신뢰도 <%= (match.confidence * 100).round %>%</span>
+                        <% elsif match.medium_confidence? %>
+                          <span class="text-xs text-yellow-600 font-medium">신뢰도 <%= (match.confidence * 100).round %>%</span>
+                        <% else %>
+                          <span class="text-xs text-red-600 font-medium">신뢰도 <%= (match.confidence * 100).round %>%</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            
+            <!-- 매칭되지 않은 거래 내역 -->
+            <% unmatched = result.analysis_data['transactions']&.reject { |t| 
+                matches.any? { |m| m.transaction_data['date'] == t['date'] && m.transaction_data['amount'] == t['amount'] }
+              } || [] %>
+            <% if unmatched.any? %>
+              <h4 class="text-sm font-medium text-gray-900 mb-3">매칭되지 않은 거래 내역</h4>
+              <div class="bg-yellow-50 rounded-lg p-3 mb-4">
+                <p class="text-xs text-yellow-800 mb-2">
+                  아래 거래 내역은 등록된 경비 항목과 매칭되지 않았습니다. 경비 항목을 추가하거나 확인해주세요.
+                </p>
+                <div class="space-y-1">
+                  <% unmatched.each do |transaction| %>
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-700">
+                        <%= transaction['date'] %> · <%= transaction['description'] %>
+                      </span>
+                      <span class="font-medium text-gray-900">
+                        <%= format_currency(transaction['amount']) %>
+                      </span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            
+            <!-- 추출된 정보 요약 -->
+            <div class="bg-gray-50 rounded-lg p-3">
+              <h4 class="text-xs font-medium text-gray-700 mb-2">추출된 정보</h4>
+              <dl class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <dt class="text-gray-500">감지된 금액</dt>
+                  <dd class="text-gray-900"><%= result.detected_amounts&.size || 0 %>개</dd>
+                </div>
+                <div>
+                  <dt class="text-gray-500">감지된 날짜</dt>
+                  <dd class="text-gray-900"><%= result.detected_dates&.size || 0 %>개</dd>
+                </div>
+                <div>
+                  <dt class="text-gray-500">추출 오류</dt>
+                  <dd class="text-gray-900"><%= result.analysis_data['extraction_errors']&.size || 0 %>개</dd>
+                </div>
+                <div>
+                  <dt class="text-gray-500">총 거래금액</dt>
+                  <dd class="text-gray-900 font-medium">
+                    <%= format_currency(result.total_amount || 0) %>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="px-4 py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p class="mt-2 text-sm text-gray-500">PDF를 업로드하면 자동으로 거래 내역을 분석합니다.</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% end %>

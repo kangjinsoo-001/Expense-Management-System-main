@@ -1,0 +1,11 @@
+# Task ID: 26
+# Title: 검증 Job 구현
+# Status: done
+# Dependencies: 21, 24, 25
+# Priority: high
+# Description: 분석된 첨부파일 내용과 경비 항목을 비교 검증하는 백그라운드 Job 구현
+# Details:
+ValidationJob 구현, 검증 규칙 적용 엔진, 검증 결과 처리(통과/주의/경고), 사용자 알림
+
+# Test Strategy:
+

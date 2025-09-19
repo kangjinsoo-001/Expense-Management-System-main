@@ -1,0 +1,140 @@
+<tr id="approval-details-<%= item.id %>" class="hidden opacity-0 transition-opacity duration-200" data-approval-details-target="detailsRow<%= item.id %>">
+  <td colspan="<%= @expense_sheet.editable? ? 6 : 5 %>" class="bg-gray-50 px-6 py-4">
+    <div class="max-w-4xl mx-auto">
+      <h4 class="text-sm font-semibold text-gray-900 mb-3">
+        결재 진행 현황
+        <% if item.needs_reapproval? %>
+          <span class="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-normal">재승인 필요</span>
+        <% end %>
+      </h4>
+      
+      <% approval_request = item.approval_request %>
+      
+      <div class="grid grid-cols-2 gap-6">
+        <!-- 왼쪽: 진행률 및 예산 정보 -->
+        <div>
+          <!-- 진행률 바 -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-gray-600">진행률</span>
+              <span class="text-xs font-medium <%= item.needs_reapproval? ? 'text-orange-600' :
+                                                   approval_request.status == 'approved' ? 'text-green-600' : 
+                                                   approval_request.status == 'rejected' ? 'text-red-600' : 
+                                                   'text-blue-600' %>">
+                <% if item.needs_reapproval? %>
+                  재승인 대기중
+                <% else %>
+                  <%= approval_request.current_status_display %>
+                <% end %>
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="h-2 rounded-full <%= item.needs_reapproval? ? 'bg-orange-600' :
+                                                approval_request.status == 'approved' ? 'bg-green-600' : 
+                                                approval_request.status == 'rejected' ? 'bg-red-600' : 
+                                                'bg-blue-600' %>" 
+                   style="width: <%= item.needs_reapproval? ? '0' : approval_request.progress_percentage %>%"></div>
+            </div>
+          </div>
+          
+          <!-- 예산 초과 정보 (재승인 필요시) -->
+          <% if item.needs_reapproval? %>
+            <div class="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <p class="text-sm text-orange-800">
+                <strong>예산 초과:</strong> 
+                <%= format_currency(item.budget_amount) %> → <%= format_currency(item.actual_amount) %>
+                <span class="font-medium">(+<%= format_currency(item.actual_amount - item.budget_amount) %>)</span>
+              </p>
+              <% if item.excess_reason.present? %>
+                <p class="text-sm text-orange-700 mt-1">사유: <%= item.excess_reason %></p>
+              <% end %>
+            </div>
+          <% end %>
+          
+          <!-- 최근 처리 이력 -->
+          <% if approval_request.approval_histories.any? %>
+            <div class="bg-white p-3 rounded-lg border border-gray-200">
+              <p class="text-xs font-medium text-gray-700 mb-2">최근 처리 이력</p>
+              <% latest_history = approval_request.approval_histories.ordered.first %>
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <% case latest_history.action %>
+                <% when 'approve' %>
+                  <svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                <% when 'reject' %>
+                  <svg class="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                <% end %>
+                <span><%= latest_history.approver.name %></span>
+                <span class="text-gray-400">•</span>
+                <span><%= latest_history.approved_at.strftime('%m/%d %H:%M') %></span>
+                <% if latest_history.comment.present? %>
+                  <span class="text-gray-400">•</span>
+                  <span class="text-gray-500"><%= latest_history.comment %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- 오른쪽: 결재선 단계 -->
+        <div>
+          <p class="text-xs font-medium text-gray-700 mb-2">결재선</p>
+          <div class="bg-white p-3 rounded-lg border border-gray-200">
+            <div class="space-y-2">
+              <% approval_request.approval_line.approval_line_steps.ordered.includes(:approver).each do |step| %>
+                <% history = approval_request.approval_histories.find_by(step_order: step.step_order) %>
+                
+                <div class="flex items-center gap-3 <%= approval_request.current_step == step.step_order && approval_request.status_pending? ? 'text-blue-600 font-medium' : 'text-gray-600' %>">
+                  <!-- 상태 아이콘 -->
+                  <% if history && history.action == 'approve' %>
+                    <svg class="h-5 w-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  <% elsif history && history.action == 'reject' %>
+                    <svg class="h-5 w-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  <% elsif approval_request.current_step == step.step_order && approval_request.status_pending? %>
+                    <div class="h-5 w-5 rounded-full bg-blue-500 animate-pulse flex-shrink-0"></div>
+                  <% else %>
+                    <div class="h-5 w-5 rounded-full bg-gray-300 flex-shrink-0"></div>
+                  <% end %>
+                  
+                  <!-- 승인자 정보 -->
+                  <div class="flex-1 text-sm">
+                    <span class="font-medium"><%= step.step_order %>단계</span>
+                    <span class="ml-2"><%= step.approver.name %></span>
+                  </div>
+                  
+                  <!-- 처리 시간 -->
+                  <div class="text-xs text-right">
+                    <% if history %>
+                      <span class="text-gray-500">
+                        <%= history.approved_at.strftime('%m/%d %H:%M') %>
+                      </span>
+                    <% elsif approval_request.current_step == step.step_order && approval_request.status_pending? %>
+                      <span class="text-blue-500">대기중</span>
+                    <% else %>
+                      <span class="text-gray-400">-</span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 상세보기 링크 -->
+      <div class="mt-4 text-center">
+        <%= link_to edit_expense_sheet_expense_item_path(@expense_sheet, item),
+                    class: "text-sm text-blue-600 hover:text-blue-700 font-medium" do %>
+          상세 보기 →
+        <% end %>
+      </div>
+    </div>
+  </td>
+</tr>

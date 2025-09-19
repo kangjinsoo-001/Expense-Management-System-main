@@ -1,0 +1,162 @@
+<% if approval_request.present? %>
+  <%= turbo_frame_tag "approval_timeline_#{dom_id(expense_sheet)}" do %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6" data-controller="timeline-animation">
+    <h3 class="text-lg font-semibold text-gray-900 mb-6">
+      결재 진행 타임라인
+    </h3>
+    
+    <% steps_by_order = approval_request.approval_request_steps.includes(approver: :organization).group_by(&:step_order).sort %>
+    
+    <!-- 현재 승인 진행 타임라인 -->
+    <div class="space-y-4">
+      <% steps_by_order.each_with_index do |(step_order, steps), index| %>
+        <% histories = approval_request.approval_histories.where(step_order: step_order) %>
+        <% is_current = approval_request.current_step == step_order && approval_request.status_pending? %>
+        <% is_completed = histories.any? { |h| h.action == 'approve' } %>
+        <% is_rejected = histories.any? { |h| h.action == 'reject' } %>
+        
+        <div class="flex items-start gap-4 <%= is_current ? 'bg-blue-50 -mx-4 px-4 py-3 rounded-lg' : '' %>">
+          <!-- 단계 번호 및 상태 -->
+          <div class="flex-shrink-0">
+            <% if is_completed %>
+              <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            <% elsif is_rejected %>
+              <div class="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+            <% elsif is_current %>
+              <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center animate-pulse">
+                <span class="text-white font-semibold"><%= step_order %></span>
+              </div>
+            <% else %>
+              <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                <span class="text-gray-600 font-semibold"><%= step_order %></span>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- 승인자 정보 -->
+          <div class="flex-1">
+            <!-- 같은 단계의 승인자들 -->
+            <div class="space-y-2">
+              <% steps.each do |step| %>
+                <% history = histories.find { |h| h.approver_id == step.approver_id } %>
+                
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">
+                        <%= step.approver.name %>
+                        <span class="text-xs text-gray-500">(<%= step.approver.organization.name %>)</span>
+                      </p>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-xs px-2 py-0.5 rounded-full inline-flex items-center <%= step.role == 'approve' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' %>">
+                          <% if step.role == 'approve' %>
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          <% else %>
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          <% end %>
+                          <%= step.role == 'approve' ? '승인' : '참조' %>
+                        </span>
+                        <% if is_current && step.role == 'approve' %>
+                          <span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">진행중</span>
+                        <% end %>
+                        <% if steps.select { |s| s.role == 'approve' }.count > 1 && step.approval_type.present? %>
+                          <span class="text-xs text-gray-500 inline-flex items-center">
+                            <% if step.approval_type == 'all_required' %>
+                              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                              전원 승인
+                            <% elsif step.approval_type == 'any_one' || step.approval_type == 'single_allowed' %>
+                              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              1인 승인
+                            <% end %>
+                          </span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 처리 시간 -->
+                  <% if history %>
+                    <div class="text-right">
+                      <p class="text-xs text-gray-500">
+                        <%= history.approved_at.strftime('%m/%d %H:%M') %>
+                      </p>
+                      <% if history.action == 'approve' %>
+                        <span class="text-xs text-green-600">승인</span>
+                      <% elsif history.action == 'reject' %>
+                        <span class="text-xs text-red-600">반려</span>
+                      <% elsif history.action == 'view' %>
+                        <span class="text-xs text-blue-600">열람</span>
+                      <% elsif history.action == 'cancel' %>
+                        <span class="text-xs text-gray-600">취소</span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+                
+                <!-- 코멘트 -->
+                <% if history && history.comment.present? %>
+                  <div class="ml-0 mt-2 p-2 bg-gray-50 rounded text-xs text-gray-700">
+                    <%= history.comment %>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 연결선 -->
+        <% if index < steps_by_order.length - 1 %>
+          <div class="ml-5 pl-5 border-l-2 border-gray-200 h-4"></div>
+        <% end %>
+      <% end %>
+    </div>
+    
+    <!-- 상태 표시 -->
+    <% if approval_request.status_approved? %>
+      <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm text-green-800 font-medium">모든 결재가 완료되었습니다</p>
+        </div>
+      </div>
+    <% elsif approval_request.status_rejected? %>
+      <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm text-red-800 font-medium">결재가 반려되었습니다</p>
+        </div>
+      </div>
+    <% elsif approval_request.status_cancelled? %>
+      <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm text-gray-800 font-medium">결재가 취소되었습니다</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <% end %>
+<% end %>

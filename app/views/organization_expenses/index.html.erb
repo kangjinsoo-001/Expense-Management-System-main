@@ -1,0 +1,173 @@
+<%= turbo_frame_tag "organization_expenses", class: "block" do %>
+  <%
+    # 데이터 준비
+    code_data = @total_by_code.map { |key, value| [key, value] }
+    org_data = @organization_expenses.transform_keys { |k| k.id }.transform_values { |v| {
+      name: v[:name] || '',
+      total_amount: v[:total_amount] || 0,
+      item_count: v[:item_count] || 0
+    }}
+    
+    # 추이 데이터 준비
+    trend_data = {}
+    if @view_mode == 'trend' && @trend_data
+      trend_data = {
+        months: @trend_months,
+        data: @trend_data,
+        topCodes: @top_expense_codes
+      }
+    end
+  %>
+  <div class="min-h-screen flex flex-col" 
+       data-controller="organization-chart"
+       data-organization-chart-expense-data-value="<%= {
+         totalByCode: code_data,
+         organizationExpenses: org_data,
+         year: @year,
+         month: @month,
+         viewMode: @view_mode,
+         trendData: trend_data
+       }.to_json %>">
+  <!-- 헤더 -->
+  <div class="bg-white border-b px-6 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <!-- 이전/다음 네비게이션 버튼 그룹 -->
+        <div class="flex items-center gap-1 mr-4">
+          <% if @view_mode == 'yearly' %>
+            <!-- 연도별: 이전 연도 버튼 -->
+            <%= link_to organization_expenses_path(view_mode: 'yearly', year: @prev_year),
+                        class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                        data: { turbo_frame: "organization_expenses", turbo_action: "advance" } do %>
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            <% end %>
+            
+            <!-- 연도별: 다음 연도 버튼 -->
+            <%= link_to organization_expenses_path(view_mode: 'yearly', year: @next_year),
+                        class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                        data: { turbo_frame: "organization_expenses", turbo_action: "advance" } do %>
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
+          <% elsif @view_mode == 'trend' %>
+            <!-- 추이: 이전 달 버튼 -->
+            <%= link_to organization_expenses_path(view_mode: 'trend', year: @prev_date.year, month: @prev_date.month),
+                        class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                        data: { turbo_frame: "organization_expenses", turbo_action: "advance" } do %>
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            <% end %>
+            
+            <!-- 추이: 다음 달 버튼 -->
+            <%= link_to organization_expenses_path(view_mode: 'trend', year: @next_date.year, month: @next_date.month),
+                        class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                        data: { turbo_frame: "organization_expenses", turbo_action: "advance" } do %>
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
+          <% else %>
+            <!-- 월별: 이전 달 버튼 -->
+            <%= link_to organization_expenses_path(year: @prev_date.year, month: @prev_date.month),
+                        class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                        data: { turbo_frame: "organization_expenses", turbo_action: "advance" } do %>
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            <% end %>
+            
+            <!-- 월별: 다음 달 버튼 -->
+            <%= link_to organization_expenses_path(year: @next_date.year, month: @next_date.month),
+                        class: "inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-50 transition-colors",
+                        data: { turbo_frame: "organization_expenses", turbo_action: "advance" } do %>
+              <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
+          <% end %>
+        </div>
+        
+        <!-- 현재 기간 표시 -->
+        <h1 class="text-lg font-semibold text-gray-900" data-organization-chart-target="pageTitle">
+          <% if @view_mode == 'yearly' %>
+            <%= "#{@year}년 경비 통계" %>
+          <% elsif @view_mode == 'trend' %>
+            <% 
+              # 12개월 전 날짜 계산
+              start_date = @end_date.beginning_of_month - 11.months
+            %>
+            <%= "#{start_date.year}년 #{start_date.month}월 ~ #{@end_date.year}년 #{@end_date.month}월 추이" %>
+          <% else %>
+            <%= "#{@year}년 #{@month}월 경비 통계" %>
+          <% end %>
+        </h1>
+      </div>
+      
+      <!-- 월별/연도별/추이 토글 버튼 -->
+      <div class="inline-flex rounded-lg bg-gray-100 p-1">
+        <%= link_to "월별", 
+                    organization_expenses_path(view_mode: 'monthly', year: @year, month: @month || Date.current.month),
+                    class: "px-3 py-1 text-sm font-medium rounded-md transition-colors #{@view_mode == 'monthly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}",
+                    data: { turbo_frame: "organization_expenses", turbo_action: "advance" } %>
+        <%= link_to "연도별", 
+                    organization_expenses_path(view_mode: 'yearly', year: @year),
+                    class: "px-3 py-1 text-sm font-medium rounded-md transition-colors #{@view_mode == 'yearly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}",
+                    data: { turbo_frame: "organization_expenses", turbo_action: "advance" } %>
+        <%= link_to "추이", 
+                    organization_expenses_path(view_mode: 'trend', year: @year, month: @month || Date.current.month),
+                    class: "px-3 py-1 text-sm font-medium rounded-md transition-colors #{@view_mode == 'trend' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}",
+                    data: { turbo_frame: "organization_expenses", turbo_action: "advance" } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 콘텐츠 -->
+  <div class="flex flex-1">
+    <!-- 좌측: 조직도 트리 -->
+    <div class="w-96 bg-white border-r overflow-y-auto">
+      <div class="p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900">조직 선택</h2>
+          <div class="flex gap-2">
+            <button type="button"
+                    data-action="click->organization-chart#expandAll"
+                    class="text-xs px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors">
+              모두 펼치기
+            </button>
+            <button type="button"
+                    data-action="click->organization-chart#collapseAll"
+                    class="text-xs px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors">
+              모두 접기
+            </button>
+          </div>
+        </div>
+        
+        <!-- 조직 트리 -->
+        <div class="space-y-1">
+          <% @managed_organizations.each do |org| %>
+            <%= render 'organization_tree_node', 
+                       organization: org, 
+                       expenses: @organization_expenses[org],
+                       level: 0,
+                       is_root: true %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우측: 상세 정보 -->
+    <div class="flex-1 overflow-y-auto bg-white">
+      <div class="p-6" data-organization-chart-target="detailsContainer">
+        <!-- 개별 조직 상세 (AJAX로 로드) -->
+        <div id="org-details-individual" data-organization-chart-target="individualDetails">
+          <!-- AJAX로 내용 로드 -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>

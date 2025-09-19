@@ -1,0 +1,71 @@
+<!-- 하단 액션 버튼 섹션 -->
+<div class="tremor-card px-6 py-4 mt-6">
+  <div class="flex items-center justify-between">
+    <!-- 왼쪽: 경비 항목 추가 버튼 -->
+    <div>
+      <% if expense_sheet.editable? %>
+        <%= link_to new_expense_sheet_expense_item_path(expense_sheet),
+                    class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          경비 항목 추가
+        <% end %>
+      <% end %>
+    </div>
+    
+    <!-- 오른쪽: 제출하기 버튼 -->
+    <div>
+      <% if expense_sheet.editable? %>
+        <% if expense_sheet.submission_blocked_reason %>
+          <button type="button" 
+                  disabled 
+                  class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed"
+                  title="<%= expense_sheet.submission_blocked_reason %>">
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            제출하기
+          </button>
+        <% else %>
+          <button type="button"
+                  data-action="click->expense-sheet-submission#toggleAttachmentSection"
+                  data-expense-sheet-submission-target="submitButton"
+                  class="tremor-button tremor-button-primary">
+            <svg class="h-4 w-4 mr-2 transition-transform duration-200" 
+                 data-expense-sheet-submission-target="toggleIcon"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            제출하기
+          </button>
+        <% end %>
+      <% elsif expense_sheet.status == 'submitted' %>
+        <div class="flex gap-3">
+          <!-- 제출 내역 확인 버튼 -->
+          <%= link_to submission_details_expense_sheet_path(expense_sheet),
+                      class: "inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" do %>
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            제출 내역 확인
+          <% end %>
+          
+          <!-- 제출 취소 버튼 -->
+          <%= button_to cancel_submission_expense_sheet_path(expense_sheet),
+                      method: :post,
+                      data: { 
+                        turbo_confirm: "제출을 취소하시겠습니까?\n경비 시트가 수정 가능한 상태로 변경됩니다.\n(개별 경비 항목의 승인 상태는 유지됩니다)"
+                      },
+                      class: "inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" do %>
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            제출 취소
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

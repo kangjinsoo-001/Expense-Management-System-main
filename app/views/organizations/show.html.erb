@@ -1,0 +1,170 @@
+<% content_for :title, @organization.name %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-8">
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-semibold text-gray-900"><%= @organization.name %></h1>
+        <p class="mt-1 text-sm text-gray-500">코드: <%= @organization.code %></p>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4 gap-2">
+        <% if can_manage_organization?(@organization) %>
+          <%= link_to edit_organization_path(@organization), 
+              class: "p-2 rounded-lg hover:bg-gray-100 transition-colors group",
+              title: "편집" do %>
+            <svg class="h-5 w-5 text-gray-600 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          <% end %>
+          <%= button_to organization_path(@organization), method: :delete, 
+              data: { turbo_confirm: "정말로 삭제하시겠습니까?" },
+              class: "p-2 rounded-lg hover:bg-red-50 transition-colors group",
+              title: "삭제" do %>
+            <svg class="h-5 w-5 text-gray-600 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          <% end %>
+        <% end %>
+        <%= link_to organizations_path, 
+            class: "p-2 rounded-lg hover:bg-gray-100 transition-colors group",
+            title: "목록으로" do %>
+          <svg class="h-5 w-5 text-gray-600 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 조직 정보 -->
+  <div class="tremor-card mb-6">
+    <div class="p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">조직 정보</h3>
+      <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">상위 조직</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <% if @organization.parent %>
+              <%= link_to @organization.parent.name, organization_path(@organization.parent), 
+                          class: "text-blue-600 hover:text-blue-700 font-medium" %>
+            <% else %>
+              <span class="text-gray-500">최상위 조직</span>
+            <% end %>
+          </dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">조직장</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <div class="flex items-center justify-between">
+              <span><%= @organization.manager&.name || "지정되지 않음" %></span>
+              <% if can_manage_organization?(@organization) && @organization.manager %>
+                <%= link_to "해제", remove_manager_organization_path(@organization), 
+                    data: { turbo_method: :delete, turbo_confirm: "조직장을 해제하시겠습니까?" },
+                    class: "text-xs text-red-600 hover:text-red-700" %>
+              <% end %>
+            </div>
+          </dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">소속 인원</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @organization.users_count %>명</dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">생성일</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <%= l(@organization.created_at, format: :long) %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 하위 조직 -->
+  <% if @children.any? %>
+    <div class="tremor-card mb-6">
+      <div class="p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">하위 조직</h3>
+        <div class="space-y-3">
+          <% @children.each do |child| %>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center">
+                <%= link_to child.name, organization_path(child), 
+                            class: "text-blue-600 hover:text-blue-700 font-medium" %>
+                <span class="ml-2 text-sm text-gray-500">(<%= child.users_count %>명)</span>
+              </div>
+              <div class="text-sm text-gray-600">
+                조직장: <%= child.manager&.name || "-" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 소속 사용자 -->
+  <div class="tremor-card">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-gray-900">소속 사용자</h3>
+        <% if can_manage_organization?(@organization) %>
+          <%= link_to "사용자 관리", manage_users_organization_path(@organization), 
+              class: "text-sm text-blue-600 hover:text-blue-700" %>
+        <% end %>
+      </div>
+
+      <% if @users.present? && @users.any? %>
+        <div class="overflow-x-auto">
+          <table class="tremor-table">
+            <thead>
+              <tr>
+                <th class="text-left">이름</th>
+                <th class="text-left">이메일</th>
+                <th class="text-left">사번</th>
+                <th class="text-left">역할</th>
+                <% if can_manage_organization?(@organization) %>
+                  <th class="text-center">작업</th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% @users.each do |user| %>
+                <tr>
+                  <td class="font-medium">
+                    <%= link_to user.name, user_path(user), 
+                                class: "text-blue-600 hover:text-blue-700" %>
+                  </td>
+                  <td><%= user.email %></td>
+                  <td><%= user.employee_id || "-" %></td>
+                  <td>
+                    <% if user == @organization.manager %>
+                      <span class="tremor-badge tremor-badge-yellow">조직장</span>
+                    <% else %>
+                      <span class="tremor-badge tremor-badge-gray">구성원</span>
+                    <% end %>
+                  </td>
+                  <% if can_manage_organization?(@organization) %>
+                    <td class="text-center">
+                      <% if user != @organization.manager %>
+                        <%= link_to "조직장 지정", assign_manager_organization_path(@organization, user_id: user.id), 
+                            data: { turbo_method: :post, turbo_confirm: "#{user.name}님을 조직장으로 지정하시겠습니까?" },
+                            class: "text-sm text-blue-600 hover:text-blue-700" %>
+                      <% else %>
+                        -
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-500">소속된 사용자가 없습니다.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,97 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="bg-white shadow-md rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold"><%= @organization.name %> - 사용자 관리</h1>
+      <%= link_to "조직 상세로 돌아가기", organization_path(@organization), class: "bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" %>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 현재 조직 소속 사용자 -->
+      <div>
+        <h2 class="text-xl font-semibold mb-4">현재 소속 사용자 (<%= @users.count %>명)</h2>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <% if @users.any? %>
+            <ul class="space-y-2">
+              <% @users.each do |user| %>
+                <li class="flex items-center justify-between bg-white p-3 rounded shadow-sm">
+                  <div>
+                    <p class="font-medium"><%= user.name %></p>
+                    <p class="text-sm text-gray-500"><%= user.email %></p>
+                    <p class="text-xs text-gray-400">
+                      <%= user.role.humanize %>
+                      <%= user == @organization.manager ? "/ 조직장" : "" %>
+                    </p>
+                  </div>
+                  <% if user != @organization.manager %>
+                    <%= link_to "제거", remove_user_organization_path(@organization, user_id: user.id),
+                        data: { turbo_method: :delete, turbo_confirm: "#{user.name}님을 조직에서 제거하시겠습니까?" },
+                        class: "text-red-600 hover:text-red-800 text-sm" %>
+                  <% else %>
+                    <span class="text-gray-400 text-sm">조직장</span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-gray-500">소속된 사용자가 없습니다.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 추가 가능한 사용자 -->
+      <div>
+        <h2 class="text-xl font-semibold mb-4">추가 가능한 사용자</h2>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <% if @available_users.any? %>
+            <div class="mb-4">
+              <input type="text" 
+                     id="userSearch" 
+                     placeholder="사용자 검색..." 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                     onkeyup="filterUsers()">
+            </div>
+            <ul class="space-y-2 max-h-96 overflow-y-auto" id="availableUsersList">
+              <% @available_users.each do |user| %>
+                <li class="flex items-center justify-between bg-white p-3 rounded shadow-sm user-item" 
+                    data-name="<%= user.name.downcase %>" 
+                    data-email="<%= user.email.downcase %>">
+                  <div>
+                    <p class="font-medium"><%= user.name %></p>
+                    <p class="text-sm text-gray-500"><%= user.email %></p>
+                    <p class="text-xs text-gray-400">
+                      <%= user.organization&.name || "소속 없음" %>
+                    </p>
+                  </div>
+                  <%= link_to "추가", add_user_organization_path(@organization, user_id: user.id),
+                      data: { turbo_method: :post, turbo_confirm: "#{user.name}님을 조직에 추가하시겠습니까?" },
+                      class: "text-blue-600 hover:text-blue-800 text-sm" %>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-gray-500">추가 가능한 사용자가 없습니다.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterUsers() {
+  const searchInput = document.getElementById('userSearch');
+  const filter = searchInput.value.toLowerCase();
+  const userItems = document.querySelectorAll('.user-item');
+  
+  userItems.forEach(item => {
+    const name = item.getAttribute('data-name');
+    const email = item.getAttribute('data-email');
+    
+    if (name.includes(filter) || email.includes(filter)) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+</script>

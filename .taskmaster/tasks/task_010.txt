@@ -1,0 +1,16 @@
+# Task ID: 10
+# Title: 경비 코드별 승인 규칙 설정 기능
+# Status: done
+# Dependencies: 8, 9
+# Priority: high
+# Description: 경비 코드 관리 화면에 승인 규칙 설정 기능 추가
+# Details:
+- ExpenseCodesController 확장
+- 승인 규칙 영역 추가 (조건식, 승인자 그룹 선택)
+- 조건식 입력 UI (예: #금액 > 300000)
+- 승인자 그룹 드롭다운
+- 규칙 우선순위 설정
+- 규칙 미리보기 기능
+
+# Test Strategy:
+

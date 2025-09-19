@@ -1,0 +1,106 @@
+<div class="tremor-card p-4 sortable-item" id="<%= dom_id(approval_line) %>_card" data-approval-line-id="<%= approval_line.id %>">
+  <!-- 헤더: 이름과 상태 -->
+  <div class="flex items-start justify-between mb-3">
+    <div class="flex items-start gap-2">
+      <span class="drag-handle mt-1" style="cursor: move; user-select: none; -webkit-user-select: none;">
+        <svg class="h-5 w-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </span>
+      <div>
+        <h3 class="font-medium text-gray-900"><%= approval_line.name %></h3>
+      <span class="<%= approval_line.is_active ? 'tremor-badge-success' : 'tremor-badge-error' %> tremor-badge text-xs mt-1">
+        <%= approval_line.is_active ? '활성' : '비활성' %>
+      </span>
+    </div>
+    
+    <!-- 작업 버튼들 -->
+    <div class="flex items-center gap-1">
+      <%= link_to approval_line_path(approval_line), 
+          class: "p-2 rounded hover:bg-gray-100 transition-colors",
+          title: "보기" do %>
+        <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      <% end %>
+      <%= link_to edit_approval_line_path(approval_line), 
+          class: "p-2 rounded hover:bg-gray-100 transition-colors",
+          title: "편집" do %>
+        <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- 승인자 목록 -->
+  <div class="space-y-2">
+    <% grouped_steps = approval_line.approval_line_steps.ordered.group_by(&:step_order) %>
+    <% grouped_steps.each do |step_order, steps| %>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <div class="flex items-start gap-2">
+          <span class="font-medium text-gray-700 text-sm"><%= step_order %>단계</span>
+          
+          <div class="flex-1">
+            <% approvers = steps.select(&:role_approve?) %>
+            <% if approvers.length >= 2 %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= approvers.first.approval_type == 'all_required' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' %> mb-2">
+                <%= approval_type_icon_svg(approvers.first.approval_type, size: 'w-3 h-3', css_class: 'mr-1') %>
+                <%= approval_type_text(approvers.first.approval_type) %>
+              </span>
+            <% end %>
+            
+            <div class="flex flex-wrap gap-2">
+              <% steps.each do |step| %>
+                <div class="inline-flex items-center bg-white rounded-full px-3 py-1 border border-gray-200">
+                  <%= approval_role_icon_svg(step.role, size: 'w-4 h-4', css_class: 'mr-1') %>
+                  <span class="text-sm text-gray-900">
+                    <%= step.approver.name %>
+                    <% if step.approver.approver_groups.any? %>
+                      <% highest_group = step.approver.approver_groups.max_by(&:priority) %>
+                      <span class="text-gray-500 text-xs">(<%= highest_group.name %>)</span>
+                    <% end %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- 추가 작업 버튼들 -->
+  <div class="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <%= button_to toggle_active_approval_line_path(approval_line),
+          method: :patch,
+          class: "text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1" do %>
+        <% if approval_line.is_active %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+          비활성화
+        <% else %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          활성화
+        <% end %>
+      <% end %>
+    </div>
+    
+    <%= button_to approval_line_path(approval_line), 
+        method: :delete,
+        data: { 
+          turbo_confirm: "정말 삭제하시겠습니까?\n\n이 결재선을 사용한 승인 요청이 있더라도 해당 승인 요청은 영향받지 않습니다."
+        },
+        class: "text-sm text-red-600 hover:text-red-700 flex items-center gap-1" do %>
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      삭제
+    <% end %>
+  </div>
+</div>

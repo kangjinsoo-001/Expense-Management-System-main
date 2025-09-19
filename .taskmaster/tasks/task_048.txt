@@ -1,0 +1,18 @@
+# Task ID: 48
+# Title: 시드 데이터 및 테스트
+# Status: pending
+# Dependencies: 47
+# Priority: medium
+# Description: 신청서 시스템의 시드 데이터를 생성하고 전체 기능을 테스트합니다.
+# Details:
+1. 카테고리 시드 데이터 생성
+2. 샘플 템플릿 생성 (각 카테고리별 2-3개)
+3. 템플릿 필드 시드 데이터
+4. 샘플 신청서 데이터
+5. 모델 테스트 작성
+6. 컨트롤러 테스트 작성
+7. 통합 테스트
+8. 성능 최적화
+
+# Test Strategy:
+

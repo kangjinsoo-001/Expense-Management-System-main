@@ -1,0 +1,161 @@
+<%# 개별 조직 상세 정보 %>
+<%
+  # 변수 초기화 - nil 체크
+  view_mode ||= 'monthly'
+  trend_data ||= nil
+  trend_months ||= []
+  top_expense_codes ||= []
+  trend_item_counts ||= []
+  
+  # 추이 데이터 준비
+  trend_chart_data = {}
+  if view_mode == 'trend' && trend_data
+    trend_chart_data = {
+      months: trend_months,
+      data: trend_data,
+      topCodes: top_expense_codes
+    }
+  end
+%>
+<div data-org-expenses="<%= { 
+  totalByCode: total_by_code.to_a,
+  organizationExpenses: children_expenses.transform_keys(&:id),
+  viewMode: view_mode,
+  trendData: trend_chart_data
+}.to_json %>"
+     data-render-charts="true">
+  
+  <!-- 조직 정보 헤더 -->
+  <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg shadow-lg p-6 mb-6 text-white">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-xl font-semibold mb-2">
+          <%= organization.name %>
+          <span class="text-lg font-normal ml-2 opacity-90">
+            <% if view_mode == 'yearly' %>
+              (<%= year %>년)
+            <% elsif view_mode == 'trend' %>
+              <% if trend_months && trend_months.any? %>
+                <% 
+                  start_month = trend_months.first
+                  end_month = trend_months.last
+                  start_year, start_m = start_month.split('-') if start_month
+                  end_year, end_m = end_month.split('-') if end_month
+                %>
+                (<%= start_year %>년 <%= start_m&.to_i %>월 ~ <%= end_year %>년 <%= end_m&.to_i %>월 추이)
+              <% else %>
+                (최근 12개월 추이)
+              <% end %>
+            <% else %>
+              (<%= year %>년 <%= month %>월)
+            <% end %>
+          </span>
+        </h2>
+        <nav class="text-sm opacity-90">
+          <% organization.ancestors.each do |ancestor| %>
+            <span><%= ancestor.name %></span>
+            <span class="mx-2">›</span>
+          <% end %>
+          <span class="font-semibold"><%= organization.name %></span>
+        </nav>
+      </div>
+      <svg class="h-8 w-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    </div>
+    
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <p class="text-sm opacity-90">
+          <% if view_mode == 'trend' %>
+            월 평균 경비
+          <% else %>
+            총 경비
+          <% end %>
+        </p>
+        <p class="text-2xl font-bold">
+          <% if view_mode == 'trend' && trend_data %>
+            <% avg_amount = trend_data.values.sum { |d| d[:total] || 0 } / 12.0 %>
+            <%= format_currency(avg_amount) %>
+          <% else %>
+            <%= format_currency(total_amount) %>
+          <% end %>
+        </p>
+      </div>
+      <div>
+        <p class="text-sm opacity-90">
+          <% if view_mode == 'trend' %>
+            월 평균 경비 항목
+          <% else %>
+            경비 항목 수
+          <% end %>
+        </p>
+        <p class="text-2xl font-bold">
+          <% if view_mode == 'trend' %>
+            <% 
+              # 월 평균 경비 항목 수 계산
+              if trend_item_counts && trend_item_counts.any?
+                avg_items = (trend_item_counts.sum.to_f / trend_item_counts.size).round
+              elsif trend_data
+                # trend_data에서 item_count 추출
+                total_items = trend_data.values.sum { |d| d[:item_count] || 0 }
+                avg_items = (total_items.to_f / 12).round
+              else
+                avg_items = 0
+              end
+            %>
+            <%= number_with_delimiter(avg_items) %>건
+          <% else %>
+            <%= number_with_delimiter(item_count) %>건
+          <% end %>
+        </p>
+      </div>
+      <div>
+        <p class="text-sm opacity-90">하위 조직 수</p>
+        <p class="text-2xl font-bold"><%= organization.children.count %>개</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 차트 영역 -->
+  <% if view_mode == 'trend' %>
+    <!-- 추이 모드: 12개월 누적 막대 차트 -->
+    <div class="bg-white border rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">최근 12개월 경비 추이</h3>
+      <div style="height: 500px; position: relative;">
+        <canvas id="org-trend-chart"></canvas>
+      </div>
+    </div>
+  <% else %>
+    <!-- 기존 모드: 좌우 배치 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 경비 코드별 차트 -->
+      <div class="bg-white border rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">경비 코드별 사용 현황</h3>
+        <div style="height: 500px; position: relative;">
+          <canvas id="org-code-chart"></canvas>
+        </div>
+      </div>
+      
+      <!-- 하위 조직별 차트 -->
+      <% if children_expenses.any? %>
+        <div class="bg-white border rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">하위 조직별 사용 현황</h3>
+          <div style="height: 500px;">
+            <canvas id="org-children-chart"></canvas>
+          </div>
+        </div>
+      <% else %>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 flex items-center justify-center">
+          <div class="text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <p class="mt-2 text-sm text-gray-500">하위 조직이 없습니다</p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

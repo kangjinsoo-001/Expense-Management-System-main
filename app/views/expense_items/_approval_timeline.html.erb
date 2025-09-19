@@ -1,0 +1,187 @@
+<% if expense_item.approval_request.present? %>
+  <%= turbo_frame_tag "approval_timeline_#{dom_id(expense_item)}" do %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6" data-controller="timeline-animation">
+    <h3 class="text-lg font-semibold text-gray-900 mb-6">
+      결재 진행 타임라인
+      <% if expense_item.needs_reapproval? %>
+        <span class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">예산 초과 재승인 필요</span>
+      <% end %>
+    </h3>
+    
+    <% if expense_item.needs_reapproval? %>
+      <div class="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+        <div class="flex items-start gap-2">
+          <svg class="h-5 w-5 text-orange-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div class="text-sm text-orange-800">
+            <p class="font-medium">예산 초과로 재승인이 필요합니다</p>
+            <p class="mt-1">
+              예산: <%= number_to_currency(expense_item.budget_amount, unit: "₩", format: "%u%n") %> → 
+              실제: <%= number_to_currency(expense_item.actual_amount, unit: "₩", format: "%u%n") %>
+              <span class="font-medium">(초과: <%= number_to_currency(expense_item.actual_amount - expense_item.budget_amount, unit: "₩", format: "%u%n") %>)</span>
+            </p>
+            <% if expense_item.excess_reason.present? %>
+              <p class="mt-1">초과 사유: <%= expense_item.excess_reason %></p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    
+    <% approval_request = expense_item.approval_request %>
+    <% steps_by_order = approval_request.approval_line.approval_line_steps.includes(approver: :organization).group_by(&:step_order).sort %>
+    
+    <!-- 이전 승인 내역 (예산 초과 재승인 필요 시) -->
+    <% if expense_item.needs_reapproval? && approval_request.approval_histories.any? %>
+      <div class="mb-6">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">예산 승인 내역</h4>
+        <div class="space-y-4 opacity-75">
+          <% steps_by_order.each_with_index do |(step_order, steps), index| %>
+            <% histories = approval_request.approval_histories.where(step_order: step_order) %>
+            <% is_completed = histories.any? { |h| h.action_approve? } %>
+            
+            <% if is_completed %>
+              <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                  <div class="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                
+                <div class="flex-1">
+                  <% steps.each do |step| %>
+                    <% history = histories.find { |h| h.approver_id == step.approver_id } %>
+                    <% if history && history.action == 'approve' %>
+                      <div class="text-sm text-gray-600">
+                        <%= step.approver.name %> - 예산 승인 완료
+                        <span class="text-xs text-gray-500 ml-2">(<%= history.approved_at.strftime('%m/%d %H:%M') %>)</span>
+                      </div>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+              
+              <% if index < steps_by_order.length - 1 %>
+                <div class="ml-4 pl-4 border-l-2 border-gray-300 h-2"></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-200 pt-4 mb-4">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">예산 초과 재승인 진행</h4>
+      </div>
+    <% end %>
+    
+    <!-- 현재 승인 진행 타임라인 -->
+    <div class="space-y-4">
+      <% steps_by_order.each_with_index do |(step_order, steps), index| %>
+        <% histories = approval_request.approval_histories.where(step_order: step_order) %>
+        <% is_current = approval_request.current_step == step_order && approval_request.status_pending? %>
+        <% # 재승인 상태에서는 이전 승인을 완료로 표시하지 않음 %>
+        <% if expense_item.needs_reapproval? %>
+          <% is_completed = false %>
+        <% else %>
+          <% is_completed = histories.any? { |h| h.action_approve? } %>
+        <% end %>
+        <% is_rejected = histories.any? { |h| h.action_reject? } %>
+        
+        <div class="flex items-start gap-4 <%= is_current ? 'bg-blue-50 -mx-4 px-4 py-3 rounded-lg' : '' %>">
+          <!-- 단계 번호 및 상태 -->
+          <div class="flex-shrink-0">
+            <% if is_completed %>
+              <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            <% elsif is_rejected %>
+              <div class="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+            <% elsif is_current %>
+              <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center animate-pulse">
+                <span class="text-white font-semibold"><%= step_order %></span>
+              </div>
+            <% else %>
+              <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                <span class="text-gray-600 font-semibold"><%= step_order %></span>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- 승인자 정보 -->
+          <div class="flex-1">
+            <!-- 같은 단계의 승인자들 -->
+            <div class="space-y-2">
+              <% steps.each do |step| %>
+                <% history = histories.find { |h| h.approver_id == step.approver_id } %>
+                
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">
+                        <%= step.approver.name %>
+                        <span class="text-xs text-gray-500">(<%= step.approver.organization.name %>)</span>
+                      </p>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-xs px-2 py-0.5 rounded-full inline-flex items-center <%= step.role == 'approve' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' %>">
+                          <%= approval_role_icon_svg(step.role, size: 'w-3 h-3', css_class: 'mr-1') %>
+                          <%= step.role == 'approve' ? '승인' : '참조' %>
+                        </span>
+                        <% if is_current && step.role == 'approve' %>
+                          <span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">진행중</span>
+                        <% end %>
+                        <% if steps.select { |s| s.role == 'approve' }.count > 1 && step.approval_type.present? %>
+                          <span class="text-xs text-gray-500 inline-flex items-center">
+                            <%= approval_type_icon_svg(step.approval_type, size: 'w-3 h-3', css_class: 'mr-1') %>
+                            <%= approval_type_text(step.approval_type) %>
+                          </span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 처리 시간 -->
+                  <% if history %>
+                    <div class="text-right">
+                      <p class="text-xs text-gray-500">
+                        <%= history.approved_at.strftime('%m/%d %H:%M') %>
+                      </p>
+                      <% if history.action == 'approve' %>
+                        <span class="text-xs text-green-600">승인</span>
+                      <% elsif history.action == 'reject' %>
+                        <span class="text-xs text-red-600">반려</span>
+                      <% elsif history.action == 'view' %>
+                        <span class="text-xs text-blue-600">열람</span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+                
+                <!-- 코멘트 -->
+                <% if history && history.comment.present? %>
+                  <div class="ml-0 mt-2 p-2 bg-gray-50 rounded text-xs text-gray-700">
+                    <%= history.comment %>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 연결선 -->
+        <% if index < steps_by_order.length - 1 %>
+          <div class="ml-5 pl-5 border-l-2 border-gray-200 h-4"></div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+<% end %>

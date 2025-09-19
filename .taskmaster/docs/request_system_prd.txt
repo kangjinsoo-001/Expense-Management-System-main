@@ -1,0 +1,407 @@
+# 신청서 관리 시스템(Request Management System) PRD
+
+## 1. 프로젝트 개요
+
+### 목적
+경비 관리 시스템의 승인 프로세스를 활용하여 범용적인 신청서 관리 시스템을 구축합니다.
+다양한 업무 신청서를 템플릿 기반으로 생성하고, 기존 결재선 시스템을 통해 승인받을 수 있는 통합 플랫폼입니다.
+
+### 핵심 기능
+- 카테고리별 신청서 템플릿 관리
+- 동적 필드 구성 (필수/선택)
+- 기존 결재선 시스템 활용
+- 다단계 승인 프로세스
+- 첨부파일 관리
+
+### 기술 전략
+- 경비 시스템의 ApprovalLine, ApprovalRequest, ApprovalHistory 재활용
+- Polymorphic 관계를 통한 기존 시스템 확장
+- Turbo/Stimulus를 활용한 동적 UI
+
+## 2. 데이터 모델 설계
+
+### 2.1 RequestCategories (신청서 카테고리)
+카테고리별로 신청서를 분류합니다.
+
+필드:
+- id: Primary Key
+- name: 카테고리명 (정보보안, 교육, 복리후생, 인사, 구매, 자산, 기타)
+- description: 설명
+- icon: 아이콘 클래스명
+- color: 카테고리 색상
+- display_order: 표시 순서
+- is_active: 활성 상태 (기본: true)
+- created_at, updated_at: 타임스탬프
+
+### 2.2 RequestTemplates (신청서 템플릿)
+각 카테고리에 속하는 신청서 템플릿을 정의합니다.
+
+필드:
+- id: Primary Key
+- request_category_id: 카테고리 외래키
+- name: 템플릿명 (예: "사용자 계정 신청서")
+- code: 고유 코드 (예: "SEC-001")
+- description: 템플릿 설명
+- instructions: 작성 가이드
+- display_order: 표시 순서
+- is_active: 활성 상태
+- attachment_required: 첨부파일 필수 여부
+- auto_numbering: 자동 번호 생성 여부
+- version: 버전 번호
+- created_at, updated_at: 타임스탬프
+
+### 2.3 RequestTemplateFields (템플릿 필드 정의)
+각 템플릿의 입력 필드를 정의합니다.
+
+필드:
+- id: Primary Key
+- request_template_id: 템플릿 외래키
+- field_key: 필드 고유 키 (예: "employee_id")
+- field_label: 표시 레이블 (예: "사번")
+- field_type: 필드 타입
+  * text: 한줄 텍스트
+  * textarea: 여러줄 텍스트
+  * number: 숫자
+  * date: 날짜
+  * datetime: 날짜시간
+  * select: 드롭다운
+  * checkbox: 체크박스
+  * radio: 라디오버튼
+  * file: 파일첨부
+  * email: 이메일
+  * phone: 전화번호
+- field_options: JSONB - 선택지, 기본값, 최소/최대값
+- is_required: 필수 여부
+- validation_rules: JSONB - 추가 검증 규칙
+- placeholder: 입력 힌트
+- help_text: 도움말
+- display_order: 표시 순서
+- display_width: 화면 너비 (full, half, third)
+- created_at, updated_at: 타임스탬프
+
+### 2.4 RequestForms (제출된 신청서)
+사용자가 작성하여 제출한 신청서입니다.
+
+필드:
+- id: Primary Key
+- request_template_id: 템플릿 외래키
+- user_id: 신청자 외래키
+- organization_id: 조직 외래키
+- request_number: 자동 생성 번호 (예: "REQ-2025-001")
+- title: 제목 (자동 생성)
+- form_data: JSONB - 실제 입력 데이터
+- status: 상태
+  * draft: 임시저장
+  * submitted: 제출됨
+  * pending: 승인대기
+  * approved: 승인완료
+  * rejected: 반려됨
+  * cancelled: 취소됨
+- approval_line_id: 결재선 외래키 (기존 시스템 활용)
+- submitted_at: 제출 시각
+- approved_at: 승인 시각
+- rejected_at: 반려 시각
+- rejection_reason: 반려 사유
+- is_draft: 임시저장 여부
+- draft_data: JSONB - 임시저장 데이터
+- created_at, updated_at: 타임스탬프
+
+### 2.5 RequestFormAttachments (첨부파일)
+신청서에 첨부된 파일을 관리합니다.
+
+필드:
+- id: Primary Key
+- request_form_id: 신청서 외래키
+- field_key: 필드 키 (어느 필드의 첨부인지)
+- file: Active Storage 참조
+- file_name: 파일명
+- file_size: 파일 크기
+- content_type: MIME 타입
+- description: 설명
+- uploaded_by_id: 업로드 사용자
+- created_at: 생성 시각
+
+### 2.6 RequestTemplateApprovalRules (템플릿별 승인 규칙)
+템플릿별로 자동 승인 규칙을 정의합니다.
+
+필드:
+- id: Primary Key
+- request_template_id: 템플릿 외래키
+- approver_group_id: 승인자 그룹 외래키 (기존 시스템 활용)
+- condition: 조건식 (예: "form_data['amount'] > 100000")
+- order: 승인 순서
+- is_active: 활성 상태
+- created_at, updated_at: 타임스탬프
+
+## 3. 예시 시나리오
+
+### 3.1 카테고리 예시
+1. [정보보안] - 빨간색, shield 아이콘
+2. [교육] - 파란색, graduation-cap 아이콘
+3. [복리후생] - 초록색, heart 아이콘
+4. [인사] - 보라색, users 아이콘
+5. [구매/자산] - 주황색, shopping-cart 아이콘
+
+### 3.2 템플릿 예시
+
+#### [정보보안] 사용자 계정 신청서
+필수 필드:
+- 사번 (text)
+- 성명 (text)
+- 부서 (select)
+- 신청 시스템 (select)
+- 권한 레벨 (radio)
+- 사용 목적 (textarea)
+
+선택 필드:
+- 사용 기간 (date range)
+- 추가 권한 (checkbox)
+- 비고 (textarea)
+
+#### [교육] 외부 교육 참가 신청서
+필수 필드:
+- 교육명 (text)
+- 교육기관 (text)
+- 교육기간 (date range)
+- 교육비용 (number)
+- 교육목적 (textarea)
+
+선택 필드:
+- 숙박여부 (radio)
+- 교통편 (select)
+- 기대효과 (textarea)
+
+#### [복리후생] 경조사 지원 신청서
+필수 필드:
+- 경조사 구분 (select: 결혼, 출산, 사망 등)
+- 대상자 관계 (select: 본인, 배우자, 자녀 등)
+- 발생일자 (date)
+
+선택 필드:
+- 증빙서류 (file)
+- 비고 (textarea)
+
+## 4. 기능 상세
+
+### 4.1 관리자 기능
+
+#### 카테고리 관리
+- 카테고리 CRUD
+- 아이콘 및 색상 설정
+- 표시 순서 드래그앤드롭
+- 활성/비활성 토글
+
+#### 템플릿 관리
+- 템플릿 CRUD
+- 카테고리 지정
+- 템플릿 복사 기능
+- 버전 관리
+- 활성/비활성 토글
+
+#### 필드 빌더
+- 드래그앤드롭으로 필드 추가/순서 변경
+- 필드 타입별 옵션 설정
+- 필수/선택 설정
+- 검증 규칙 설정
+- 실시간 미리보기
+
+#### 승인 규칙 설정
+- 템플릿별 승인 규칙 추가
+- 조건식 빌더
+- 승인자 그룹 지정
+
+### 4.2 사용자 기능
+
+#### 신청서 작성
+1. 카테고리 선택 (카드 UI)
+2. 템플릿 선택 (리스트 UI)
+3. 동적 폼 입력
+   - 필수 필드 표시 (빨간 별표)
+   - 실시간 유효성 검증
+   - 자동 저장 (3분마다)
+4. 결재선 선택 (기존 시스템 활용)
+5. 제출
+
+#### 신청서 조회
+- 내 신청 목록
+- 상태별 필터링
+- 검색 기능
+- 상세 보기
+- 인쇄 기능
+
+#### 임시저장
+- 자동 저장 (3분마다)
+- 수동 저장 버튼
+- 임시저장 목록
+- 임시저장 불러오기
+
+### 4.3 승인자 기능 (기존 시스템 활용)
+
+#### 승인 대기 목록
+- 신청서 타입 표시
+- 긴급도 표시
+- 일괄 처리
+
+#### 승인/반려
+- 신청서 상세 보기
+- 승인 코멘트
+- 반려 사유 필수 입력
+- 참조자 지정
+
+## 5. UI/UX 설계
+
+### 5.1 신청서 작성 플로우
+```
+[1단계: 카테고리 선택]
+┌─────────┬─────────┬─────────┐
+│정보보안 │  교육   │복리후생 │
+├─────────┼─────────┼─────────┤
+│  인사   │구매/자산│  기타   │
+└─────────┴─────────┴─────────┘
+
+[2단계: 템플릿 선택]
+┌────────────────────────────┐
+│ ▶ 사용자 계정 신청서      │
+│ ▶ 시스템 접근 권한 신청서 │
+│ ▶ VPN 계정 신청서         │
+└────────────────────────────┘
+
+[3단계: 신청서 작성]
+┌────────────────────────────┐
+│ 사번* [___________]        │
+│ 성명* [___________]        │
+│ 부서* [선택▼]             │
+│ ...                        │
+└────────────────────────────┘
+
+[4단계: 결재선 선택]
+┌────────────────────────────┐
+│ ○ 기본 결재선             │
+│ ○ 팀장 승인 결재선        │
+│ ○ 임원 승인 결재선        │
+└────────────────────────────┘
+```
+
+### 5.2 관리자 템플릿 빌더
+```
+[템플릿 정보]
+카테고리: [정보보안 ▼]
+템플릿명: [_________________]
+설명: [___________________]
+
+[필드 구성]
+┌────────────────────────────┐
+│ + 필드 추가               │
+├────────────────────────────┤
+│ ≡ 사번 (text) *필수 ⚙️ 🗑️ │
+│ ≡ 성명 (text) *필수 ⚙️ 🗑️ │
+│ ≡ 부서 (select) *필수 ⚙️🗑️│
+└────────────────────────────┘
+
+[미리보기]
+실시간 폼 미리보기 영역
+```
+
+## 6. 구현 계획
+
+### Phase 1: 기본 구조 (1주차)
+- 데이터베이스 마이그레이션
+- 모델 생성 및 관계 설정
+- 기본 CRUD 컨트롤러
+
+### Phase 2: 관리자 기능 (2주차)
+- 카테고리 관리
+- 템플릿 관리
+- 필드 빌더 (Stimulus)
+- 승인 규칙 설정
+
+### Phase 3: 사용자 기능 (3주차)
+- 신청서 작성 UI
+- 동적 폼 렌더링
+- 임시저장
+- 파일 업로드
+
+### Phase 4: 승인 통합 (4주차)
+- ApprovalRequest polymorphic 변환
+- 기존 승인 프로세스 연결
+- 승인 화면 수정
+
+### Phase 5: 대시보드 및 리포팅 (5주차)
+- 신청 현황 대시보드
+- 통계 리포트
+- 검색 및 필터링
+
+## 7. 기존 시스템 수정 사항
+
+### 7.1 ApprovalRequest 모델 Polymorphic 변환
+```ruby
+# 마이그레이션
+add_column :approval_requests, :approvable_type, :string
+add_column :approval_requests, :approvable_id, :integer
+add_index :approval_requests, [:approvable_type, :approvable_id]
+
+# 기존 데이터 마이그레이션
+ApprovalRequest.update_all(
+  approvable_type: 'ExpenseItem',
+  approvable_id: expense_item_id
+)
+```
+
+### 7.2 모델 관계 수정
+```ruby
+# approval_request.rb
+belongs_to :approvable, polymorphic: true
+belongs_to :expense_item, optional: true # 하위 호환성
+
+# request_form.rb
+has_one :approval_request, as: :approvable
+
+# expense_item.rb (기존)
+has_one :approval_request, as: :approvable
+```
+
+### 7.3 ApprovalsController 확장
+- 신청서 타입 처리 추가
+- 조건부 partial 렌더링
+- 타입별 상세 페이지
+
+## 8. 성공 지표
+
+### 정량 지표
+- 템플릿 생성 시간: 10분 이내
+- 신청서 작성 시간: 5분 이내
+- 승인 처리 시간: 24시간 이내
+- 시스템 가동률: 99.9%
+
+### 정성 지표
+- 사용자 만족도
+- 관리자 편의성
+- 확장 가능성
+- 유지보수 용이성
+
+## 9. 리스크 및 대응
+
+### 기술적 리스크
+- Polymorphic 변환 시 기존 데이터 무결성
+  → 철저한 백업 및 단계적 마이그레이션
+- 동적 폼 성능 이슈
+  → Stimulus 최적화, 캐싱 전략
+
+### 운영적 리스크
+- 사용자 교육 필요
+  → 사용자 가이드, 동영상 튜토리얼
+- 초기 템플릿 부족
+  → 주요 템플릿 사전 제작
+
+## 10. 향후 확장 계획
+
+### 단기 (3개월)
+- 모바일 반응형 UI
+- 알림 시스템 (이메일/슬랙)
+- 템플릿 마켓플레이스
+
+### 중장기 (6개월~1년)
+- AI 기반 자동 분류
+- 워크플로우 자동화
+- 외부 시스템 연동 (ERP, HR)
+- 전자서명 통합

@@ -1,0 +1,333 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" 
+     data-controller="room-calendar"
+     data-date="<%= @date %>"
+     data-room-calendar-date-value="<%= @date %>"
+     data-room-calendar-all-rooms-value="<%= @all_rooms.map { |r| { id: r.id, name: r.name, category: r.category } }.to_json %>">
+  <!-- 헤더 -->
+  <div class="mb-6">
+    <div class="sm:flex sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">회의실 예약</h1>
+        <p class="mt-1 text-sm text-gray-600">일간 예약 현황</p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex gap-2">
+        <%= link_to room_reservations_path,
+            class: "inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" do %>
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          내 예약 보기
+        <% end %>
+        <button type="button" 
+            data-action="click->room-calendar#showNewReservationModal"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+          </svg>
+          예약하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 날짜 네비게이션 -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-3 sm:px-6 flex items-center gap-4">
+      <div class="flex items-center">
+        <%= link_to calendar_room_reservations_path(date: @date - 1.day, location: params[:location]),
+            class: "inline-flex items-center p-2 text-gray-400 hover:text-gray-500" do %>
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+          </svg>
+        <% end %>
+        <%= link_to calendar_room_reservations_path(date: @date + 1.day, location: params[:location]),
+            class: "inline-flex items-center p-2 text-gray-400 hover:text-gray-500" do %>
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+          </svg>
+        <% end %>
+      </div>
+      
+      <div class="flex items-center space-x-4 flex-1">
+        <h2 class="text-lg font-medium text-gray-900">
+          <% 
+            weekdays = %w[일 월 화 수 목 금 토]
+            weekday = weekdays[@date.wday]
+          %>
+          <%= @date.strftime("%Y년 %m월 %d일") %> (<%= weekday %>)
+        </h2>
+        <div style="width: 80px;">
+          <% unless @date == Date.today %>
+            <%= link_to "오늘로 이동", calendar_room_reservations_path(location: params[:location]), 
+                class: "text-sm text-indigo-600 hover:text-indigo-500" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 지점 필터 칩 (DB 기반) -->
+  <% if @available_categories.present? %>
+    <div class="mb-6 flex flex-wrap gap-2">
+      <%= link_to "전체", 
+          calendar_room_reservations_path(date: @date),
+          class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium #{params[:location].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+      
+      <% @available_categories.each do |category| %>
+        <%= link_to category, 
+            calendar_room_reservations_path(date: @date, location: category),
+            class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium #{params[:location] == category ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Flash 메시지 영역 -->
+  <div id="flash_messages"></div>
+  
+  <!-- 캘린더 그리드 (오버레이 방식) -->
+  <style>
+    /* 애니메이션 */
+    @keyframes fade-in {
+      from { 
+        opacity: 0; 
+        transform: translateY(-10px);
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes highlight-green {
+      0% {
+        background-color: rgb(187 247 208);
+        border-color: rgb(74 222 128);
+        box-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
+      }
+      100% {
+        background-color: rgb(224 231 255);
+        border-color: rgb(165 180 252);
+        box-shadow: none;
+      }
+    }
+    
+    .animate-fade-in {
+      animation: fade-in 0.3s ease-out;
+    }
+    
+    .calendar-cell {
+      height: 24px;
+      min-height: 24px;
+      max-height: 24px;
+      position: relative;
+    }
+    
+    /* 예약 오버레이 스타일 */
+    .reservation-overlay {
+      background-color: rgb(224 231 255);
+      border: 1px solid rgb(165 180 252);
+      border-radius: 4px;
+      padding: 2px 4px;
+      cursor: move;
+      transition: background-color 0.2s;
+      pointer-events: auto;
+      overflow: hidden;
+      font-size: 11px;
+      z-index: 10;
+    }
+    
+    .reservation-overlay:hover {
+      background-color: rgb(199 210 254);
+      z-index: 11;
+    }
+    
+    /* 소유자 예약 스타일 */
+    .reservation-overlay.owned {
+      background-color: rgb(254 240 138);
+      border-color: rgb(250 204 21);
+    }
+    
+    .reservation-overlay.owned:hover {
+      background-color: rgb(254 229 70);
+    }
+    
+    /* 녹색 하이라이트 애니메이션 - owned 클래스와 함께 사용될 때도 처리 */
+    .reservation-overlay.highlight-green {
+      animation: highlight-green 1s ease-out forwards;
+    }
+    
+    /* 소유자 예약이면서 하이라이트인 경우 */
+    .reservation-overlay.owned.highlight-green {
+      animation: highlight-green-owned 1s ease-out forwards;
+    }
+    
+    @keyframes highlight-green-owned {
+      0% {
+        background-color: rgb(187 247 208);
+        border-color: rgb(74 222 128);
+        box-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
+      }
+      100% {
+        background-color: rgb(254 240 138);
+        border-color: rgb(250 204 21);
+        box-shadow: none;
+      }
+    }
+    
+    /* 드래그 중인 예약 */
+    .reservation-overlay.dragging {
+      opacity: 0.3;
+      pointer-events: none !important;
+    }
+    
+    /* Resize 핸들 스타일 */
+    .resize-handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: transparent;
+      cursor: ns-resize;
+      z-index: 12;
+    }
+    
+    .resize-handle:hover {
+      background-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .resize-handle.top {
+      top: 0;
+      cursor: n-resize;
+    }
+    
+    .resize-handle.bottom {
+      bottom: 0;
+      cursor: s-resize;
+    }
+    
+    /* Resizing 중인 예약 */
+    .reservation-overlay.resizing {
+      opacity: 0.7;
+      border-color: rgb(99, 102, 241);
+      border-width: 2px;
+    }
+    
+    /* 드래그 미리보기 */
+    .drag-preview {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      background-color: rgba(165, 180, 252, 0.5);
+      border: 2px dashed rgb(99, 102, 241);
+      border-radius: 4px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    
+    /* 드래그 선택 시 강조 스타일 */
+    td.bg-indigo-100 {
+      background-color: rgb(224 231 255) !important;
+      border-color: rgb(165 180 252) !important;
+    }
+    
+    /* 툴팁 애니메이션 */
+    #reservation-tooltip {
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -90%); }
+      to { opacity: 1; transform: translate(-50%, -100%); }
+    }
+  </style>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="overflow-x-auto">
+      <table class="w-full table-fixed select-none">
+        <colgroup>
+          <col style="width: 64px;">
+          <% @filtered_rooms.each do |room| %>
+            <col>
+          <% end %>
+        </colgroup>
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="sticky left-0 bg-gray-50 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 64px; min-width: 64px; max-width: 64px;">
+              시간
+            </th>
+            <% @filtered_rooms.each do |room| %>
+              <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-500 position-relative">
+                <div title="<%= room.name %>">
+                  <div class="text-xs text-gray-400">
+                    <%= room.category %>
+                  </div>
+                  <div class="truncate font-medium">
+                    <%= room.name %>
+                  </div>
+                </div>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody id="calendar_grid" 
+               class="bg-white">
+          <%= render 'calendar_grid', 
+              filtered_rooms: @filtered_rooms, 
+              reservations: @reservations, 
+              date: @date, 
+              current_user: current_user,
+              highlight_reservation_id: nil %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 툴팁 -->
+  <div id="reservation-tooltip" class="hidden absolute z-50 bg-gray-900 text-white p-2 rounded-lg text-xs max-w-xs whitespace-pre-line"></div>
+
+  <!-- 새 예약 모달 -->
+  <div id="newReservationModal" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-lg" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-lg shadow-2xl border border-gray-200">
+      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900" id="modal-title">
+          새 예약
+        </h3>
+        <button type="button" data-action="click->room-calendar#closeModal" class="text-gray-400 hover:text-gray-500">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-6 max-h-[70vh] overflow-y-auto">
+        <turbo-frame id="reservation_form" src="/room_reservations/new?modal=true">
+          <div class="text-center py-4">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-sm text-gray-500">로딩 중...</p>
+          </div>
+        </turbo-frame>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 예약 수정 모달 -->
+  <div id="editReservationModal" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-lg" aria-labelledby="edit-modal-title" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-lg shadow-2xl border border-gray-200">
+      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900" id="edit-modal-title">
+          예약 수정
+        </h3>
+        <button type="button" data-action="click->room-calendar#closeEditModal" class="text-gray-400 hover:text-gray-500">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-6 max-h-[70vh] overflow-y-auto">
+        <turbo-frame id="edit_reservation_form">
+          <div class="text-center py-4">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-sm text-gray-500">로딩 중...</p>
+          </div>
+        </turbo-frame>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,135 @@
+<%= form_with model: approval_line, data: { 
+  controller: "approval-line-form"
+} do |f| %>
+  
+
+  <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-medium text-gray-900">기본 정보</h2>
+    </div>
+    
+    <div class="p-6">
+      <div class="mb-4">
+        <%= f.label :name, class: "block text-sm font-medium text-gray-700 mb-2" do %>
+          결재선 이름 <span class="text-red-500">*</span>
+        <% end %>
+        <%= f.text_field :name, 
+                         class: "w-full px-3 py-2 border #{approval_line.errors[:name].any? ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-blue-500 focus:border-blue-500",
+                         placeholder: "예: 기본 결재선, 팀장 승인" %>
+        <% if approval_line.errors[:name].any? %>
+          <p class="mt-1 text-sm text-red-600"><%= approval_line.errors[:name].first %></p>
+        <% end %>
+      </div>
+      
+      <div class="flex items-center">
+        <%= f.check_box :is_active, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+        <%= f.label :is_active, "활성화", class: "ml-2 block text-sm text-gray-900" %>
+        <span class="ml-2 text-sm text-gray-500">(활성화된 결재선만 경비 항목에 적용할 수 있습니다)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 bg-white shadow-sm rounded-lg border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-medium text-gray-900">승인 단계</h2>
+    </div>
+    
+    <div class="p-6">
+      <div data-approval-line-form-target="steps" class="space-y-4">
+        <% if @grouped_steps && @grouped_steps.any? %>
+          <% @grouped_steps.each do |step_order, steps| %>
+            <div class="approval-step-group bg-gray-50 rounded-lg p-4" data-step-order="<%= step_order %>">
+              <div class="flex items-start space-x-4">
+                <div class="drag-handle flex-shrink-0 cursor-move">
+                  <svg class="w-6 h-6 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </div>
+                
+                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span class="step-number text-sm font-bold text-blue-600"><%= step_order %></span>
+                </div>
+                
+                <div class="flex-1">
+                  <div class="approvers-container space-y-3" data-step-order="<%= step_order %>">
+                    <% steps.each do |step| %>
+                      <%= f.fields_for :approval_line_steps, step do |step_form| %>
+                        <%= render 'approval_step_edit_fields', f: f, step_form: step_form, step: step %>
+                      <% end %>
+                    <% end %>
+                  </div>
+                  
+                  <div class="mt-3 flex items-center justify-between">
+                    <button type="button"
+                            data-action="click->approval-line-form#addApproverToStep"
+                            class="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                      + 이 단계에 승인자 추가
+                    </button>
+                    
+                    <div class="approval-type-field" style="<%= steps.select { |s| s.role_approve? }.length >= 2 ? 'display: flex;' : 'display: none;' %>" data-step-order="<%= step_order %>">
+                      <label class="text-sm font-medium text-gray-700 mr-2">승인 방식</label>
+                      <select class="approval-type-select text-sm px-3 py-1 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                              data-action="change->approval-line-form#updateApprovalType">
+                        <option value="single_allowed" <%= steps.first&.approval_type == 'single_allowed' ? 'selected' : '' %>>단독 가능</option>
+                        <option value="all_required" <%= steps.first&.approval_type == 'all_required' ? 'selected' : '' %>>전체 합의</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="flex-shrink-0">
+                  <!-- 단계 삭제는 마지막 승인자 삭제 시 자동으로 처리 -->
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <%= f.fields_for :approval_line_steps do |step_form| %>
+            <%= render 'approval_step_fields', f: f, step_form: step_form, step: step_form.object %>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <div class="mt-6 flex items-center justify-between">
+        <button type="button" 
+                data-action="click->approval-line-form#addStep"
+                data-approval-line-form-target="addButton"
+                class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          단계 추가
+        </button>
+        
+        <% if approval_line.approval_line_steps.any? %>
+          <p class="text-sm text-gray-500">
+            💡 단계 순서를 변경하려면 <span class="inline-flex items-center">
+              <svg class="w-4 h-4 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </span> 아이콘을 드래그하세요.
+          </p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 flex justify-end space-x-3">
+    <%= link_to "취소", approval_lines_path, 
+                class: "px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors" %>
+    <%= f.submit approval_line.new_record? ? "생성" : "수정", 
+                 class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer" %>
+  </div>
+
+  <!-- 단계 추가용 템플릿 -->
+  <template data-approval-line-form-target="stepTemplate">
+    <%= f.fields_for :approval_line_steps, ApprovalLineStep.new, child_index: 'NEW_RECORD' do |step_form| %>
+      <%= render 'approval_step_fields', f: f, step_form: step_form, step: step_form.object %>
+    <% end %>
+  </template>
+<% end %>
+
+<script>
+  // 사용자 목록을 JavaScript에서 사용할 수 있도록 전달
+  window.approvalLineUsers = <%= raw @users.to_json(include: { organization: { only: [:name] } }) %>;
+</script>

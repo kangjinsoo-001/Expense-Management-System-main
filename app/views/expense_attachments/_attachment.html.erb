@@ -1,0 +1,212 @@
+<div id="attachment-<%= attachment.id %>" 
+     class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+     data-controller="attachment-status"
+     data-attachment-status-id-value="<%= attachment.id %>"
+     data-attachment-status-status-value="<%= attachment.status %>">
+  
+  <div class="flex items-start justify-between">
+    <div class="flex-1">
+      <!-- 파일 정보 -->
+      <div class="flex items-center">
+        <% if attachment.file_type&.include?('pdf') %>
+          <svg class="h-8 w-8 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+          </svg>
+        <% else %>
+          <svg class="h-8 w-8 text-blue-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+          </svg>
+        <% end %>
+        
+        <div>
+          <p class="text-sm font-medium text-gray-900"><%= attachment.file_name || "파일명 없음" %></p>
+          <p class="text-xs text-gray-500">
+            <%= number_to_human_size(attachment.file_size) if attachment.file_size %>
+            · <%= attachment.created_at.strftime("%Y-%m-%d %H:%M") %>
+          </p>
+        </div>
+      </div>
+      
+      <!-- 상태 표시 -->
+      <div class="mt-3">
+        <% case attachment.status %>
+        <% when 'pending' %>
+          <div class="flex items-center text-gray-500">
+            <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm">대기중...</span>
+          </div>
+        <% when 'uploading' %>
+          <div class="flex items-center text-blue-600">
+            <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm">업로드중...</span>
+          </div>
+        <% when 'processing' %>
+          <div class="flex items-center text-indigo-600">
+            <% if attachment.processing_stage == 'extracting' %>
+              <svg class="animate-pulse h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span class="text-sm">AI 텍스트 추출중...</span>
+            <% elsif attachment.processing_stage == 'summarizing' %>
+              <svg class="animate-pulse h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span class="text-sm">AI 요약중...</span>
+            <% else %>
+              <svg class="animate-pulse h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span class="text-sm">AI 분석중...</span>
+            <% end %>
+          </div>
+        <% when 'completed' %>
+          <div class="flex items-center text-green-600">
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="text-sm">AI 분석 완료</span>
+          </div>
+          
+          <!-- AI 요약 결과 표시 -->
+          <% if attachment.ai_processed && attachment.summary_data.present? %>
+            <div class="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+              <div class="flex items-center mb-2">
+                <svg class="h-4 w-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <p class="text-xs font-medium text-blue-700">AI 요약 결과</p>
+                <% if attachment.receipt_type.present? %>
+                  <span class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
+                    <%= attachment.receipt_type == 'telecom' ? '통신비' : attachment.receipt_type == 'general' ? '일반' : attachment.receipt_type %>
+                  </span>
+                <% end %>
+              </div>
+              
+              <% begin %>
+                <% summary = JSON.parse(attachment.summary_data) %>
+                <div class="space-y-1">
+                  <% if attachment.receipt_type == 'telecom' %>
+                    <% if summary['total_amount'] %>
+                      <p class="text-sm text-gray-900 font-bold mb-1">
+                        <span>총 청구금액:</span> 
+                        <%= number_to_currency(summary['total_amount'], unit: "₩", precision: 0) %>
+                      </p>
+                      <div class="ml-3 border-l-2 border-gray-300 pl-2">
+                    <% end %>
+                    <% if summary['service_charge'] %>
+                      <p class="text-xs text-gray-700">
+                        <span class="font-medium">통신 서비스 요금:</span> 
+                        <%= number_to_currency(summary['service_charge'], unit: "₩", precision: 0) %>
+                      </p>
+                    <% end %>
+                    <% if summary['additional_service_charge'] && summary['additional_service_charge'] > 0 %>
+                      <p class="text-xs text-gray-700">
+                        <span class="font-medium">부가 서비스 요금:</span> 
+                        <%= number_to_currency(summary['additional_service_charge'], unit: "₩", precision: 0) %>
+                      </p>
+                    <% end %>
+                    <% if summary['device_installment'] && summary['device_installment'] > 0 %>
+                      <p class="text-xs text-gray-700">
+                        <span class="font-medium">단말기 할부금:</span> 
+                        <%= number_to_currency(summary['device_installment'], unit: "₩", precision: 0) %>
+                      </p>
+                    <% end %>
+                    <% if summary['other_charges'] && summary['other_charges'] > 0 %>
+                      <p class="text-xs text-gray-700">
+                        <span class="font-medium">기타 요금:</span> 
+                        <%= number_to_currency(summary['other_charges'], unit: "₩", precision: 0) %>
+                      </p>
+                    <% end %>
+                    <% if summary['discount_amount'] && summary['discount_amount'] != 0 %>
+                      <p class="text-xs text-red-600">
+                        <span class="font-medium">할인 금액:</span> 
+                        -<%= number_to_currency(summary['discount_amount'].abs, unit: "₩", precision: 0) %>
+                      </p>
+                    <% end %>
+                    <% if summary['total_amount'] %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <% summary.each do |key, value| %>
+                      <% if value.present? %>
+                        <p class="text-xs text-gray-700">
+                          <span class="font-medium"><%= key.humanize %>:</span> 
+                          <%= value.is_a?(Numeric) ? number_to_currency(value, unit: "₩", precision: 0) : value %>
+                        </p>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% rescue JSON::ParserError %>
+                <p class="text-xs text-gray-600"><%= attachment.summary_data %></p>
+              <% end %>
+            </div>
+          <% end %>
+          
+          <!-- 추출된 텍스트 표시 -->
+          <% if attachment.extracted_text.present? %>
+            <div class="mt-3 p-3 bg-gray-50 rounded-md">
+              <p class="text-xs font-medium text-gray-700 mb-1">추출된 원본 텍스트:</p>
+              <p class="text-xs text-gray-600 whitespace-pre-wrap"><%= truncate(attachment.extracted_text, length: 200) %></p>
+              <% if attachment.extracted_text.length > 200 %>
+                <button type="button" 
+                        class="mt-2 text-xs text-indigo-600 hover:text-indigo-500"
+                        data-action="click->attachment-status#toggleFullText">
+                  전체 보기
+                </button>
+                <div class="hidden mt-2" data-attachment-status-target="fullText">
+                  <p class="text-xs text-gray-600 whitespace-pre-wrap"><%= attachment.extracted_text %></p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        <% when 'failed' %>
+          <div class="flex items-center text-red-600">
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-sm">처리 실패</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- 액션 버튼들 -->
+    <div class="flex items-center space-x-2 ml-4">
+      <% if attachment.file.attached? %>
+        <%= link_to expense_sheet_expense_item_expense_attachment_path(
+                      attachment.expense_item.expense_sheet,
+                      attachment.expense_item,
+                      attachment),
+                    target: "_blank",
+                    class: "text-gray-400 hover:text-gray-600" do %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        <% end %>
+      <% end %>
+      
+      <%= button_to expense_sheet_expense_item_expense_attachment_path(
+                      attachment.expense_item.expense_sheet,
+                      attachment.expense_item,
+                      attachment),
+                    method: :delete,
+                    data: { 
+                      turbo_method: :delete,
+                      turbo_confirm: "이 파일을 삭제하시겠습니까?"
+                    },
+                    class: "text-red-400 hover:text-red-600" do %>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      <% end %>
+    </div>
+  </div>
+</div>

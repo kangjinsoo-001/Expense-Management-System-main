@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  organization: one
+  year: 1
+  month: 1
+  status: 1
+  closed_at: 2025-09-07 22:12:44
+  closed_by: one
+  notes: MyText
+
+two:
+  user: two
+  organization: two
+  year: 1
+  month: 1
+  status: 1
+  closed_at: 2025-09-07 22:12:44
+  closed_by: two
+  notes: MyText

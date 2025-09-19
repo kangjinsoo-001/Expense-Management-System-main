@@ -1,0 +1,32 @@
+# Task ID: 41
+# Title: 신청서 관리 시스템 - 데이터베이스 모델 및 마이그레이션 생성
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: 신청서 관리 시스템의 기본 데이터베이스 구조를 생성합니다.
+# Details:
+1. RequestCategory 모델 및 마이그레이션 생성
+2. RequestTemplate 모델 및 마이그레이션 생성  
+3. RequestTemplateField 모델 및 마이그레이션 생성
+4. RequestForm 모델 및 마이그레이션 생성
+5. RequestFormAttachment 모델 및 마이그레이션 생성
+6. RequestTemplateApprovalRule 모델 및 마이그레이션 생성
+7. 모델 간 관계(associations) 설정
+8. 검증 규칙 및 스코프 추가
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. RequestCategory 모델 및 마이그레이션 생성 [done]
+### Dependencies: None
+### Description: 카테고리 모델과 테이블 생성
+### Details:
+name, description, icon, color, display_order, is_active 필드 포함
+
+## 2. RequestTemplate 모델 및 마이그레이션 생성 [done]
+### Dependencies: None
+### Description: 템플릿 모델과 테이블 생성
+### Details:
+request_category_id, name, code, description, instructions, display_order, is_active, attachment_required, auto_numbering, version 필드 포함
+

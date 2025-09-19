@@ -1,0 +1,53 @@
+<% if expense_item.approval_request.present? && expense_item.approval_request.approval_histories.any? %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">결재 처리 이력</h3>
+    
+    <div class="space-y-3">
+      <% expense_item.approval_request.approval_histories.sort_by { |h| -h.approved_at.to_i }.each do |history| %>
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+          <!-- 액션 아이콘 -->
+          <div class="flex-shrink-0">
+            <span class="h-8 w-8 rounded-full <%= history.action == 'approve' ? 'bg-green-100' : history.action == 'reject' ? 'bg-red-100' : 'bg-blue-100' %> flex items-center justify-center">
+              <%= approval_action_icon_svg(history.action, size: 'w-5 h-5') %>
+            </span>
+          </div>
+          
+          <!-- 이력 내용 -->
+          <div class="flex-1">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-900">
+                  <%= history.approver.name %>
+                  <span class="text-xs text-gray-500">(<%= history.approver.organization.name %>)</span>
+                </p>
+                <p class="text-xs text-gray-600 mt-0.5">
+                  <% case history.action %>
+                  <% when 'approve' %>
+                    <span class="text-green-600 font-medium">승인</span>
+                  <% when 'reject' %>
+                    <span class="text-red-600 font-medium">반려</span>
+                  <% when 'view' %>
+                    <span class="text-blue-600 font-medium">열람</span>
+                  <% end %>
+                  <% if history.step_order.present? %>
+                    <span class="text-gray-400">• <%= history.step_order %>단계</span>
+                  <% end %>
+                </p>
+              </div>
+              
+              <span class="text-xs text-gray-500">
+                <%= history.approved_at.strftime("%Y-%m-%d %H:%M") %>
+              </span>
+            </div>
+            
+            <% if history.comment.present? %>
+              <div class="mt-2 p-2 bg-white rounded border border-gray-200">
+                <p class="text-sm text-gray-700 whitespace-pre-wrap"><%= history.comment %></p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,55 @@
+/* Sortable.js 커스텀 스타일 */
+
+/* 드래그 중인 요소 */
+.sortable-ghost {
+  opacity: 0.4;
+  background: #f3f4f6;
+}
+
+.sortable-drag {
+  opacity: 1 !important;
+}
+
+.sortable-fallback {
+  opacity: 0.8;
+  background: #eff6ff;
+}
+
+/* 드래그 핸들 호버 효과 */
+.drag-handle:hover {
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  padding: 2px;
+  margin: -2px;
+}
+
+/* 드래그 중 커서 */
+.drag-handle:active {
+  cursor: grabbing !important;
+}
+
+/* 테이블 행 드래그 시 스타일 */
+tr.sortable-item {
+  transition: background-color 0.2s;
+}
+
+tr.sortable-item:hover .drag-handle {
+  color: #374151;
+}
+
+/* 모바일 카드 드래그 시 스타일 */
+.sortable-item.tremor-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sortable-item.tremor-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* 드래그 중 바디 스타일 */
+body.dragging {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}

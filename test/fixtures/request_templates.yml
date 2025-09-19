@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  request_category: one
+  name: MyString
+  code: MyString
+  description: MyText
+  instructions: MyText
+  display_order: 1
+  is_active: false
+  attachment_required: false
+  auto_numbering: false
+  version: 1
+
+two:
+  request_category: two
+  name: MyString
+  code: MyString
+  description: MyText
+  instructions: MyText
+  display_order: 1
+  is_active: false
+  attachment_required: false
+  auto_numbering: false
+  version: 1

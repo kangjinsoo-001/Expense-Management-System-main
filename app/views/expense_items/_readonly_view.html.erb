@@ -1,0 +1,208 @@
+<div class="tremor-card">
+  <div class="p-6">
+    <div class="space-y-6">
+      <!-- 1. 경비 발생일 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          경비 발생일
+        </label>
+        <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+          <%= @expense_item.expense_date.strftime('%Y-%m-%d') %>
+        </p>
+      </div>
+
+      <!-- 2. 경비 코드 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          경비 코드
+        </label>
+        <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+          <%= @expense_item.expense_code.name_with_code %>
+        </p>
+        
+        <!-- 가이드 정보 표시 -->
+        <% if @expense_item.expense_code.present? %>
+          <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div class="flex items-start gap-2">
+              <svg class="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="text-sm text-blue-800">
+                <p class="font-medium"><%= @expense_item.expense_code.name %></p>
+                <p class="text-xs mt-1 whitespace-pre-wrap"><%= @expense_item.expense_code.description || '설명 없음' %></p>
+                <% if @expense_item.expense_code.limit_amount.present? %>
+                  <p class="text-xs mt-1">한도: <span class="font-medium"><%= @expense_item.expense_code.limit_amount_display %></span></p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 3. 추가 필드 (custom fields) -->
+      <% if @expense_item.custom_fields.present? && @expense_item.expense_code.validation_rules['required_fields'].present? %>
+        <% @expense_item.expense_code.validation_rules['required_fields'].each do |field_key, field_config| %>
+          <% field_value = @expense_item.custom_fields[field_key] %>
+          <% if field_value.present? %>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <%= field_config['label'] || field_key.humanize %>
+              </label>
+              <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+                <%= field_value %>
+              </p>
+            </div>
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <!-- 4. 금액 정보 -->
+      <div>
+        <% if @expense_item.budget_mode? %>
+          <!-- 예산 모드 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              예산 금액
+            </label>
+            <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+              <%= number_to_currency(@expense_item.budget_amount, unit: "₩", format: "%u%n") %>
+            </p>
+          </div>
+          
+          <% if @expense_item.actual_amount.present? %>
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                실제 집행 금액
+              </label>
+              <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+                <%= number_to_currency(@expense_item.actual_amount, unit: "₩", format: "%u%n") %>
+              </p>
+            </div>
+            
+            <% if @expense_item.budget_exceeded? %>
+              <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  예산 초과 사유
+                </label>
+                <p class="mt-1 text-sm text-gray-900 bg-orange-50 px-3 py-2 rounded-md border border-orange-200">
+                  <%= @expense_item.excess_reason || '사유 없음' %>
+                </p>
+              </div>
+            <% end %>
+          <% end %>
+        <% else %>
+          <!-- 일반 모드 -->
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            금액
+          </label>
+          <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+            <%= number_to_currency(@expense_item.amount, unit: "₩", format: "%u%n") %>
+          </p>
+        <% end %>
+      </div>
+
+      <!-- 5. 설명 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          설명
+        </label>
+        <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+          <%= @expense_item.display_description %>
+        </p>
+      </div>
+
+      <!-- 6. 코스트 센터 -->
+      <% if @expense_item.cost_center.present? %>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            코스트 센터
+          </label>
+          <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+            <%= @expense_item.cost_center.name_with_code %>
+          </p>
+        </div>
+      <% end %>
+
+      <!-- 7. 결재선 -->
+      <% if @expense_item.approval_line.present? %>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            결재선
+          </label>
+          <p class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+            <%= @expense_item.approval_line.name %>
+          </p>
+        </div>
+      <% end %>
+
+      <!-- 8. 첨부파일 -->
+      <% if @expense_item.expense_attachments.any? %>
+        <div data-controller="attachment-uploader"
+             data-attachment-uploader-expense-sheet-id-value="<%= @expense_item.expense_sheet_id %>"
+             data-attachment-uploader-expense-item-id-value="<%= @expense_item.id %>">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            첨부파일 (<%= @expense_item.expense_attachments.count %>개)
+          </label>
+          <div class="mt-2 space-y-2">
+            <% @expense_item.expense_attachments.each do |attachment| %>
+              <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                <div class="flex items-center gap-2">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <span class="text-sm font-medium text-gray-700"><%= attachment.file_name %></span>
+                    <span class="text-xs text-gray-500 ml-2">(<%= number_to_human_size(attachment.file_size) %>)</span>
+                    <% if attachment.status == 'completed' %>
+                      <span class="text-xs text-green-600 ml-2">AI 분석 완료</span>
+                    <% elsif attachment.status == 'processing' %>
+                      <span class="text-xs text-yellow-600 ml-2">AI 분석 중...</span>
+                    <% end %>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <% if attachment.status == 'completed' && attachment.extracted_text.present? %>
+                    <button type="button" 
+                            class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
+                            data-action="click->attachment-uploader#viewExtractedText"
+                            data-attachment-id="<%= attachment.id %>"
+                            data-extracted-text="<%= html_escape(attachment.extracted_text) %>">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      내용 보기
+                    </button>
+                  <% end %>
+                  <% if attachment.file.attached? %>
+                    <%= link_to rails_blob_path(attachment.file, disposition: "attachment"),
+                                class: "text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1" do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                      </svg>
+                      다운로드
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- 버튼 영역 -->
+      <div class="flex justify-between pt-6 border-t">
+        <%= link_to expense_sheets_path, 
+                    class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+          목록으로 돌아가기
+        <% end %>
+        
+        <% if @expense_item.approval_request&.status_rejected? %>
+          <p class="text-sm text-red-600">
+            반려됨 - 목록에서 수정 버튼을 클릭하여 수정할 수 있습니다
+          </p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

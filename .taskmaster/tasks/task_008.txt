@@ -1,0 +1,15 @@
+# Task ID: 8
+# Title: 승인자 그룹 모델 및 데이터베이스 구조 설계
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: ApproverGroup, ApproverGroupMember, ExpenseCodeApprovalRule 모델과 마이그레이션 생성
+# Details:
+- ApproverGroup: 승인자 그룹 마스터 정보 (name, description, priority, is_active)
+- ApproverGroupMember: 그룹 멤버 관계 (approver_group_id, user_id, added_by, added_at)
+- ExpenseCodeApprovalRule: 경비 코드별 승인 규칙 (expense_code_id, condition, approver_group_id, order)
+- 각 모델의 관계 설정 및 validation 추가
+- 우선순위 시스템 구현 (1~10)
+
+# Test Strategy:
+

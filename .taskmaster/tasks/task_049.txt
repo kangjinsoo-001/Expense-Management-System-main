@@ -1,0 +1,15 @@
+# Task ID: 49
+# Title: 신청서 시스템 버그 수정 및 개선
+# Status: done
+# Dependencies: 44
+# Priority: high
+# Description: 신청서 결재선 검증 로직 수정, 권한 그룹 표시 개선, 중복 페이지 제거
+# Details:
+1. 결재선 검증 로직 수정 (결재 없음을 오류로 인식)
+2. 사용자 권한 그룹 표시 개선 (최상위 권한 표시)
+3. 불필요한 select_approval_line 페이지 제거
+4. RequestForm 모델 polymorphic 관계 임시 비활성화
+5. 존재하지 않는 필드 참조 제거 (purpose, content, description)
+
+# Test Strategy:
+

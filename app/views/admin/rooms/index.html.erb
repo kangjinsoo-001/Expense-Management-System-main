@@ -1,0 +1,81 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-semibold text-gray-900">회의실 관리</h1>
+      <p class="mt-2 text-sm text-gray-700">회의실 목록을 관리합니다.</p>
+    </div>
+    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      <%= link_to new_admin_room_path, class: "inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto" do %>
+        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+        </svg>
+        회의실 추가
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-8 flex flex-col">
+    <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">카테고리</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">회의실명</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">현재 예약 수</th>
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <span class="sr-only">작업</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <% @rooms.each do |room| %>
+                <tr>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <% if room.room_category %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <%= room.room_category.name %>
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <%= room.category %>
+                      </span>
+                    <% end %>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                    <div class="font-medium"><%= room.name %></div>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <%= room.room_reservations.upcoming.count %>개
+                    </span>
+                  </td>
+                  <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                    <div class="flex justify-end gap-2">
+                      <%= link_to edit_admin_room_path(room), class: "text-indigo-600 hover:text-indigo-900" do %>
+                        수정
+                      <% end %>
+                      <%= button_to admin_room_path(room), method: :delete, 
+                          data: { turbo_confirm: "이 회의실을 삭제하시겠습니까?\n예약된 내역도 모두 삭제됩니다." },
+                          class: "text-red-600 hover:text-red-900 ml-2" do %>
+                        삭제
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+              <% if @rooms.empty? %>
+                <tr>
+                  <td colspan="4" class="px-3 py-8 text-sm text-gray-500 text-center">
+                    등록된 회의실이 없습니다.
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

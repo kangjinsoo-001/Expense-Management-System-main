@@ -1,0 +1,19 @@
+# Task ID: 43
+# Title: 템플릿 관리 및 필드 빌더 구현 (관리자)
+# Status: done
+# Dependencies: 41, 42
+# Priority: high
+# Description: 관리자가 신청서 템플릿을 생성하고 동적 필드를 구성할 수 있는 기능을 구현합니다.
+# Details:
+1. Admin::RequestTemplatesController 생성
+2. 템플릿 CRUD 기능
+3. RequestTemplateField nested attributes
+4. 필드 빌더 UI (Stimulus controller)
+5. 필드 타입별 옵션 설정
+6. 필수/선택 필드 설정
+7. 실시간 폼 미리보기
+8. 템플릿 복사 기능
+9. 검증 규칙 설정 UI
+
+# Test Strategy:
+

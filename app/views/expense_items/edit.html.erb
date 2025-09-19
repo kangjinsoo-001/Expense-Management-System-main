@@ -1,0 +1,130 @@
+<div class="max-w-4xl mx-auto">
+  <!-- Flash 메시지 영역 -->
+  <div id="flash_messages"></div>
+  
+  <!-- 헤더 영역 -->
+  <div class="mb-6">
+    <div class="flex items-center gap-3">
+      <%= link_to expense_sheets_path, 
+                  class: "inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-100 transition-colors" do %>
+        <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      <% end %>
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">경비 항목 수정</h1>
+        <p class="mt-1 text-sm text-gray-500">
+          <%= "#{@expense_sheet.year}년 #{@expense_sheet.month}월 경비 시트" %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 읽기 전용 모드 안내 -->
+  <% if @readonly_mode %>
+    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <div class="flex items-start gap-2">
+        <svg class="h-5 w-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-yellow-800">
+            <% if @expense_item.approval_request&.status_pending? %>
+              이 경비 항목은 현재 승인 진행 중이므로 수정할 수 없습니다.
+            <% elsif @expense_item.approval_request&.status_approved? %>
+              이 경비 항목은 승인이 완료되어 수정할 수 없습니다.
+            <% end %>
+          </p>
+          <p class="text-sm text-yellow-700 mt-1">
+            아래 내용은 읽기 전용으로 표시됩니다. 
+            <% if @expense_item.approval_request&.status_pending? %>
+              승인이 반려되면 수정이 가능합니다.
+            <% end %>
+          </p>
+          
+          <!-- 승인 취소 버튼 추가 -->
+          <% if @expense_item.approval_request&.status_pending? %>
+            <div class="mt-3">
+              <%= button_to "승인 요청 취소", 
+                          cancel_approval_expense_sheet_expense_item_path(@expense_sheet, @expense_item),
+                          method: :post,
+                          data: { 
+                            turbo_confirm: "이 경비 항목의 승인 요청을 취소하시겠습니까?"
+                          },
+                          class: "inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+              <span class="ml-2 text-xs text-gray-600">승인 요청을 취소하면 다시 수정할 수 있습니다.</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% elsif @actual_amount_input_only %>
+    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div class="flex items-start gap-2">
+        <svg class="h-5 w-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <p class="text-sm font-medium text-blue-800">
+            예산 승인이 완료된 항목입니다. 실제 집행 금액만 입력할 수 있습니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 결재 진행 타임라인 -->
+  <%= render 'approval_timeline', expense_item: @expense_item %>
+
+  <!-- 결재 이력 섹션 (토글 가능) -->
+  <% if @expense_item.approval_request.present? && @expense_item.approval_request.approval_histories.any? %>
+    <div data-controller="history-toggle" class="mb-6">
+      <button data-action="click->history-toggle#toggle" 
+              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+        <div class="flex items-center gap-2">
+          <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-medium text-gray-900">결재 처리 이력</span>
+          <span class="text-sm text-gray-500">
+            (<%= @expense_item.approval_request.approval_histories.count %>건)
+          </span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <span data-history-toggle-target="showText" class="text-sm text-blue-600">보기</span>
+          <span data-history-toggle-target="hideText" class="text-sm text-blue-600 hidden">숨기기</span>
+          <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+      
+      <div data-history-toggle-target="content" 
+           class="hidden transition-all duration-300 ease-in-out opacity-0 max-h-0 overflow-hidden">
+        <div class="mt-4">
+          <%= render 'approval_history', expense_item: @expense_item %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 폼 영역 -->
+  <% if @readonly_mode %>
+    <!-- 읽기 전용 뷰 -->
+    <%= render 'readonly_view', expense_item: @expense_item %>
+  <% else %>
+    <!-- 수정 가능한 폼 -->
+    <div class="tremor-card">
+      <div class="p-6">
+        <%= render partial: "form", locals: { 
+          expense_item: @expense_item, 
+          expense_sheet: @expense_sheet,
+          expense_codes: @expense_codes,
+          cost_centers: @cost_centers,
+          actual_amount_input_only: @actual_amount_input_only
+        } %>
+      </div>
+    </div>
+  <% end %>
+</div>

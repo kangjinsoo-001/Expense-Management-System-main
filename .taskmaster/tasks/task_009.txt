@@ -1,0 +1,16 @@
+# Task ID: 9
+# Title: 승인자 그룹 관리 기능 구현
+# Status: done
+# Dependencies: 8
+# Priority: high
+# Description: 관리자용 승인자 그룹 CRUD 및 멤버 관리 기능 구현
+# Details:
+- Admin::ApproverGroupsController 생성
+- 그룹 목록 (우선순위순 정렬)
+- 그룹 생성/수정/삭제
+- 그룹 멤버 추가/제거 기능
+- 활성화/비활성화 토글
+- 그룹별 멤버 목록 표시
+
+# Test Strategy:
+

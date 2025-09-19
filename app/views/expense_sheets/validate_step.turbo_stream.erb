@@ -1,0 +1,92 @@
+<%# 4단계 완료 시에만 Turbo Stream 응답 %>
+<% if @step_number == 4 %>
+  <%# 경비 항목 테이블 업데이트 %>
+  <%= turbo_stream.replace "expense_items_table" do %>
+    <%= render partial: "expense_sheets/expense_items_table", 
+               locals: { expense_sheet: @expense_sheet, expense_items: @expense_items } %>
+  <% end %>
+
+  <%# 메트릭 카드 업데이트 %>
+  <%= turbo_stream.replace "metric_cards" do %>
+    <%= render partial: "expense_sheets/metric_cards", 
+               locals: { expense_sheet: @expense_sheet, expense_items: @expense_items } %>
+  <% end %>
+
+  <%# 검증 상세 내역 테이블 업데이트 - display 복원 %>
+  <%= turbo_stream.replace "validation_details_table" do %>
+    <div id="validation_details_table">
+      <%= render partial: "expense_sheets/validation_details_table", 
+                 locals: { expense_sheet: @expense_sheet, expense_items: @expense_items } %>
+    </div>
+  <% end %>
+
+  <%# 제출 버튼 영역 업데이트 %>
+  <%= turbo_stream.replace "submit_button_area" do %>
+    <div id="submit_button_area" class="mt-6">
+      <% 
+        has_completed_attachments = @expense_sheet.expense_sheet_attachments.any? { |a| a.status == 'completed' }
+        all_items_validated = @expense_sheet.expense_items.not_drafts.all? { |item| item.validation_status == 'validated' }
+        can_submit = has_completed_attachments && all_items_validated
+      %>
+      
+      <%= form_with url: confirm_submit_expense_sheet_path(@expense_sheet) do |form| %>
+        <% if can_submit %>
+          <%= form.submit "경비 시트 최종 제출", 
+                          class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500",
+                          data: { 
+                            turbo_confirm: "경비 시트를 제출하시겠습니까? 제출 후에는 수정할 수 없습니다."
+                          } %>
+        <% else %>
+          <button type="button"
+                  disabled
+                  class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-400 bg-gray-200 cursor-not-allowed">
+            경비 시트 최종 제출
+          </button>
+          <p class="mt-2 text-xs text-gray-500 text-center">
+            <% if !has_completed_attachments %>
+              필수 첨부파일을 업로드하고 AI 분석을 완료하세요.
+            <% elsif !all_items_validated %>
+              모든 경비 항목이 검증을 통과해야 제출할 수 있습니다.
+            <% end %>
+          </p>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# 검증 완료 알림 추가 %>
+  <%= turbo_stream.prepend "flash_messages" do %>
+    <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg bg-green-500 text-white" data-turbo-temporary="true">
+      <div class="flex items-center">
+        <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span>AI 검증이 완료되었습니다. 경비 항목 상태가 업데이트되었습니다.</span>
+      </div>
+    </div>
+    <script>
+      // 3초 후 자동으로 알림 제거
+      setTimeout(() => {
+        const notification = document.querySelector('[data-turbo-temporary="true"]');
+        if (notification) {
+          notification.style.opacity = '0';
+          notification.style.transition = 'opacity 0.5s';
+          setTimeout(() => notification.remove(), 500);
+        }
+      }, 3000);
+      
+      // 진행 상황 표시 영역도 2초 후 숨기기
+      setTimeout(() => {
+        const progressContainer = document.getElementById('validation_progress');
+        if (progressContainer) {
+          progressContainer.style.transition = 'opacity 0.5s';
+          progressContainer.style.opacity = '0';
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            progressContainer.style.opacity = '1';
+          }, 500);
+        }
+      }, 2000);
+    </script>
+  <% end %>
+<% end %>

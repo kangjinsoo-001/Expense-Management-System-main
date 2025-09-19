@@ -1,0 +1,139 @@
+<!doctype html>
+
+<html lang="ko">
+
+  <head>
+
+    <title>서버 오류가 발생했습니다 (500)</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <meta name="robots" content="noindex, nofollow">
+
+    <style>
+
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
+      * {
+        margin: 0;
+      }
+
+      html {
+        font-size: 16px;
+      }
+
+      body {
+        background: #FFF;
+        color: #261B23;
+        display: grid;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans KR", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        font-size: clamp(1rem, 2.5vw, 2rem);
+        -webkit-font-smoothing: antialiased;
+        font-style: normal;
+        font-weight: 400;
+        letter-spacing: -0.0025em;
+        line-height: 1.4;
+        min-height: 100vh;
+        place-items: center;
+        text-rendering: optimizeLegibility;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      a {
+        color: inherit;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 0.0925em;
+      }
+
+      b, strong {
+        font-weight: 700;
+      }
+
+      i, em {
+        font-style: italic;
+      }
+
+      main {
+        display: grid;
+        gap: 1em;
+        padding: 2em;
+        place-items: center;
+        text-align: center;
+      }
+
+      main header {
+        width: min(100%, 12em);
+      }
+
+      main header h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        color: #d30001;
+        margin-bottom: 0.5rem;
+      }
+
+      main header p {
+        font-size: 1.5rem;
+        color: #666;
+      }
+
+      main article {
+        width: min(100%, 30em);
+      }
+
+      main article p {
+        font-size: 75%;
+      }
+
+      main article br {
+
+        display: none;
+
+        @media(min-width: 48em) {
+          display: inline;
+        }
+
+      }
+
+      .home-button {
+        background: #d30001;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        text-decoration: none;
+        border-radius: 0.25rem;
+        display: inline-block;
+        margin-top: 2rem;
+        transition: background-color 0.2s;
+      }
+
+      .home-button:hover {
+        background: #b30001;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <!-- This file lives in public/500.html -->
+
+    <main>
+      <header>
+        <h1>500</h1>
+        <p>서버 오류</p>
+      </header>
+      <article>
+        <p><strong>죄송합니다. 일시적인 오류가 발생했습니다.</strong><br>잠시 후 다시 시도해 주세요.</p>
+        <p>
+          <a href="/" class="home-button">홈으로 돌아가기</a>
+        </p>
+      </article>
+    </main>
+
+  </body>
+
+</html>

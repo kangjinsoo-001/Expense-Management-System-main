@@ -1,0 +1,181 @@
+<%= turbo_frame_tag "expense_sheets_list", data: { turbo_cache: "false" } do %>
+  <!-- 모바일 카드 뷰 -->
+  <div class="md:hidden space-y-4" data-user-id="<%= current_user.id %>">
+    <% expense_sheets.each do |expense_sheet| %>
+      <% cache expense_sheet do %>
+      <div class="tremor-card p-4">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex-1">
+            <h3 class="text-lg font-medium text-gray-900">
+              <%= expense_sheet.period %>
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">
+              <%= expense_sheet.user.name %> · <%= expense_sheet.organization.name %>
+            </p>
+          </div>
+          <span class="<%= expense_sheet.status == 'draft' ? 'tremor-badge-gray' : 
+                         expense_sheet.status == 'submitted' ? 'tremor-badge-blue' : 
+                         expense_sheet.status == 'approved' ? 'tremor-badge-success' : 
+                         expense_sheet.status == 'rejected' ? 'tremor-badge-error' : 
+                         'tremor-badge-blue' %> tremor-badge">
+            <%= t("expense_sheet.status.#{expense_sheet.status}") %>
+          </span>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <p class="tremor-metric-label">항목 수</p>
+            <p class="text-lg font-semibold text-gray-900"><%= expense_sheet.expense_items_count %>건</p>
+          </div>
+          <div>
+            <p class="tremor-metric-label">총액</p>
+            <p class="text-lg font-semibold text-gray-900">
+              <%= format_currency(expense_sheet.total_amount) %>
+            </p>
+          </div>
+          <div class="col-span-2">
+            <p class="tremor-metric-label">제출일</p>
+            <p class="text-sm text-gray-900">
+              <%= expense_sheet.submitted_at&.strftime("%Y-%m-%d") || "미제출" %>
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex gap-3">
+          <%= link_to new_expense_sheet_expense_item_path(expense_sheet), 
+                      class: "tremor-button-secondary flex-1 justify-center text-sm",
+                      data: { turbo_frame: "_top" } do %>
+            경비 추가
+          <% end %>
+          <% if expense_sheet.editable? %>
+            <%= link_to edit_expense_sheet_path(expense_sheet), 
+                        class: "tremor-button-primary flex-1 justify-center text-sm",
+                        data: { turbo_frame: "_top" } do %>
+              편집
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+      <% end %>
+    <% end %>
+    
+    <% if expense_sheets.empty? %>
+      <div class="tremor-card">
+        <div class="text-center py-12">
+          <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100">
+            <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 class="mt-4 text-lg font-medium text-gray-900">경비 시트가 없습니다</h3>
+          <p class="mt-2 text-sm text-gray-500">첫 경비 시트를 만들어보세요</p>
+          <div class="mt-6">
+            <%= link_to new_expense_sheet_path, 
+                        class: "tremor-button-primary" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              첫 경비 시트 만들기
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 데스크톱 테이블 뷰 -->
+  <div class="hidden md:block">
+    <div class="tremor-card">
+      <div class="overflow-x-auto">
+        <table class="tremor-table">
+          <thead>
+            <tr>
+              <th class="text-left">기간</th>
+              <th class="text-left">작성자</th>
+              <th class="text-left">조직</th>
+              <th class="text-left">상태</th>
+              <th class="text-center">항목 수</th>
+              <th class="text-right">총액</th>
+              <th class="text-left">제출일</th>
+              <th class="text-center w-32">작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% expense_sheets.each do |expense_sheet| %>
+              <% cache expense_sheet do %>
+              <tr>
+                <td class="font-medium">
+                  <%= expense_sheet.period %>
+                </td>
+                <td>
+                  <%= expense_sheet.user.name %>
+                </td>
+                <td class="text-gray-600">
+                  <%= expense_sheet.organization.name %>
+                </td>
+                <td>
+                  <span class="<%= expense_sheet.status == 'draft' ? 'tremor-badge-gray' : 
+                                 expense_sheet.status == 'submitted' ? 'tremor-badge-blue' : 
+                                 expense_sheet.status == 'approved' ? 'tremor-badge-success' : 
+                                 expense_sheet.status == 'rejected' ? 'tremor-badge-error' : 
+                                 'tremor-badge-blue' %> tremor-badge">
+                    <%= t("expense_sheet.status.#{expense_sheet.status}") %>
+                  </span>
+                </td>
+                <td class="text-center">
+                  <%= expense_sheet.expense_items_count %>
+                </td>
+                <td class="text-right font-semibold">
+                  <%= format_currency(expense_sheet.total_amount) %>
+                </td>
+                <td>
+                  <%= expense_sheet.submitted_at&.strftime("%Y-%m-%d") || "-" %>
+                </td>
+                <td class="text-center">
+                  <div class="flex items-center justify-center gap-3">
+                    <%= link_to new_expense_sheet_expense_item_path(expense_sheet), 
+                                class: "text-blue-600 hover:text-blue-700 font-medium text-sm",
+                                data: { turbo_frame: "_top" } do %>
+                      추가
+                    <% end %>
+                    <% if expense_sheet.editable? %>
+                      <%= link_to edit_expense_sheet_path(expense_sheet), 
+                                  class: "text-blue-600 hover:text-blue-700 font-medium text-sm",
+                                  data: { turbo_frame: "_top" } do %>
+                        편집
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <% if expense_sheets.empty? %>
+      <div class="tremor-card mt-4">
+        <div class="text-center py-16">
+          <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100">
+            <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 class="mt-4 text-lg font-medium text-gray-900">경비 시트가 없습니다</h3>
+          <p class="mt-2 text-sm text-gray-500">첫 경비 시트를 만들어보세요</p>
+          <div class="mt-8">
+            <%= link_to new_expense_sheet_path, 
+                        class: "tremor-button-primary" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              첫 경비 시트 만들기
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

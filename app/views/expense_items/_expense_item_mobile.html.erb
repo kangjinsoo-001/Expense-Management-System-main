@@ -1,0 +1,87 @@
+<div id="expense_item_mobile_<%= expense_item.id %>" class="border-b border-gray-200 p-4" data-controller="touch-gestures">
+  <div class="flex items-start justify-between" data-touch-gestures-target="swipeable">
+    <div class="flex-1">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-gray-900">
+          <%= expense_item.expense_date.strftime("%Y-%m-%d") %>
+        </span>
+        <div class="flex items-center gap-2">
+          <% if expense_item.is_valid %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+              유효
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+              검증 필요
+            </span>
+          <% end %>
+        </div>
+      </div>
+      
+      <p class="text-sm text-gray-500 mb-1">
+        <%= expense_item.expense_code.display_name %>
+      </p>
+      
+      <p class="text-sm text-gray-900">
+        <%= expense_item.display_description %>
+      </p>
+      
+      <p class="mt-2 text-base font-semibold text-gray-900">
+        <%= format_currency(expense_item.amount) %>
+      </p>
+      
+      <% if expense_item.approval_request.present? %>
+        <% 
+          approval_request = expense_item.approval_request
+          total_steps = approval_request.approval_line.approval_line_steps.pluck(:step_order).uniq.count
+          completed_steps = approval_request.approval_histories.where(action: 'approve').pluck(:step_order).uniq.count
+          progress_percentage = (completed_steps.to_f / total_steps * 100).round
+        %>
+        <div class="mt-2">
+          <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+            <span>결재 진행률</span>
+            <span class="font-medium"><%= progress_percentage %>%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-300 <%= approval_request.status == 'approved' ? 'bg-green-600' : approval_request.status == 'rejected' ? 'bg-red-600' : 'bg-blue-600' %>"
+                 style="width: <%= progress_percentage %>%">
+            </div>
+          </div>
+        </div>
+      <% end %>
+      
+      <% if expense_item.expense_sheet.editable? %>
+        <div class="mt-3 flex items-center gap-3">
+          <%= link_to "편집", edit_expense_sheet_expense_item_path(expense_item.expense_sheet, expense_item), 
+                      class: "text-sm text-indigo-600 hover:text-indigo-900" %>
+          <%= link_to "삭제", expense_sheet_expense_item_path(expense_item.expense_sheet, expense_item),
+                      method: :delete,
+                      data: { 
+                        confirm: "이 경비 항목을 삭제하시겠습니까?",
+                        turbo_method: :delete 
+                      },
+                      class: "text-sm text-red-600 hover:text-red-900" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- 스와이프 액션 (선택사항) -->
+  <% if expense_item.expense_sheet.editable? %>
+    <div class="absolute right-0 top-0 h-full w-24 bg-red-600 flex items-center justify-center" 
+         data-touch-gestures-target="actions"
+         style="transform: translateX(100%);">
+      <%= link_to expense_sheet_expense_item_path(expense_item.expense_sheet, expense_item),
+                  method: :delete,
+                  data: { 
+                    confirm: "이 경비 항목을 삭제하시겠습니까?",
+                    turbo_method: :delete 
+                  },
+                  class: "text-white" do %>
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      <% end %>
+    </div>
+  <% end %>
+</div>

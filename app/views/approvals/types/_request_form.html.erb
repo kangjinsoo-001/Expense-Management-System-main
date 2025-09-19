@@ -1,0 +1,68 @@
+<!-- RequestForm 전용 상세 템플릿 -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">기본 정보</h2>
+  
+  <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <dt class="text-sm font-medium text-gray-500">신청자</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.user.name %>
+        <span class="text-gray-500">(<%= item.user.organization&.name || '소속 없음' %>)</span>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">신청일</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.created_at.strftime('%Y-%m-%d %H:%M') %>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">신청서 종류</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.request_template&.name || '일반 신청서' %>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">상태</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+          <%= item.status == 'pending' ? 'bg-yellow-100 text-yellow-800' :
+              item.status == 'approved' ? 'bg-green-100 text-green-800' :
+              item.status == 'rejected' ? 'bg-red-100 text-red-800' :
+              'bg-gray-100 text-gray-800' %>">
+          <%= item.status_display %>
+        </span>
+      </dd>
+    </div>
+  </dl>
+</div>
+
+<!-- 주요 내용 -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">주요 내용</h2>
+  
+  <% if item.form_data.present? %>
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <% item.form_data.each do |key, value| %>
+        <% next if value.blank? %>
+        <% next if key == 'attachment' %> <!-- 첨부파일 필드는 별도 섹션에서 처리 -->
+        <div>
+          <dt class="text-sm font-medium text-gray-500"><%= item.field_label(key) %></dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= value %></dd>
+        </div>
+      <% end %>
+      
+      <% if item.request_number.present? %>
+        <div>
+          <dt class="text-sm font-medium text-gray-500">신청번호</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= item.request_number %></dd>
+        </div>
+      <% end %>
+    </dl>
+  <% else %>
+    <p class="text-sm text-gray-500">신청 내용이 없습니다.</p>
+  <% end %>
+</div>

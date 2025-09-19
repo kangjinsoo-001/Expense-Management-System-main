@@ -1,0 +1,63 @@
+<div class="min-h-[calc(100vh-4rem)] flex items-start justify-center px-4 pt-4 pb-12">
+  <div class="w-full max-w-md">
+    <!-- 로고 영역 -->
+    <div class="text-center mb-8">
+      <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-lg bg-blue-600">
+        <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h2 class="mt-4 text-3xl font-bold text-gray-900">경비 관리 시스템</h2>
+      <p class="mt-2 text-sm text-gray-600">계정에 로그인하세요</p>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div class="tremor-card">
+      <div class="p-8">
+        <%= form_with url: login_path, class: "space-y-6" do |form| %>
+          <% if flash[:alert] %>
+            <div class="rounded-md bg-red-50 border border-red-200 p-4 tremor-fade-in">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-red-800"><%= flash[:alert] %></p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <div>
+            <%= form.label :email, class: "tremor-metric-label block mb-2" do %>
+              이메일 <span class="text-red-500">*</span>
+            <% end %>
+            <%= form.email_field :email, 
+                class: "tremor-input", 
+                required: true,
+                autofocus: true,
+                placeholder: "your@email.com" %>
+          </div>
+
+          <div>
+            <%= form.label :password, class: "tremor-metric-label block mb-2" do %>
+              비밀번호 <span class="text-red-500">*</span>
+            <% end %>
+            <%= form.password_field :password, 
+                class: "tremor-input", 
+                required: true,
+                placeholder: "••••••••" %>
+          </div>
+
+          <div>
+            <%= form.submit "로그인", 
+                class: "w-full tremor-button-primary justify-center text-base" %>
+          </div>
+        <% end %>
+
+      </div>
+    </div>
+  </div>
+</div>

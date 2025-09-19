@@ -1,0 +1,84 @@
+<%= turbo_frame_tag "approval_rules_list" do %>
+  <!-- 드래그앤드롭 알림 위치 -->
+  <div id="dragdrop_flash_container" class="mb-2"></div>
+  
+  <% if approval_rules.any? %>
+    <div class="overflow-x-auto" data-controller="approval-rules-dragdrop" data-approval-rules-dragdrop-request-template-id="<%= request_template.id %>">
+      <table class="min-w-full divide-y divide-gray-200" data-approval-rules-dragdrop-target="list">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              순서
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              조건식
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              필수 승인자 그룹
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              상태
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              작업
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+        <% approval_rules.each do |rule| %>
+          <tr id="approval_rule_<%= rule.id %>" data-approval-rules-dragdrop-target="rule">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <%= rule.order %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <code class="px-2 py-1 bg-gray-100 rounded text-xs font-mono"><%= rule.condition %></code>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex items-center">
+                <%= rule.approver_group.name %>
+                <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                  우선순위 <%= rule.approver_group.priority %>
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <% if rule.is_active? %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  활성
+                </span>
+              <% else %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                  비활성
+                </span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex items-center space-x-2">
+                <%= button_to '삭제',
+                              remove_approval_rule_admin_request_template_path(request_template, rule_id: rule.id),
+                              method: :delete,
+                              data: { 
+                                turbo_confirm: '이 승인 규칙을 삭제하시겠습니까?'
+                              },
+                              class: 'text-red-600 hover:text-red-900' %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+      <h4 class="text-sm font-semibold text-blue-900 mb-2">조건식 예시:</h4>
+      <ul class="text-sm text-blue-700 space-y-1">
+        <li><code class="px-1 bg-blue-100 rounded">비어두기</code> - 모든 경우에 적용 (기본 승인자)</li>
+        <li><code class="px-1 bg-blue-100 rounded">#금액 > 300000</code> - 금액이 30만원 초과인 경우</li>
+        <li><code class="px-1 bg-blue-100 rounded">#금액 <= 500000</code> - 금액이 50만원 이하인 경우</li>
+        <li><code class="px-1 bg-blue-100 rounded">#참석인원 > 10</code> - 참석인원 필드가 10명 초과인 경우</li>
+      </ul>
+    </div>
+  <% else %>
+    <p class="text-gray-500 text-center py-4" id="no_rules_message">아직 승인 규칙이 없습니다.</p>
+  <% end %>
+<% end %>

@@ -1,0 +1,63 @@
+# Task ID: 21
+# Title: 첨부파일 요구사항 모델 및 데이터베이스 구조 설계
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: AttachmentRequirement, AttachmentAnalysisRule, AttachmentValidationRule, ExpenseSheetAttachment 모델 설계 및 마이그레이션 생성
+# Details:
+경비 시트 제출 시 필요한 첨부파일 요구사항을 정의하고 AI 분석/검증 규칙을 저장하는 데이터베이스 구조 설계
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. AttachmentRequirement 모델 설계 및 마이그레이션 [done]
+### Dependencies: None
+### Description: 경비 시트별 첨부파일 요구사항을 정의하는 모델 생성
+### Details:
+- expense_sheet_id, expense_code_id 관계 설정
+- file_type (영수증, 계약서, 청구서 등)
+- is_required (필수 여부)
+- max_file_size, allowed_formats
+- validation_rules (JSON)
+
+## 2. AttachmentAnalysisRule 모델 설계 및 마이그레이션 [done]
+### Dependencies: None
+### Description: AI 첨부파일 분석 규칙을 정의하는 모델 생성
+### Details:
+- rule_name, rule_type (OCR, 이미지 분류, 텍스트 추출 등)
+- expense_code_id 관계
+- ai_model_config (사용할 AI 모델 설정)
+- extraction_fields (추출할 필드 정의)
+- confidence_threshold
+
+## 3. AttachmentValidationRule 모델 설계 및 마이그레이션 [done]
+### Dependencies: None
+### Description: 첨부파일 검증 규칙을 정의하는 모델 생성
+### Details:
+- validation_type (파일 크기, 형식, 내용 검증 등)
+- expense_code_id, attachment_requirement_id 관계
+- validation_params (JSON - 검증 파라미터)
+- error_message (검증 실패시 메시지)
+- is_active, priority
+
+## 4. ExpenseSheetAttachment 모델 설계 및 마이그레이션 [done]
+### Dependencies: None
+### Description: 경비 시트에 첨부된 파일을 관리하는 모델 생성
+### Details:
+- expense_sheet_id, attachment_requirement_id 관계
+- file_path, file_name, file_size, mime_type
+- ai_analysis_result (JSON - AI 분석 결과)
+- validation_status (pending, valid, invalid)
+- uploaded_at, analyzed_at
+
+## 5. 모델 간 관계 설정 및 테스트 [done]
+### Dependencies: None
+### Description: 생성된 모델들 간의 관계 설정 및 통합 테스트
+### Details:
+- has_many, belongs_to 관계 설정
+- 모델 검증 규칙 추가
+- 시드 데이터 생성
+- 모델 유닛 테스트 작성
+- 관계 테스트 작성
+

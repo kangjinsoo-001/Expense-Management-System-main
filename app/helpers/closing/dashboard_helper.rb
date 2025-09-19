@@ -1,0 +1,2 @@
+module Closing::DashboardHelper
+end

@@ -1,0 +1,115 @@
+<% content_for :title, @cost_center.name %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="mb-8">
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-semibold text-gray-900"><%= @cost_center.name %></h1>
+        <p class="mt-1 text-sm text-gray-500">코드: <%= @cost_center.code %> · <%= @cost_center.fiscal_year %>년도</p>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4 gap-2">
+        <%= link_to edit_admin_cost_center_path(@cost_center), 
+            class: "p-2 rounded-lg hover:bg-gray-100 transition-colors group",
+            title: "편집" do %>
+          <svg class="h-5 w-5 text-gray-600 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        <% end %>
+        <%= button_to admin_cost_center_path(@cost_center), 
+            method: :delete,
+            data: { turbo_confirm: "정말로 삭제하시겠습니까?" },
+            class: "p-2 rounded-lg hover:bg-red-50 transition-colors group",
+            title: "삭제" do %>
+          <svg class="h-5 w-5 text-gray-600 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        <% end %>
+        <%= link_to admin_cost_centers_path, 
+            class: "p-2 rounded-lg hover:bg-gray-100 transition-colors group",
+            title: "목록으로" do %>
+          <svg class="h-5 w-5 text-gray-600 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기본 정보 -->
+  <div class="tremor-card mb-6">
+    <div class="p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">기본 정보</h3>
+      <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">코드</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @cost_center.code %></dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">관리자</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @cost_center.manager&.name || "-" %></dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">조직</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @cost_center.organization&.name || "전체" %></dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">상태</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <span class="<%= @cost_center.active? ? 'tremor-badge tremor-badge-success' : 'tremor-badge tremor-badge-error' %>">
+              <%= @cost_center.active? ? '활성' : '비활성' %>
+            </span>
+          </dd>
+        </div>
+        
+        <div class="sm:col-span-2">
+          <dt class="text-sm font-medium text-gray-500">설명</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @cost_center.description.presence || "-" %></dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 예산 정보 -->
+  <div class="tremor-card mb-6">
+    <div class="p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">예산 정보</h3>
+      <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">예산 금액</dt>
+          <dd class="mt-1 text-sm text-gray-900 font-semibold">
+            <%= @cost_center.budget_amount ? format_currency(@cost_center.budget_amount) : "-" %>
+          </dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">회계연도</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @cost_center.fiscal_year %>년</dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">예산 사용률</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <div class="flex items-center">
+              <div class="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: <%= @cost_center.budget_utilization %>%"></div>
+              </div>
+              <span class="text-sm font-medium"><%= @cost_center.budget_utilization %>%</span>
+            </div>
+          </dd>
+        </div>
+        
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">생성일</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <%= l @cost_center.created_at, format: :long %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<%= turbo_frame_tag "modal" %>

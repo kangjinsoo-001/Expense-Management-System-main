@@ -1,0 +1,405 @@
+<!-- 첨부 서류 업로드 섹션 -->
+<div class="bg-white shadow-sm rounded-lg" data-controller="sheet-attachment-uploader"
+     data-sheet-attachment-uploader-expense-sheet-id-value="<%= expense_sheet.id %>">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-medium leading-6 text-gray-900">첨부 서류</h3>
+        <p class="mt-1 text-sm text-gray-500">법인카드 명세서 등 필수 증빙 서류를 업로드해주세요.</p>
+      </div>
+      <button type="button"
+              data-action="click->expense-sheet-submission#hideAttachmentSection"
+              class="text-gray-400 hover:text-gray-500 p-1 rounded-md hover:bg-gray-100 transition-colors">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="px-4 py-5 sm:px-6">
+    <div class="space-y-3">
+      <!-- 파일 업로드 영역 -->
+      <div class="flex items-center space-x-3">
+        <input type="file"
+               accept="application/pdf,image/jpeg,image/jpg,image/png"
+               multiple
+               class="hidden"
+               data-sheet-attachment-uploader-target="fileInput"
+               data-action="change->sheet-attachment-uploader#fileSelected" />
+        
+        <button type="button"
+                data-action="click->sheet-attachment-uploader#triggerFileSelect"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          파일 선택
+        </button>
+        
+        <span class="text-xs text-gray-500">
+          PDF, JPG, PNG 파일 (10MB 이하)
+        </span>
+      </div>
+      
+      <!-- 검증 메시지 영역 -->
+      <div id="validation-messages"></div>
+      
+      <!-- 첨부된 파일 목록 -->
+      <div data-sheet-attachment-uploader-target="attachmentsList" class="space-y-2">
+        <% sheet_attachments ||= expense_sheet.expense_sheet_attachments.includes(:attachment_requirement) %>
+        <% if sheet_attachments && sheet_attachments.any? %>
+          <% sheet_attachments.each do |attachment| %>
+            <div id="sheet-attachment-<%= attachment.id %>" class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg mb-2 hover:shadow-sm transition-shadow">
+              <input type="hidden" name="sheet_attachment_ids[]" value="<%= attachment.id %>" />
+              <div class="flex items-center flex-1">
+                <svg class="h-8 w-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-900"><%= attachment.file_name %></p>
+                  <p class="text-xs <%= attachment.status == 'completed' ? 'text-green-600' : attachment.status == 'processing' ? 'text-yellow-600' : 'text-gray-500' %>" 
+                     data-status-id="<%= attachment.id %>">
+                    <% if attachment.status == 'completed' %>
+                      AI 분석 완료
+                    <% elsif attachment.status == 'processing' %>
+                      <% if attachment.processing_stage == 'extracting' %>
+                        AI 추출중...
+                      <% elsif attachment.processing_stage == 'summarizing' %>
+                        AI 분석중...
+                      <% else %>
+                        AI 처리중...
+                      <% end %>
+                    <% else %>
+                      <%= attachment.status_label %>
+                    <% end %>
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <% if attachment.status == 'completed' && attachment.analysis_result.present? %>
+                  <button type="button" 
+                          class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
+                          data-view-btn-id="<%= attachment.id %>"
+                          data-action="click->sheet-attachment-uploader#viewSummary"
+                          data-attachment-id="<%= attachment.id %>"
+                          data-analysis-result="<%= html_escape(attachment.analysis_result.to_json) %>">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    내용 보기
+                  </button>
+                <% else %>
+                  <button type="button" 
+                          class="hidden text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
+                          data-view-btn-id="<%= attachment.id %>"
+                          data-action="click->sheet-attachment-uploader#viewSummary"
+                          data-attachment-id="<%= attachment.id %>">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    내용 보기
+                  </button>
+                <% end %>
+                <button type="button"
+                        class="text-gray-400 hover:text-red-500"
+                        data-action="click->sheet-attachment-uploader#removeAttachment"
+                        data-attachment-id="<%= attachment.id %>">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <!-- AI 검증 진행 상황 표시 -->
+      <%= render 'validation_progress' %>
+      
+      <!-- AI 검증 진행 버튼 -->
+      <div class="mt-6" data-controller="ai-validation" 
+           data-ai-validation-expense-sheet-id-value="<%= expense_sheet.id %>">
+        <% 
+          has_completed_attachments = sheet_attachments&.any? { |a| a.status == 'completed' }
+          # 검증 상태 확인 - 모든 경비 항목이 validated 상태인지 확인
+          all_items_validated = expense_sheet.expense_items.all? { |item| item.validation_status == 'validated' }
+          validation_completed = all_items_validated
+          
+          # 검증 이력 정보
+          latest_validation = expense_sheet.latest_validation
+          validation_count = expense_sheet.validation_count
+        %>
+        
+        <button type="button"
+                data-action="click->ai-validation#validateWithAI"
+                data-ai-validation-target="validateButton"
+                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M17.618 5.504A11.995 11.995 0 0112 2.944a11.995 11.995 0 01-8.618 3.04A12.004 12.004 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          AI 검증 진행
+        </button>
+        
+        <% if latest_validation %>
+          <%
+            # 실시간으로 영수증 첨부 상태 확인
+            validation_context = latest_validation.full_validation_context || {}
+            step_4_data = validation_context["step_4"] || {}
+            receipt_check = step_4_data[:receipt_check] || step_4_data["receipt_check"] || {}
+            items_needing_receipts = receipt_check[:items_needing_receipts] || receipt_check["items_needing_receipts"] || []
+            
+            # 실제로 영수증이 누락된 항목 수 계산
+            actually_missing_count = if items_needing_receipts.any?
+              items_needing_receipts.count { |item|
+                expense_item = expense_sheet.expense_items.find { |ei| ei.id == item['item_id'].to_i }
+                expense_item && !expense_item.expense_attachments.any?
+              }
+            else
+              0
+            end
+            
+            # 실시간 유효성 체크
+            is_actually_valid = latest_validation.all_valid && actually_missing_count == 0
+            
+            # 전체 문제 항목 수 (검증 시점의 warning_count에서 해결된 영수증 항목 제외)
+            real_warning_count = if latest_validation.warning_count > 0
+              # 원래 warning_count에서 이미 해결된 영수증 항목 수를 빼기
+              resolved_receipts = items_needing_receipts.count - actually_missing_count
+              [latest_validation.warning_count - resolved_receipts, actually_missing_count].max
+            else
+              actually_missing_count
+            end
+          %>
+          <p class="mt-2 text-xs <%= is_actually_valid ? 'text-green-600' : 'text-yellow-600' %> text-center validation-status-message">
+            <% if is_actually_valid %>
+              <svg class="inline h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              모든 경비 항목 검증 완료
+            <% else %>
+              <svg class="inline h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              검증 완료 - 확인 필요 항목 <%= real_warning_count %>개
+              <% if actually_missing_count > 0 %>
+                <span class="text-xs">(영수증 <%= actually_missing_count %>개 필요)</span>
+              <% end %>
+            <% end %>
+            <span class="text-xs text-gray-400 ml-2">
+              (마지막: <%= latest_validation.created_at.strftime('%m/%d %H:%M') %>)
+            </span>
+          </p>
+        <% elsif all_items_validated %>
+          <p class="mt-2 text-xs text-green-600 text-center validation-status-message">
+            <svg class="inline h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            모든 경비 항목 검증 완료
+          </p>
+        <% else %>
+          <p class="mt-2 text-xs text-gray-500 text-center validation-status-message">
+            <% if !has_completed_attachments %>
+              첨부파일이 없어도 AI 검증을 진행할 수 있습니다. (통신비 외 항목이 있으면 1단계에서 확인됩니다)
+            <% else %>
+              검증 버튼을 클릭하여 경비 항목을 검증하세요.
+            <% end %>
+          </p>
+        <% end %>
+        
+        <!-- 검증 결과 표시 영역 -->
+        <div data-ai-validation-target="resultContainer" class="mt-4 hidden">
+          <!-- 검증 결과가 여기에 표시됩니다 -->
+        </div>
+      </div>
+      
+      <!-- 검증 상세 내역 테이블 -->
+      <div id="validation_details_table">
+        <% if expense_sheet.validation_histories.any? %>
+          <%= render partial: "expense_sheets/validation_details_table", 
+                     locals: { expense_sheet: expense_sheet, expense_items: expense_sheet.expense_items.not_drafts.ordered } %>
+        <% end %>
+      </div>
+      
+      <!-- 결재선 선택 섹션 -->
+      <!-- 클라이언트 사이드 검증을 위한 데이터 -->
+      <script>
+        window.approvalLinesData = <%= @approval_lines_data.to_json.html_safe %>;
+        window.expenseSheetRulesData = <%= @expense_sheet_rules_data.to_json.html_safe %>;
+        window.currentUserGroups = <%= @current_user_groups_data.to_json.html_safe %>;
+      </script>
+      
+      <div class="mt-6" data-controller="expense-sheet-approval"
+           data-expense-sheet-approval-sheet-id-value="<%= expense_sheet.id %>"
+           data-total-amount="<%= expense_sheet.total_amount || 0 %>">
+        <label class="block text-sm font-medium text-gray-700 mb-2">결재선</label>
+        
+        <% approval_lines = current_user.approval_lines.ordered_by_position %>
+        <% if approval_lines.any? %>
+          <!-- 결재선 칩 목록 -->
+          <div class="flex flex-wrap gap-2 mb-3">
+            <!-- 결재 없음 옵션 -->
+            <label class="inline-flex items-center cursor-pointer relative">
+              <%= radio_button_tag :selected_approval_line_id, "", 
+                                  checked: expense_sheet.approval_line_id.blank?,
+                                  class: "sr-only peer",
+                                  data: { 
+                                    expense_sheet_approval_target: "selectRadio",
+                                    action: "change->expense-sheet-approval#selectApprovalLine"
+                                  } %>
+              <span class="chip-selector px-3 py-1 text-sm rounded-full border transition-all
+                         peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-gray-500
+                         <%= expense_sheet.approval_line_id.blank? ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400' %>"
+                    data-expense-sheet-approval-target="chip">
+                결재 없음
+              </span>
+            </label>
+            
+            <!-- 사용자 결재선들 -->
+            <% approval_lines.each do |line| %>
+              <label class="inline-flex items-center cursor-pointer relative">
+                <%= radio_button_tag :selected_approval_line_id, line.id,
+                                    checked: expense_sheet.approval_line_id == line.id,
+                                    class: "sr-only peer",
+                                    data: { 
+                                      expense_sheet_approval_target: "selectRadio",
+                                      action: "change->expense-sheet-approval#selectApprovalLine"
+                                    } %>
+                <span class="chip-selector px-3 py-1 text-sm rounded-full border transition-all
+                           peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-gray-500
+                           <%= expense_sheet.approval_line_id == line.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400' %>"
+                      data-expense-sheet-approval-target="chip">
+                  <%= line.name %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+          
+          <!-- 선택된 결재선 미리보기 -->
+          <div class="approval-preview <%= expense_sheet.approval_line_id.present? ? '' : 'hidden' %>"
+               data-expense-sheet-approval-target="preview">
+            <% if expense_sheet.approval_line_id.present? %>
+              <%= render partial: "approval_line_preview", locals: { approval_line: expense_sheet.approval_line } %>
+            <% end %>
+          </div>
+          
+          <!-- 규칙 검증 메시지 -->
+          <div id="expense_sheet_approval_validation" data-expense-sheet-approval-target="validationArea">
+            <!-- Ajax로 검증 결과 표시 -->
+          </div>
+        <% else %>
+          <p class="text-sm text-gray-500">
+            결재선을 먼저 생성해주세요.
+            <%= link_to "결재선 관리", approval_lines_path, class: "text-indigo-600 hover:text-indigo-500", target: "_blank" %>
+          </p>
+        <% end %>
+      </div>
+      
+      <!-- 최종 제출 버튼 -->
+      <div id="submit_button_area" class="mt-6">
+        <% 
+          # 항상 직접 계산 (외부에서 전달된 값이 잘못되었을 수 있으므로)
+          # 컨트롤러와 동일하게 .where(is_draft: false) 사용
+          items = expense_sheet.expense_items.where(is_draft: false)
+          all_items_validated = items.all? { |item| item.validation_status == 'validated' }
+          latest_validation = expense_sheet.validation_histories.order(created_at: :desc).first
+          
+          # 실시간으로 영수증 첨부 상태 확인
+          # validation_history가 있고, 영수증이 필요한 항목이 있을 때
+          actually_valid = if latest_validation
+            # validation_details에서 영수증이 필요하다고 표시된 항목들 확인
+            validation_context = latest_validation.full_validation_context || {}
+            step_4_data = validation_context["step_4"] || {}
+            receipt_check = step_4_data[:receipt_check] || step_4_data["receipt_check"] || {}
+            items_needing = receipt_check[:items_needing_receipts] || receipt_check["items_needing_receipts"] || []
+            
+            if items_needing.any?
+              # 실제로 영수증이 없는 항목이 있는지 확인
+              actually_missing = items_needing.any? { |item|
+                expense_item = items.find { |ei| ei.id == item['item_id'].to_i }
+                expense_item && !expense_item.expense_attachments.any?
+              }
+              !actually_missing  # 누락된 항목이 없으면 valid
+            else
+              # 영수증이 필요한 항목이 없으면 원래 all_valid 사용
+              latest_validation.all_valid
+            end
+          else
+            false
+          end
+          
+          # 디버깅용 로그
+          Rails.logger.info "🔍 Partial 내부 계산: items=#{items.count}, all_validated=#{all_items_validated}"
+          Rails.logger.info "🔍 실시간 영수증 체크: actually_valid=#{actually_valid}"
+          
+          # 최종 제출 가능 조건: 모든 항목이 검증 완료 상태 + 영수증 실시간 체크
+          can_submit = all_items_validated && latest_validation && actually_valid
+          Rails.logger.info "🔍 can_submit 최종: all_items_validated=#{all_items_validated}, actually_valid=#{actually_valid}, can_submit=#{can_submit}"
+        %>
+        
+        <!-- 디버그 출력 (개발환경에서만) -->
+        <% if Rails.env.development? %>
+          <div class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-4 text-xs">
+            <p class="font-bold">🔍 Debug Info (Partial 내부에서 직접 계산):</p>
+            <p>all_items_validated: <%= all_items_validated %> (재계산됨)</p>
+            <p>latest_validation: <%= latest_validation.present? %></p>
+            <p>latest_validation.all_valid (저장된 값): <%= latest_validation&.all_valid %></p>
+            <p>actually_valid (실시간 영수증 체크): <strong class="<%= actually_valid ? 'text-green-600' : 'text-red-600' %>"><%= actually_valid %></strong></p>
+            <p>can_submit: <strong class="<%= can_submit ? 'text-green-600' : 'text-red-600' %>"><%= can_submit %></strong></p>
+            
+            <% if defined?(items) && items %>
+              <p class="mt-2 font-bold">경비 항목 상태 (총 <%= items.count %>개):</p>
+              <% items.each do |item| %>
+                <p class="ml-2">- Item #<%= item.id %>: <%= item.validation_status %> <%= item.validation_status == 'validated' ? '✅' : '❌' %></p>
+              <% end %>
+              <% if items.empty? %>
+                <p class="ml-2 text-orange-600">⚠️ draft가 아닌 경비 항목이 없습니다</p>
+              <% end %>
+            <% end %>
+            
+            <% if local_assigns[:all_items_validated] != nil %>
+              <p class="mt-2 text-gray-500">외부에서 전달된 값: all_items_validated=<%= local_assigns[:all_items_validated] %> (무시됨)</p>
+            <% end %>
+          </div>
+        <% end %>
+        
+        <%= form_with url: confirm_submit_expense_sheet_path(expense_sheet), local: true do |form| %>
+          <%= hidden_field_tag "expense_sheet[approval_line_id]", 
+                               expense_sheet.approval_line_id,
+                               id: "expense_sheet_approval_line_id",
+                               data: { expense_sheet_approval_target: "approvalLineField" } %>
+          <% if can_submit %>
+            <%= form.submit "경비 시트 최종 제출", 
+                            class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 opacity-50 cursor-not-allowed",
+                            id: "expense-sheet-submit-button",
+                            disabled: true,
+                            data: { 
+                              ai_validated: can_submit.to_s,
+                              turbo_confirm: "경비 시트를 제출하시겠습니까? 제출 후에는 수정할 수 없습니다."
+                            } %>
+            <p class="mt-2 text-xs text-gray-500 text-center">
+              승인 규칙에 맞는 결재선을 선택하면 제출이 가능합니다.
+            </p>
+          <% else %>
+            <button type="button"
+                    disabled
+                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-400 bg-gray-200 cursor-not-allowed">
+              경비 시트 최종 제출
+            </button>
+            <p class="mt-2 text-xs text-gray-500 text-center">
+              <% if !all_items_validated %>
+                AI 검증을 통해 모든 경비 항목을 검증하세요.
+              <% elsif !actually_valid %>
+                필수 영수증을 모두 첨부한 후 페이지를 새로고침하세요.
+              <% elsif !latest_validation %>
+                AI 검증을 진행해주세요.
+              <% end %>
+            </p>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

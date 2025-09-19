@@ -1,0 +1,77 @@
+<!-- 전체 컨테이너에 Stimulus 컨트롤러 적용 -->
+<div data-controller="expense-sheet-submission">
+  <!-- 메트릭 카드 -->
+  <%= render 'metric_cards', expense_sheet: expense_sheet, expense_items: expense_items %>
+
+  <!-- 상단 도구 모음 (정렬, 엑셀 다운로드) -->
+  <%= render 'action_buttons', expense_sheet: expense_sheet, expense_items: expense_items %>
+
+  <!-- 경비 항목 테이블 (최우선 표시) -->
+  <% if expense_items.any? %>
+    <%= render 'expense_items_table', expense_sheet: expense_sheet, expense_items: expense_items %>
+  <% else %>
+    <div class="tremor-card">
+      <div class="px-6 py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">경비 항목이 없습니다</h3>
+        <p class="mt-1 text-sm text-gray-500">새로운 경비 항목을 추가해 주세요.</p>
+        <% if expense_sheet.editable? %>
+          <div class="mt-6">
+            <%= link_to "첫 경비 항목 추가",
+                        new_expense_sheet_expense_item_path(expense_sheet),
+                        class: "tremor-button tremor-button-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 하단 액션 버튼 (경비 항목 추가, 제출하기) -->
+  <% if expense_items.any? %>
+    <%= render 'bottom_actions', expense_sheet: expense_sheet %>
+  <% end %>
+
+  <!-- 첨부서류 섹션 -->
+  <% # can_submit 조건 계산 (컨트롤러와 동일한 방식) %>
+  <% latest_validation = expense_sheet.validation_histories.order(created_at: :desc).first %>
+  <% # 컨트롤러와 동일하게 .where(is_draft: false) 사용 %>
+  <% all_items_validated = expense_sheet.expense_items.where(is_draft: false).all? { |item| item.validation_status == 'validated' } %>
+  <% can_submit = all_items_validated && latest_validation && latest_validation.all_valid %>
+  
+  <% # 제출/마감된 시트의 경우 첨부파일을 항상 표시 %>
+  <% if expense_sheet.submitted? || expense_sheet.closed? %>
+    <% sheet_attachments = expense_sheet.expense_sheet_attachments.includes(:attachment_requirement) %>
+    <% if sheet_attachments.any? %>
+      <div class="mt-6">
+        <div class="bg-white shadow-sm rounded-lg">
+          <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">첨부 서류</h3>
+            <p class="mt-1 text-sm text-gray-500">제출된 증빙 서류</p>
+          </div>
+          <div class="px-4 py-5 sm:px-6">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <% sheet_attachments.each do |attachment| %>
+                <%= render 'expense_sheet_attachments/attachment_card', 
+                           attachment: attachment, 
+                           readonly: true %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <!-- 편집 모드에서는 제출하기 클릭 시에만 표시 -->
+    <div id="attachment-upload-section" class="hidden mt-6" data-expense-sheet-submission-target="attachmentSection">
+      <%= render 'attachment_upload_section', 
+                 expense_sheet: expense_sheet,
+                 sheet_attachments: @sheet_attachments || expense_sheet.expense_sheet_attachments.includes(:attachment_requirement),
+                 required_attachments: @required_attachments || AttachmentRequirement.where(attachment_type: 'expense_sheet', active: true).order(:position),
+                 uploaded_requirement_ids: @uploaded_requirement_ids || (@sheet_attachments || expense_sheet.expense_sheet_attachments).pluck(:attachment_requirement_id).compact,
+                 latest_validation: latest_validation,
+                 all_items_validated: all_items_validated %>
+    </div>
+  <% end %>
+</div>

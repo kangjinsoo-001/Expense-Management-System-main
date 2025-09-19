@@ -1,0 +1,37 @@
+<!-- 결재선 미리보기 (경비 항목과 동일한 형식) -->
+<div class="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+  <h4 class="text-sm font-medium text-gray-700 mb-2">승인 단계</h4>
+  <% if approval_line && approval_line.approval_line_steps.any? %>
+    <div class="space-y-2">
+      <% grouped_steps = approval_line.approval_line_steps.ordered.group_by(&:step_order) %>
+      <% grouped_steps.each do |step_order, steps| %>
+        <div class="text-sm flex items-center">
+          <span class="font-medium text-gray-600 mr-2"><%= step_order %>.</span>
+          <% approvers = steps.select(&:role_approve?) %>
+          <% if approvers.length >= 2 %>
+            <span class="mr-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= approvers.first.approval_type == 'all_required' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' %>">
+              <%= approvers.first.approval_type == 'all_required' ? '전체 합의' : '단독 가능' %>
+            </span>
+          <% end %>
+          <% steps.each_with_index do |step, index| %>
+            <% if index > 0 %>
+              <span class="mx-1 text-gray-300">|</span>
+            <% end %>
+            <span class="text-gray-700">
+              <%= step.approver.name %>
+              <% if step.approver.approver_groups.any? %>
+                <% highest_group = step.approver.approver_groups.max_by(&:priority) %>
+                <span class="text-gray-500">(<%= highest_group.name %>)</span>
+              <% end %>
+            </span>
+            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium <%= step.role == 'approve' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' %>">
+              <%= step.role == 'approve' ? '승인' : '참조' %>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500">승인자가 없습니다.</p>
+  <% end %>
+</div>

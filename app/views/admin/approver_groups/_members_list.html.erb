@@ -1,0 +1,48 @@
+<% if members.any? %>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            이름
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            이메일
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            사번
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            추가자
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            추가일
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% members.each do |member| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= member.user.name %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= member.user.email %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= member.user.employee_id %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= member.added_by.name %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= l(member.created_at, format: :short) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-gray-500 text-center py-4">아직 멤버가 없습니다.</p>
+<% end %>

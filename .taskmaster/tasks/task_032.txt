@@ -1,0 +1,31 @@
+# Task ID: 32
+# Title: AI 분석 시스템 구현
+# Status: done
+# Dependencies: 30, 31
+# Priority: high
+# Description: Gemini API를 활용한 첨부파일 내용 분석 및 데이터 추출 시스템 구현
+# Details:
+AttachmentAnalysisJob 구현, GeminiService 확장, 프롬프트 템플릿 시스템 구축. 자연어 프롬프트를 Gemini API에 전달하여 구조화된 JSON 형태로 분석 결과 저장
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. AttachmentAnalysisService 구현 [done]
+### Dependencies: None
+### Description: AI 분석 요청을 처리하는 서비스 클래스 구현
+### Details:
+GeminiService를 확장하여 자연어 프롬프트를 Gemini API에 전달. 응답을 구조화된 JSON으로 파싱
+
+## 2. AttachmentAnalysisJob 구현 [done]
+### Dependencies: None
+### Description: 첨부파일 분석을 비동기로 처리하는 Job 구현
+### Details:
+업로드된 파일의 텍스트를 추출하고 AI 분석 서비스 호출. 분석 결과를 ExpenseSheetAttachment에 저장
+
+## 3. 프롬프트 템플릿 엔진 구현 [done]
+### Dependencies: None
+### Description: 관리자 입력 프롬프트를 효과적인 AI 프롬프트로 변환
+### Details:
+변수 치환, Few-shot 예시 삽입, 컨텍스트 정보 추가 기능. PromptTemplateService 구현
+

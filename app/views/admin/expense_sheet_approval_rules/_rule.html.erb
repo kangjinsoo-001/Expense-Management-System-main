@@ -1,0 +1,85 @@
+<%= turbo_frame_tag "rule_#{rule.id}" do %>
+  <tr id="rule_<%= rule.id %>" class="hover:bg-gray-50">
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <%= rule.order %>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <% case rule.rule_type %>
+      <% when 'total_amount' %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          총금액
+        </span>
+      <% when 'item_count' %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          항목수
+        </span>
+      <% when 'submitter_based' %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          제출자
+        </span>
+      <% when 'expense_code_based' %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          코드포함
+        </span>
+      <% else %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          기타
+        </span>
+      <% end %>
+    </td>
+    <td class="px-6 py-4 text-sm text-gray-900">
+      <div class="space-y-1">
+        <% if rule.submitter_group.present? %>
+          <div>
+            <span class="text-xs text-gray-500">제출자:</span>
+            <span class="font-medium"><%= rule.submitter_group.name %></span>
+          </div>
+        <% end %>
+        <% if rule.condition.present? %>
+          <code class="px-2 py-1 bg-gray-100 rounded text-xs font-mono"><%= rule.condition %></code>
+        <% end %>
+      </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <div class="flex items-center">
+        <%= rule.approver_group.name %>
+        <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+          우선순위 <%= rule.approver_group.priority %>
+        </span>
+      </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+      <% if rule.is_active? %>
+        <%= button_to toggle_active_admin_expense_sheet_approval_rule_path(rule),
+                      method: :patch,
+                      class: "inline-flex items-center" do %>
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 cursor-pointer hover:bg-green-200">
+            활성
+          </span>
+        <% end %>
+      <% else %>
+        <%= button_to toggle_active_admin_expense_sheet_approval_rule_path(rule),
+                      method: :patch,
+                      class: "inline-flex items-center" do %>
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 cursor-pointer hover:bg-gray-200">
+            비활성
+          </span>
+        <% end %>
+      <% end %>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+      <div class="flex items-center space-x-2">
+        <%= link_to '수정', edit_admin_expense_sheet_approval_rule_path(rule),
+                    data: { turbo_frame: "modal" },
+                    class: 'text-indigo-600 hover:text-indigo-900' %>
+        <%= button_to '삭제',
+                      admin_expense_sheet_approval_rule_path(rule),
+                      method: :delete,
+                      data: { 
+                        turbo_confirm: '이 승인 규칙을 삭제하시겠습니까?'
+                      },
+                      class: 'text-red-600 hover:text-red-900' %>
+      </div>
+    </td>
+  </tr>
+<% end %>

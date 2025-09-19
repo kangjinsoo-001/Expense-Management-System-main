@@ -1,0 +1,41 @@
+<% content_for :title, "회원가입" %>
+
+<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+    <!-- 로고 영역 -->
+    <div class="text-center mb-8">
+      <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-lg bg-blue-600">
+        <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+      </div>
+      <h2 class="mt-4 text-3xl font-bold text-gray-900">회원가입</h2>
+      <p class="mt-2 text-sm text-gray-600">새 계정을 만들어보세요</p>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div class="tremor-card">
+      <div class="p-8">
+        <%= render "form", user: @user %>
+        
+        <div class="mt-6">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="bg-white px-4 text-gray-500">또는</span>
+            </div>
+          </div>
+
+          <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+              이미 계정이 있으신가요? 
+              <%= link_to "로그인", login_path, class: "font-medium text-blue-600 hover:text-blue-700" %>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

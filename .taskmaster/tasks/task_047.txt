@@ -1,0 +1,18 @@
+# Task ID: 47
+# Title: 신청서 대시보드 및 통계
+# Status: pending
+# Dependencies: 46
+# Priority: low
+# Description: 신청서 현황을 한눈에 볼 수 있는 대시보드와 통계 기능을 구현합니다.
+# Details:
+1. 신청서 현황 대시보드
+2. 카테고리별 신청 통계
+3. 월별/분기별 신청 추이
+4. 승인율/반려율 통계
+5. 평균 처리 시간 분석
+6. 템플릿별 사용 빈도
+7. 부서별 신청 현황
+8. 실시간 업데이트 (Turbo Streams)
+
+# Test Strategy:
+

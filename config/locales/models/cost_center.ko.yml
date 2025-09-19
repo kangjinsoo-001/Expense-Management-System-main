@@ -1,0 +1,29 @@
+ko:
+  activerecord:
+    models:
+      cost_center: "비용 센터"
+    attributes:
+      cost_center:
+        code: "코드"
+        name: "이름"
+        description: "설명"
+        organization: "조직"
+        manager: "관리자"
+        budget_amount: "예산 금액"
+        fiscal_year: "회계연도"
+        active: "활성화"
+        metadata: "메타데이터"
+    errors:
+      models:
+        cost_center:
+          attributes:
+            code:
+              blank: "는 필수입니다"
+              taken: "는 이미 사용 중입니다"
+            name:
+              blank: "은 필수입니다"
+            fiscal_year:
+              blank: "는 필수입니다"
+              greater_than: "는 %{count}보다 커야 합니다"
+            budget_amount:
+              greater_than_or_equal_to: "는 0 이상이어야 합니다"

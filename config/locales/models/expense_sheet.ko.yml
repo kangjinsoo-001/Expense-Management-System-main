@@ -1,0 +1,50 @@
+ko:
+  expense_sheet:
+    status:
+      draft: "작성중"
+      submitted: "제출됨"
+      approved: "승인됨"
+      rejected: "반려됨"
+      closed: "마감됨"
+  
+  activerecord:
+    models:
+      expense_sheet: "경비 시트"
+      expense_item: "경비 항목"
+    attributes:
+      expense_sheet:
+        user: "사용자"
+        organization: "조직"
+        year: "연도"
+        month: "월"
+        status: "상태"
+        total_amount: "총액"
+        submitted_at: "제출일"
+        approved_at: "승인일"
+        approved_by: "승인자"
+        rejection_reason: "반려 사유"
+        remarks: "비고"
+      expense_item:
+        expense_sheet: "경비 시트"
+        expense_code: "경비 코드"
+        cost_center: "코스트 센터"
+        expense_date: "경비 발생일"
+        amount: "금액"
+        description: "설명"
+        custom_fields: "추가 필드"
+        validation_errors: "검증 오류"
+        is_valid: "유효성"
+        receipt_number: "영수증 번호"
+        vendor_name: "거래처명"
+        vendor_tax_id: "사업자번호"
+        remarks: "비고"
+    errors:
+      models:
+        expense_sheet:
+          attributes:
+            user_id:
+              taken: "해당 월에 이미 경비 시트가 존재합니다"
+        expense_item:
+          attributes:
+            expense_date:
+              invalid_period: "경비 시트 기간과 일치해야 합니다"

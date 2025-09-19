@@ -1,0 +1,41 @@
+<div id="inline_flash_<%= SecureRandom.hex(4) %>" class="inline-flash-message">
+  <% if type.to_s == 'notice' %>
+    <div class="rounded-md bg-green-50 p-2">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="ml-2">
+          <p class="text-sm font-medium text-green-800"><%= message %></p>
+        </div>
+      </div>
+    </div>
+  <% elsif type.to_s == 'alert' || type.to_s == 'error' %>
+    <div class="rounded-md bg-red-50 p-2">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-4 w-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="ml-2">
+          <p class="text-sm font-medium text-red-800"><%= message %></p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // 3초 후 자동으로 사라지도록
+  setTimeout(() => {
+    const flashEl = document.getElementById('inline_flash_<%= SecureRandom.hex(4) %>');
+    if (flashEl) {
+      flashEl.style.transition = 'opacity 0.5s';
+      flashEl.style.opacity = '0';
+      setTimeout(() => flashEl.remove(), 500);
+    }
+  }, 3000);
+</script>

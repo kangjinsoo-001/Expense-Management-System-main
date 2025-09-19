@@ -1,0 +1,73 @@
+<!-- ExpenseItem 전용 상세 템플릿 -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">기본 정보</h2>
+  
+  <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <dt class="text-sm font-medium text-gray-500">신청자</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.expense_sheet.user.name %>
+        <span class="text-gray-500">(<%= item.expense_sheet.user.organization.name %>)</span>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">신청일</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= item.created_at.strftime('%Y-%m-%d %H:%M') %>
+      </dd>
+    </div>
+    
+    <div>
+      <dt class="text-sm font-medium text-gray-500">상태</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+          <%= @approval_request.status == 'pending' ? 'bg-yellow-100 text-yellow-800' :
+              @approval_request.status == 'approved' ? 'bg-green-100 text-green-800' :
+              @approval_request.status == 'rejected' ? 'bg-red-100 text-red-800' :
+              'bg-gray-100 text-gray-800' %>">
+          <%= @approval_request.status == 'pending' ? '대기중' :
+              @approval_request.status == 'approved' ? '승인완료' :
+              @approval_request.status == 'rejected' ? '반려' : '미제출' %>
+        </span>
+      </dd>
+    </div>
+  </dl>
+</div>
+
+<!-- 주요 내용 -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">주요 내용</h2>
+  
+  <div class="prose prose-sm max-w-none text-gray-700">
+    <ul class="list-disc pl-5 space-y-2">
+      <li><strong>경비 코드:</strong> <%= item.expense_code.name %></li>
+      <li><strong>금액:</strong> 
+        <% if item.is_budget? && item.actual_amount.present? %>
+          예산 <%= number_to_currency(item.budget_amount, unit: "₩", format: "%u%n") %> → 
+          실제 <%= number_to_currency(item.actual_amount, unit: "₩", format: "%u%n") %>
+          <% if item.budget_exceeded? %>
+            <span class="text-red-600">(초과: <%= number_to_currency(item.actual_amount - item.budget_amount, unit: "₩", format: "%u%n") %>)</span>
+          <% end %>
+        <% elsif item.is_budget? %>
+          예산 <%= item.formatted_amount %> (집행 대기)
+        <% else %>
+          <%= item.formatted_amount %>
+        <% end %>
+      </li>
+      <li><strong>경비 일자:</strong> <%= item.expense_date.strftime('%Y년 %m월 %d일') %></li>
+      <li><strong>코스트센터:</strong> <%= item.cost_center.name %></li>
+      <li><strong>설명:</strong> <%= item.display_description %></li>
+      <% if item.remarks.present? %>
+        <li><strong>비고:</strong> <%= item.remarks %></li>
+      <% end %>
+    </ul>
+    
+    <% if item.budget_exceeded? && item.excess_reason.present? %>
+      <div class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+        <p class="text-sm font-medium text-orange-700 mb-1">예산 초과 사유</p>
+        <p class="text-sm text-orange-800"><%= item.excess_reason %></p>
+      </div>
+    <% end %>
+  </div>
+</div>
