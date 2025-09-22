@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경비 관리 시스템 - 디자인 시스템 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        success: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        danger: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .component-demo {
+            background: 
+                radial-gradient(circle at 25px 25px, #f1f5f9 2px, transparent 0),
+                radial-gradient(circle at 75px 75px, #f1f5f9 2px, transparent 0);
+            background-size: 100px 100px;
+        }
+        
+        .color-swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .color-swatch::after {
+            content: attr(data-color);
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        
+        .typography-sample {
+            margin: 16px 0;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        .shadow-demo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 8px;
+            margin: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .spacing-demo {
+            background: #dbeafe;
+            border: 1px dashed #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #1d4ed8;
+            font-weight: 500;
+        }
+        
+        .component-variant {
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            margin-bottom: 16px;
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-item.active { 
+            background: #3b82f6; 
+            color: white;
+        }
+        
+        /* 커스텀 스크롤바 */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Design System Guide</h1>
+                    <p class="text-sm text-gray-500 mt-1">경비 관리 시스템 디자인 시스템</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        v1.0.0
+                    </span>
+                    <span class="text-sm text-gray-500">5명의 디자이너가 협업 중</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex gap-8">
+            <!-- Sidebar Navigation -->
+            <nav class="w-64 flex-shrink-0">
+                <div class="bg-white rounded-lg shadow p-4 sticky top-24">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">디자인 토큰</h3>
+                    <ul class="space-y-1 mb-6">
+                        <li><a href="#colors" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('colors')">Colors</a></li>
+                        <li><a href="#typography" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('typography')">Typography</a></li>
+                        <li><a href="#spacing" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('spacing')">Spacing</a></li>
+                        <li><a href="#shadows" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('shadows')">Shadows</a></li>
+                    </ul>
+                    
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">컴포넌트</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#buttons" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('buttons')">Buttons</a></li>
+                        <li><a href="#forms" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('forms')">Form Elements</a></li>
+                        <li><a href="#cards" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('cards')">Cards</a></li>
+                        <li><a href="#status" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('status')">Status Indicators</a></li>
+                        <li><a href="#navigation" class="nav-item block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100" onclick="showSection('navigation')">Navigation</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="flex-1">
+                <!-- Colors Section -->
+                <section id="colors" class="tab-content active">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Colors</h2>
+                        <p class="text-gray-600 mb-8">일관된 시각적 언어를 위한 컬러 시스템입니다. 각 색상은 접근성과 사용성을 고려하여 설계되었습니다.</p>
+                        
+                        <!-- Primary Colors -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Primary Colors</h3>
+                            <p class="text-gray-600 mb-6">주요 브랜드 색상으로 CTA 버튼, 링크, 중요한 UI 요소에 사용됩니다.</p>
+                            <div class="flex flex-wrap gap-4 mb-6">
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-50" data-color="50"></div>
+                                    <p class="mt-6 text-xs font-mono">#eff6ff</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-100" data-color="100"></div>
+                                    <p class="mt-6 text-xs font-mono">#dbeafe</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-200" data-color="200"></div>
+                                    <p class="mt-6 text-xs font-mono">#bfdbfe</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-300" data-color="300"></div>
+                                    <p class="mt-6 text-xs font-mono">#93c5fd</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-400" data-color="400"></div>
+                                    <p class="mt-6 text-xs font-mono">#60a5fa</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-500" data-color="500"></div>
+                                    <p class="mt-6 text-xs font-mono">#3b82f6</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-600" data-color="600"></div>
+                                    <p class="mt-6 text-xs font-mono">#2563eb</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-primary-700" data-color="700"></div>
+                                    <p class="mt-6 text-xs font-mono">#1d4ed8</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Usage Examples -->
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <h4 class="font-semibold text-gray-900 mb-4">사용 예시</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="text-center">
+                                        <button class="w-full px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
+                                            Primary Button
+                                        </button>
+                                        <p class="text-xs text-gray-600 mt-2">Primary 600 - 주요 액션</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <button class="w-full px-4 py-2 border border-primary-300 text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition-colors">
+                                            Secondary Button
+                                        </button>
+                                        <p class="text-xs text-gray-600 mt-2">Primary 300 Border - 보조 액션</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-full px-4 py-2 bg-primary-50 text-primary-700 rounded-lg">
+                                            <span class="text-sm font-medium">알림 배경</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-2">Primary 50 - 정보 전달</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Semantic Colors -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Semantic Colors</h3>
+                            <p class="text-gray-600 mb-6">상태와 의미를 전달하는 색상들입니다.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <!-- Success -->
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-3">Success</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <div class="color-swatch bg-success-50" data-color="50"></div>
+                                        <div class="color-swatch bg-success-100" data-color="100"></div>
+                                        <div class="color-swatch bg-success-500" data-color="500"></div>
+                                        <div class="color-swatch bg-success-700" data-color="700"></div>
+                                    </div>
+                                    <div class="bg-success-50 border border-success-200 rounded-lg p-3">
+                                        <div class="flex items-center">
+                                            <div class="w-4 h-4 bg-success-500 rounded-full mr-2"></div>
+                                            <span class="text-success-700 text-sm font-medium">승인 완료</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Warning -->
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-3">Warning</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <div class="color-swatch bg-warning-50" data-color="50"></div>
+                                        <div class="color-swatch bg-warning-100" data-color="100"></div>
+                                        <div class="color-swatch bg-warning-500" data-color="500"></div>
+                                        <div class="color-swatch bg-warning-700" data-color="700"></div>
+                                    </div>
+                                    <div class="bg-warning-50 border border-warning-200 rounded-lg p-3">
+                                        <div class="flex items-center">
+                                            <div class="w-4 h-4 bg-warning-500 rounded-full mr-2"></div>
+                                            <span class="text-warning-700 text-sm font-medium">검토 필요</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Danger -->
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-3">Danger</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <div class="color-swatch bg-danger-50" data-color="50"></div>
+                                        <div class="color-swatch bg-danger-100" data-color="100"></div>
+                                        <div class="color-swatch bg-danger-500" data-color="500"></div>
+                                        <div class="color-swatch bg-danger-700" data-color="700"></div>
+                                    </div>
+                                    <div class="bg-danger-50 border border-danger-200 rounded-lg p-3">
+                                        <div class="flex items-center">
+                                            <div class="w-4 h-4 bg-danger-500 rounded-full mr-2"></div>
+                                            <span class="text-danger-700 text-sm font-medium">반려됨</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gray Scale -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Gray Scale</h3>
+                            <p class="text-gray-600 mb-6">텍스트, 배경, 테두리 등에 사용되는 중성색상입니다.</p>
+                            <div class="flex flex-wrap gap-4">
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-50" data-color="50"></div>
+                                    <p class="mt-6 text-xs font-mono">#f9fafb</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-100" data-color="100"></div>
+                                    <p class="mt-6 text-xs font-mono">#f3f4f6</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-200" data-color="200"></div>
+                                    <p class="mt-6 text-xs font-mono">#e5e7eb</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-300" data-color="300"></div>
+                                    <p class="mt-6 text-xs font-mono">#d1d5db</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-400" data-color="400"></div>
+                                    <p class="mt-6 text-xs font-mono">#9ca3af</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-500" data-color="500"></div>
+                                    <p class="mt-6 text-xs font-mono">#6b7280</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-600" data-color="600"></div>
+                                    <p class="mt-6 text-xs font-mono">#4b5563</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-700" data-color="700"></div>
+                                    <p class="mt-6 text-xs font-mono">#374151</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-800" data-color="800"></div>
+                                    <p class="mt-6 text-xs font-mono">#1f2937</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="color-swatch bg-gray-900" data-color="900"></div>
+                                    <p class="mt-6 text-xs font-mono">#111827</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Typography Section -->
+                <section id="typography" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Typography</h2>
+                        <p class="text-gray-600 mb-8">일관된 정보 계층과 가독성을 위한 타이포그래피 시스템입니다.</p>
+                        
+                        <!-- Font Family -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Font Family</h3>
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <div class="font-sans text-2xl text-gray-900 mb-2">Inter</div>
+                                <p class="text-gray-600 text-sm">Primary font for all UI elements and body text</p>
+                                <div class="mt-4 text-gray-500 font-mono text-sm">
+                                    font-family: 'Inter', system-ui, sans-serif;
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Typography Scale -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Typography Scale</h3>
+                            
+                            <div class="space-y-6">
+                                <!-- Headings -->
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4">Headings</h4>
+                                    <div class="space-y-4">
+                                        <div class="typography-sample">
+                                            <div class="text-4xl font-bold text-gray-900 mb-2">Heading 1</div>
+                                            <div class="text-sm text-gray-500 font-mono">36px / font-bold / line-height: 1.2</div>
+                                            <div class="text-xs text-gray-400 mt-1">페이지 타이틀, 주요 섹션</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-3xl font-bold text-gray-900 mb-2">Heading 2</div>
+                                            <div class="text-sm text-gray-500 font-mono">30px / font-bold / line-height: 1.2</div>
+                                            <div class="text-xs text-gray-400 mt-1">섹션 제목</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-2xl font-semibold text-gray-900 mb-2">Heading 3</div>
+                                            <div class="text-sm text-gray-500 font-mono">24px / font-semibold / line-height: 1.3</div>
+                                            <div class="text-xs text-gray-400 mt-1">서브섹션 제목</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-xl font-semibold text-gray-900 mb-2">Heading 4</div>
+                                            <div class="text-sm text-gray-500 font-mono">20px / font-semibold / line-height: 1.4</div>
+                                            <div class="text-xs text-gray-400 mt-1">카드 제목, 컴포넌트 제목</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Body Text -->
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4">Body Text</h4>
+                                    <div class="space-y-4">
+                                        <div class="typography-sample">
+                                            <div class="text-lg text-gray-900 mb-2">Large Body Text</div>
+                                            <div class="text-sm text-gray-500 font-mono">18px / font-normal / line-height: 1.6</div>
+                                            <div class="text-xs text-gray-400 mt-1">중요한 설명문, 리드 텍스트</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-base text-gray-900 mb-2">Body Text</div>
+                                            <div class="text-sm text-gray-500 font-mono">16px / font-normal / line-height: 1.6</div>
+                                            <div class="text-xs text-gray-400 mt-1">기본 본문 텍스트</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-sm text-gray-700 mb-2">Small Text</div>
+                                            <div class="text-sm text-gray-500 font-mono">14px / font-normal / line-height: 1.5</div>
+                                            <div class="text-xs text-gray-400 mt-1">부가 정보, 캡션</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-xs text-gray-600 mb-2">Extra Small Text</div>
+                                            <div class="text-sm text-gray-500 font-mono">12px / font-normal / line-height: 1.4</div>
+                                            <div class="text-xs text-gray-400 mt-1">메타 정보, 타임스탬프</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Special Text -->
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4">Special Text</h4>
+                                    <div class="space-y-4">
+                                        <div class="typography-sample">
+                                            <div class="text-base font-medium text-gray-900 mb-2">Medium Weight</div>
+                                            <div class="text-sm text-gray-500 font-mono">16px / font-medium / line-height: 1.5</div>
+                                            <div class="text-xs text-gray-400 mt-1">버튼 텍스트, 강조 텍스트</div>
+                                        </div>
+                                        
+                                        <div class="typography-sample">
+                                            <div class="text-base font-mono text-gray-900 mb-2">Monospace</div>
+                                            <div class="text-sm text-gray-500 font-mono">16px / font-mono / line-height: 1.5</div>
+                                            <div class="text-xs text-gray-400 mt-1">코드, 숫자 데이터</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usage in Context -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">사용 예시</h3>
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                                    <h2 class="text-2xl font-semibold text-gray-900 mb-2">경비 신청서</h2>
+                                    <p class="text-gray-600 mb-6">새로운 경비를 신청하려면 아래 정보를 입력해주세요.</p>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">경비 제목</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="경비 제목을 입력하세요">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">금액</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono" placeholder="0">
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">마지막 수정: 2024.01.15 14:30</span>
+                                            <button class="px-4 py-2 bg-primary-600 text-white rounded-md font-medium">저장</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Spacing Section -->
+                <section id="spacing" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Spacing</h2>
+                        <p class="text-gray-600 mb-8">일관된 레이아웃과 시각적 리듬을 위한 간격 시스템입니다.</p>
+                        
+                        <!-- Spacing Scale -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Spacing Scale</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 8px; height: 8px; margin: 20px auto;">2</div>
+                                    <div class="text-sm font-mono text-gray-600">2px / 0.125rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">테두리, 구분선</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 16px; height: 16px; margin: 20px auto;">4</div>
+                                    <div class="text-sm font-mono text-gray-600">4px / 0.25rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">최소 간격</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 32px; height: 32px; margin: 20px auto;">8</div>
+                                    <div class="text-sm font-mono text-gray-600">8px / 0.5rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">텍스트 간격</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 48px; height: 48px; margin: 20px auto;">12</div>
+                                    <div class="text-sm font-mono text-gray-600">12px / 0.75rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">버튼 패딩</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 64px; height: 64px; margin: 20px auto;">16</div>
+                                    <div class="text-sm font-mono text-gray-600">16px / 1rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">기본 간격</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 80px; height: 80px; margin: 20px auto;">20</div>
+                                    <div class="text-sm font-mono text-gray-600">20px / 1.25rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">카드 패딩</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 96px; height: 96px; margin: 20px auto;">24</div>
+                                    <div class="text-sm font-mono text-gray-600">24px / 1.5rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">섹션 간격</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 128px; height: 128px; margin: 20px auto;">32</div>
+                                    <div class="text-sm font-mono text-gray-600">32px / 2rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">컴포넌트 간격</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="spacing-demo" style="width: 160px; height: 160px; margin: 20px auto;">40</div>
+                                    <div class="text-sm font-mono text-gray-600">40px / 2.5rem</div>
+                                    <div class="text-xs text-gray-400 mt-1">페이지 섹션</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layout Examples -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">레이아웃 적용 예시</h3>
+                            
+                            <!-- Card Layout -->
+                            <div class="mb-8">
+                                <h4 class="font-medium text-gray-900 mb-4">Card Layout</h4>
+                                <div class="bg-gray-50 rounded-lg p-6">
+                                    <div class="bg-white rounded-lg border border-gray-200" style="padding: 24px;">
+                                        <h3 class="text-lg font-semibold text-gray-900" style="margin-bottom: 8px;">카드 제목</h3>
+                                        <p class="text-gray-600" style="margin-bottom: 16px;">카드 설명 텍스트입니다.</p>
+                                        <div style="margin-bottom: 16px;">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">태그</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">2024.01.15</span>
+                                            <button class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium">버튼</button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 text-xs text-gray-500 space-y-1">
+                                        <div>• 카드 패딩: 24px</div>
+                                        <div>• 제목-설명 간격: 8px</div>
+                                        <div>• 섹션 간격: 16px</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Layout -->
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-4">Form Layout</h4>
+                                <div class="bg-gray-50 rounded-lg p-6">
+                                    <div class="bg-white rounded-lg border border-gray-200" style="padding: 24px;">
+                                        <div style="margin-bottom: 20px;">
+                                            <label class="block text-sm font-medium text-gray-700" style="margin-bottom: 4px;">입력 필드 1</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                        </div>
+                                        <div style="margin-bottom: 20px;">
+                                            <label class="block text-sm font-medium text-gray-700" style="margin-bottom: 4px;">입력 필드 2</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                        </div>
+                                        <div class="flex justify-end space-x-3">
+                                            <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium">취소</button>
+                                            <button class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium">저장</button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 text-xs text-gray-500 space-y-1">
+                                        <div>• 폼 패딩: 24px</div>
+                                        <div>• 라벨-입력 간격: 4px</div>
+                                        <div>• 필드 간격: 20px</div>
+                                        <div>• 버튼 간격: 12px</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Shadows Section -->
+                <section id="shadows" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Shadows</h2>
+                        <p class="text-gray-600 mb-8">깊이와 계층감을 표현하는 그림자 시스템입니다.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <div class="text-center">
+                                <div class="shadow-demo" style="box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">xs</div>
+                                <h4 class="font-medium text-gray-900 mt-4 mb-2">Extra Small</h4>
+                                <div class="text-xs font-mono text-gray-600 mb-2">shadow-xs</div>
+                                <div class="text-xs text-gray-500">버튼 hover, 입력 필드</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="shadow-demo" style="box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);">sm</div>
+                                <h4 class="font-medium text-gray-900 mt-4 mb-2">Small</h4>
+                                <div class="text-xs font-mono text-gray-600 mb-2">shadow-sm</div>
+                                <div class="text-xs text-gray-500">카드, 패널</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="shadow-demo" style="box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);">md</div>
+                                <h4 class="font-medium text-gray-900 mt-4 mb-2">Medium</h4>
+                                <div class="text-xs font-mono text-gray-600 mb-2">shadow-md</div>
+                                <div class="text-xs text-gray-500">드롭다운, 팝업</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="shadow-demo" style="box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);">lg</div>
+                                <h4 class="font-medium text-gray-900 mt-4 mb-2">Large</h4>
+                                <div class="text-xs font-mono text-gray-600 mb-2">shadow-lg</div>
+                                <div class="text-xs text-gray-500">모달, 오버레이</div>
+                            </div>
+                        </div>
+
+                        <!-- Usage Examples -->
+                        <div class="mt-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">사용 예시</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4">카드 컴포넌트</h4>
+                                    <div class="bg-gray-50 p-6 rounded-lg">
+                                        <div class="bg-white rounded-lg p-6" style="box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);">
+                                            <h5 class="font-semibold text-gray-900 mb-2">경비 항목</h5>
+                                            <p class="text-gray-600 text-sm">점심 회의비</p>
+                                            <div class="mt-3 flex justify-between items-center">
+                                                <span class="text-lg font-bold text-gray-900">45,000원</span>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">승인됨</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-3">shadow-sm 사용</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4">드롭다운 메뉴</h4>
+                                    <div class="bg-gray-50 p-6 rounded-lg">
+                                        <div class="bg-white rounded-lg border border-gray-200" style="box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);">
+                                            <div class="p-1">
+                                                <div class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer">경비 신청</div>
+                                                <div class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer">승인 현황</div>
+                                                <div class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer">통계</div>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-3">shadow-md 사용</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Buttons Section -->
+                <section id="buttons" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Buttons</h2>
+                        <p class="text-gray-600 mb-8">사용자 액션을 유도하는 버튼 컴포넌트들입니다. 현재 51개 위치에서 중복 사용 중입니다.</p>
+                        
+                        <!-- Primary Buttons -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Primary Buttons</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">크기별 변형</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        <button class="px-3 py-1.5 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
+                                            Small
+                                        </button>
+                                        <button class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
+                                            Medium
+                                        </button>
+                                        <button class="px-6 py-3 bg-primary-600 text-white rounded-lg text-base font-medium hover:bg-primary-700 transition-colors">
+                                            Large
+                                        </button>
+                                        <button class="px-8 py-4 bg-primary-600 text-white rounded-lg text-lg font-medium hover:bg-primary-700 transition-colors">
+                                            Extra Large
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <div class="font-medium text-gray-900">Small</div>
+                                        <div class="text-gray-600">px-3 py-1.5 text-sm</div>
+                                        <div class="text-gray-500">32px height</div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">Medium</div>
+                                        <div class="text-gray-600">px-4 py-2 text-sm</div>
+                                        <div class="text-gray-500">36px height</div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">Large</div>
+                                        <div class="text-gray-600">px-6 py-3 text-base</div>
+                                        <div class="text-gray-500">48px height</div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">Extra Large</div>
+                                        <div class="text-gray-600">px-8 py-4 text-lg</div>
+                                        <div class="text-gray-500">56px height</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">아이콘과 함께</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        <button class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
+                                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            경비 추가
+                                        </button>
+                                        <button class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
+                                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            다운로드
+                                        </button>
+                                        <button class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
+                                            제출하기
+                                            <svg class="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    아이콘은 텍스트와 8px 간격으로 배치합니다. 16px 크기를 사용합니다.
+                                </div>
+                            </div>
+
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">상태별 변형</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        <button class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
+                                            Normal
+                                        </button>
+                                        <button class="px-4 py-2 bg-primary-700 text-white rounded-md text-sm font-medium">
+                                            Hover
+                                        </button>
+                                        <button class="px-4 py-2 bg-primary-800 text-white rounded-md text-sm font-medium">
+                                            Active
+                                        </button>
+                                        <button class="px-4 py-2 bg-gray-300 text-gray-500 rounded-md text-sm font-medium cursor-not-allowed" disabled>
+                                            Disabled
+                                        </button>
+                                        <button class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium">
+                                            <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            로딩 중...
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Secondary Buttons -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Secondary Buttons</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">변형 스타일</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        <button class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                                            Outlined
+                                        </button>
+                                        <button class="px-4 py-2 text-primary-700 bg-primary-50 rounded-md text-sm font-medium hover:bg-primary-100 transition-colors">
+                                            Soft
+                                        </button>
+                                        <button class="px-4 py-2 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
+                                            Ghost
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <div class="font-medium text-gray-900">Outlined</div>
+                                        <div class="text-gray-600">테두리가 있는 스타일</div>
+                                        <div class="text-gray-500">취소, 뒤로가기</div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">Soft</div>
+                                        <div class="text-gray-600">배경색이 있는 스타일</div>
+                                        <div class="text-gray-500">필터, 선택 옵션</div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">Ghost</div>
+                                        <div class="text-gray-600">배경 없는 스타일</div>
+                                        <div class="text-gray-500">메뉴, 네비게이션</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Buttons -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Danger Buttons</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">경고 액션</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        <button class="px-4 py-2 bg-danger-600 text-white rounded-md text-sm font-medium hover:bg-danger-700 transition-colors">
+                                            삭제
+                                        </button>
+                                        <button class="px-4 py-2 border border-danger-300 text-danger-700 bg-white rounded-md text-sm font-medium hover:bg-danger-50 transition-colors">
+                                            제출 취소
+                                        </button>
+                                        <button class="px-4 py-2 text-danger-700 rounded-md text-sm font-medium hover:bg-danger-50 transition-colors">
+                                            반려
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        <svg class="h-5 w-5 text-warning-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <div>
+                                            <h5 class="text-sm font-medium text-warning-800">사용 시 주의</h5>
+                                            <p class="text-sm text-warning-700 mt-1">위험한 액션에만 사용하며, 확인 대화상자와 함께 사용하는 것을 권장합니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usage Guidelines -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">사용 가이드라인</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4 text-success-700">✅ 올바른 사용</h4>
+                                    <div class="space-y-3 text-sm">
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-success-500 rounded-full mr-3"></div>
+                                            <span>페이지당 하나의 Primary 버튼 사용</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-success-500 rounded-full mr-3"></div>
+                                            <span>액션의 중요도에 따른 버튼 타입 선택</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-success-500 rounded-full mr-3"></div>
+                                            <span>명확하고 액션 지향적인 라벨 사용</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-success-500 rounded-full mr-3"></div>
+                                            <span>적절한 크기와 터치 영역 확보</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-medium text-gray-900 mb-4 text-danger-700">❌ 피해야 할 사용</h4>
+                                    <div class="space-y-3 text-sm">
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-danger-500 rounded-full mr-3"></div>
+                                            <span>하나의 화면에 여러 Primary 버튼</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-danger-500 rounded-full mr-3"></div>
+                                            <span>모호한 라벨 ("확인", "OK")</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-danger-500 rounded-full mr-3"></div>
+                                            <span>너무 작은 터치 영역 (44px 미만)</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-danger-500 rounded-full mr-3"></div>
+                                            <span>일반 액션에 Danger 버튼 사용</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Forms Section -->
+                <section id="forms" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Form Elements</h2>
+                        <p class="text-gray-600 mb-8">사용자 입력을 받는 폼 요소들입니다. 현재 15개의 _form.html.erb 파일에서 중복 사용 중입니다.</p>
+                        
+                        <!-- Text Inputs -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Text Inputs</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">기본 입력 필드</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="max-w-md space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">경비 제목</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="경비 제목을 입력하세요">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">금액</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono" placeholder="0">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">설명</label>
+                                            <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" rows="3" placeholder="상세 설명을 입력하세요"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">상태별 변형</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="max-w-md space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">기본 상태</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="입력하세요">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">포커스 상태</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-primary-500 rounded-md outline-none ring-2 ring-primary-500" value="포커스된 상태">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">에러 상태</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-danger-300 rounded-md focus:outline-none focus:ring-2 focus:ring-danger-500 focus:border-danger-500" value="잘못된 값">
+                                            <p class="mt-1 text-sm text-danger-600">올바른 이메일 주소를 입력해주세요.</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-1">비활성 상태</label>
+                                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed" value="편집 불가" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Select Dropdowns -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Select Dropdowns</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">드롭다운 선택</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="max-w-md space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">경비 코드</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                                <option>선택하세요</option>
+                                                <option>회의비</option>
+                                                <option>교통비</option>
+                                                <option>숙박비</option>
+                                                <option>식비</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">승인자</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" multiple size="4">
+                                                <option>김팀장</option>
+                                                <option>이과장</option>
+                                                <option>박대리</option>
+                                                <option>최부장</option>
+                                            </select>
+                                            <p class="mt-1 text-xs text-gray-500">Ctrl 키를 누르고 클릭하여 여러 명을 선택하세요.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Checkboxes and Radios -->
+                        <div class="mb-12">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Checkboxes & Radio Buttons</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">선택 옵션</h4>
+                                <div class="component-demo p-6 rounded-lg mb-6">
+                                    <div class="max-w-md space-y-6">
+                                        <!-- Checkboxes -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-3">첨부 옵션</label>
+                                            <div class="space-y-2">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" checked>
+                                                    <span class="ml-2 text-sm text-gray-700">영수증 첨부</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                    <span class="ml-2 text-sm text-gray-700">증빙 서류 첨부</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                    <span class="ml-2 text-sm text-gray-700">참석자 명단 첨부</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Radio Buttons -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-3">결제 방법</label>
+                                            <div class="space-y-2">
+                                                <label class="flex items-center">
+                                                    <input type="radio" name="payment" class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500" checked>
+                                                    <span class="ml-2 text-sm text-gray-700">법인카드</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="radio" name="payment" class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                                                    <span class="ml-2 text-sm text-gray-700">개인카드</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="radio" name="payment" class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                                                    <span class="ml-2 text-sm text-gray-700">현금</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Layout -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-6">Form Layout</h3>
+                            
+                            <div class="component-variant">
+                                <h4 class="font-medium text-gray-900 mb-4">완성된 폼 예시</h4>
+                                <div class="component-demo p-6 rounded-lg">
+                                    <div class="max-w-2xl">
+                                        <form class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">경비 제목 *</label>
+                                                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="경비 제목">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">금액 *</label>
+                                                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono" placeholder="0">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">경비 코드</label>
+                                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                                        <option>회의비</option>
+                                                        <option>교통비</option>
+                                                        <option>숙박비</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">사용 일자</label>
+                                                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">상세 설명</label>
+                                                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" rows="3" placeholder="경비 사용 내역을 상세히 기록해주세요"></textarea>
+                                            </div>
+                                            
+                                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                    <span class="ml-2 text-sm text-gray-700">임시저장</span>
+                                                </div>
+                                                <div class="flex space-x-3">
+                                                    <button type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50">
+                                                        취소
+                                                    </button>
+                                                    <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700">
+                                                        저장
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Add other sections (Cards, Status, Navigation) here -->
+                <!-- For brevity, I'll add a few more key sections -->
+
+                <section id="cards" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Cards</h2>
+                        <p class="text-gray-600 mb-8">정보를 그룹화하여 표시하는 카드 컴포넌트들입니다.</p>
+                        
+                        <div class="component-variant">
+                            <h4 class="font-medium text-gray-900 mb-4">경비 카드</h4>
+                            <div class="component-demo p-6 rounded-lg mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                                        <div class="flex justify-between items-start mb-3">
+                                            <h3 class="font-semibold text-gray-900">점심 회의비</h3>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">승인됨</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-3">2024.01.15 | 회의비</p>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-bold text-gray-900">45,000원</span>
+                                            <button class="text-sm text-primary-600 hover:text-primary-700">상세보기</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="status" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Status Indicators</h2>
+                        <p class="text-gray-600 mb-8">상태와 진행 상황을 표시하는 인디케이터들입니다.</p>
+                        
+                        <div class="component-variant">
+                            <h4 class="font-medium text-gray-900 mb-4">상태 배지</h4>
+                            <div class="component-demo p-6 rounded-lg mb-6">
+                                <div class="flex flex-wrap gap-3">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-success-100 text-success-800">승인됨</span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-warning-100 text-warning-800">검토중</span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-danger-100 text-danger-800">반려됨</span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">대기중</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="navigation" class="tab-content">
+                    <div class="bg-white rounded-lg shadow p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Navigation</h2>
+                        <p class="text-gray-600 mb-8">사용자가 시스템을 탐색할 수 있도록 돕는 네비게이션 컴포넌트들입니다.</p>
+                        
+                        <div class="component-variant">
+                            <h4 class="font-medium text-gray-900 mb-4">브레드크럼</h4>
+                            <div class="component-demo p-6 rounded-lg mb-6">
+                                <nav class="flex" aria-label="Breadcrumb">
+                                    <ol role="list" class="flex items-center space-x-4">
+                                        <li><a href="#" class="text-gray-400 hover:text-gray-500 text-sm">홈</a></li>
+                                        <li class="flex items-center"><span class="text-gray-400 mx-2">/</span><a href="#" class="text-gray-400 hover:text-gray-500 text-sm">경비 관리</a></li>
+                                        <li class="flex items-center"><span class="text-gray-400 mx-2">/</span><span class="text-gray-500 text-sm">경비 신청</span></li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.tab-content');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active state from all nav items
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active state to clicked nav item
+            event.target.classList.add('active');
+            
+            // Update URL hash
+            window.location.hash = sectionId;
+        }
+        
+        // Handle initial load and hash changes
+        function handleHashChange() {
+            const hash = window.location.hash.substring(1);
+            if (hash && document.getElementById(hash)) {
+                showSection(hash);
+                document.querySelector(`[onclick="showSection('${hash}')"]`).classList.add('active');
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash) {
+                handleHashChange();
+            } else {
+                document.querySelector('.nav-item').classList.add('active');
+            }
+        });
+        
+        window.addEventListener('hashchange', handleHashChange);
+    </script>
+</body>
+</html>
